@@ -1,0 +1,146 @@
+<html>
+            <head>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f9f9f9; color: #333; }
+                    h1, h2, h3 { color: #2c3e50; }
+                    .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+                    
+                    /* Tables */
+                    table { border-collapse: collapse; width: 100%; margin-bottom: 20px; font-size: 14px; }
+                    th, td { border: 1px solid #e1e4e8; padding: 10px; text-align: left; }
+                    th { background-color: #f1f8ff; color: #0366d6; font-weight: 600; }
+                    tr:nth-child(even) { background-color: #f8f9fa; }
+                    
+                    /* Status Colors */
+                    .pass { color: #28a745; font-weight: bold; }
+                    .fail { color: #dc3545; font-weight: bold; }
+                    
+                    /* Layout */
+                    .section { margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px; }
+                    .metric-box { background: #f0f4f8; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 5px solid #0366d6; }
+                    .row { display: flex; gap: 20px; }
+                    .col { flex: 1; overflow-x: auto; }
+                    
+                    /* Tabs/Previews */
+                    .preview-header { font-weight: bold; margin-bottom: 10px; color: #555; }
+                    .scroll-table { max-height: 400px; overflow-y: auto; display: block; }
+                </style>
+            </head>
+            <body>
+            <div class="container">
+                <h1>Validation Report</h1>
+                
+                <div class="metric-box">
+                    <h3>Metric Explanations</h3>
+                    <ul>
+                        <li><strong>KS Test (Kolmogorov-Smirnov):</strong> Used for continuous numerical columns. Compares the cumulative distribution functions of the real and synthetic data. <br>
+                            <em>Result:</em> Returns a p-value. If p > 0.05, we fail to reject the null hypothesis (i.e., distributions are likely the same).</li>
+                        <li><strong>TVD (Total Variation Distance):</strong> Used for categorical or discrete columns. Measures the maximum difference between probabilities assigned to the same event by two distributions. <br>
+                            <em>Result:</em> Value between 0 and 1. Lower is better (0 means identical). We consider < 0.1 as passing.</li>
+                        <li><strong>Correlation Distance:</strong> Measures how well the pairwise correlations between numerical columns are preserved. Calculated as the Frobenius norm of the difference between correlation matrices. <br>
+                            <em>Result:</em> Lower is better (0 means identical correlation structure).</li>
+                    </ul>
+                </div>
+            
+<div class='section'><h2>Table: table1</h2>
+<p><strong>Correlation Distance:</strong> 0.0000</p>
+<h3>Column Validation Metrics</h3>
+<table><tr><th>Column</th><th>Test Type</th><th>Statistic</th><th>P-Value / Score</th><th>Status</th></tr>
+<tr><td>A</td><td>ks_test</td><td>0.1500</td><td>0.2112</td><td class='pass'>PASS</td></tr>
+</table>
+<h3>Detailed Statistics (Real vs Synthetic)</h3>
+<table><tr><th>Column</th><th>Metric</th><th>Real</th><th>Synthetic</th></tr>
+<tr><td rowspan='4'>A</td><td>max</td><td>3.1594</td><td>2.2227</td></tr>
+<tr><td>mean</td><td>0.1937</td><td>-0.1318</td></tr>
+<tr><td>min</td><td>-2.2528</td><td>-2.7654</td></tr>
+<tr><td>std</td><td>1.1413</td><td>1.0078</td></tr>
+</table>
+<h3>Data Preview (First 10 Rows)</h3>
+<div class='row'>
+<div class='col'>
+<div class='preview-header'>Original Data (Real)</div>
+<table class="dataframe scroll-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>A</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0.886371</td>
+    </tr>
+    <tr>
+      <td>-1.057131</td>
+    </tr>
+    <tr>
+      <td>2.456090</td>
+    </tr>
+    <tr>
+      <td>1.154669</td>
+    </tr>
+    <tr>
+      <td>1.197261</td>
+    </tr>
+    <tr>
+      <td>0.479740</td>
+    </tr>
+    <tr>
+      <td>0.974597</td>
+    </tr>
+    <tr>
+      <td>-1.890023</td>
+    </tr>
+    <tr>
+      <td>-0.321590</td>
+    </tr>
+    <tr>
+      <td>-1.098734</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<div class='col'>
+<div class='preview-header'>Synthetic Data (Generated)</div>
+<table class="dataframe scroll-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>A</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>-0.126412</td>
+    </tr>
+    <tr>
+      <td>0.572234</td>
+    </tr>
+    <tr>
+      <td>0.240792</td>
+    </tr>
+    <tr>
+      <td>-0.080955</td>
+    </tr>
+    <tr>
+      <td>-1.446013</td>
+    </tr>
+    <tr>
+      <td>-1.222377</td>
+    </tr>
+    <tr>
+      <td>0.891929</td>
+    </tr>
+    <tr>
+      <td>-0.080665</td>
+    </tr>
+    <tr>
+      <td>-1.728093</td>
+    </tr>
+    <tr>
+      <td>0.686994</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+</div>
+</div></body></html>
