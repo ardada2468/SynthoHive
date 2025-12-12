@@ -7,7 +7,7 @@ name = "syntho_hive"
 version = "0.1.0"
 description = "Production Synthetic Data Engine with Relational Integrity"
 authors = [
-  { name = "SynthoHive Team", email = "team@synthohive.dev" },
+  { name = "SynthoHive Team", email = "ardada2468@gmail.com" },
 ]
 license = { text = "MIT" }
 classifiers = [
