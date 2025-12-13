@@ -134,3 +134,12 @@ report.generate(
 3. Commit your changes (`git commit -m 'Add some feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+Huge thannks to the CTGAN Team!
+
+@inproceedings{ctgan,
+  title={Modeling Tabular data using Conditional GAN},
+  author={Xu, Lei and Skoularidou, Maria and Cuesta-Infante, Alfredo and Veeramachaneni, Kalyan},
+  booktitle={Advances in Neural Information Processing Systems},
+  year={2019}
+}
