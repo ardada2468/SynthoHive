@@ -531,6 +531,100 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#explanation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Explanation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Explanation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-setup-spark" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Setup Spark
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-define-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Define Metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-initialize-synthesizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Initialize Synthesizer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-missing-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Missing Data
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-training-ctgan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Training (CTGAN)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-generate-sample" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Generate (sample)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1463,7 +1557,7 @@
 <hr />
 <h2 id="quick-start-single-script">Quick Start: Single Script<a class="headerlink" href="#quick-start-single-script" title="Permanent link">&para;</a></h2>
 <p>You can run this entire workflow in a single file. Save the code below as <code>quickstart.py</code> and run it with <code>python quickstart.py</code>.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span> <span class="n">SparkSession</span>
@@ -1481,18 +1575,17 @@
 <span class="c1"># --- 2. CREATE DUMMY DATA ---</span>
 <span class="c1"># For this demo, we create a small dataset and save it to disk. </span>
 <span class="c1"># SynthoHive normally reads from data lakes (Delta/Parquet) or Hive tables.</span>
+<span class="n">data_dir</span> <span class="o">=</span> <span class="s2">&quot;./quickstart_data&quot;</span>
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">data_dir</span><span class="p">):</span>
+    <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
+<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
+
 <span class="n">raw_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
     <span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">101</span><span class="p">),</span>
     <span class="s2">&quot;age&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">50</span><span class="p">]</span> <span class="o">*</span> <span class="mi">25</span><span class="p">,</span>
     <span class="s2">&quot;city&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;New York&quot;</span><span class="p">,</span> <span class="s2">&quot;London&quot;</span><span class="p">,</span> <span class="s2">&quot;Tokyo&quot;</span><span class="p">,</span> <span class="s2">&quot;Paris&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">25</span><span class="p">,</span>
     <span class="s2">&quot;income&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">50000.0</span><span class="p">,</span> <span class="mf">60000.0</span><span class="p">,</span> <span class="mf">75000.0</span><span class="p">,</span> <span class="mf">90000.0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">25</span>
 <span class="p">})</span>
-
-<span class="c1"># Setup local data directory</span>
-<span class="n">data_dir</span> <span class="o">=</span> <span class="s2">&quot;./quickstart_data&quot;</span>
-<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">data_dir</span><span class="p">):</span>
-    <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
-<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
 
 <span class="n">input_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">data_dir</span><span class="si">}</span><span class="s2">/users_input.parquet&quot;</span>
 <span class="n">raw_data</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="n">input_path</span><span class="p">)</span>
@@ -1531,17 +1624,22 @@
 <span class="n">output_base_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">data_dir</span><span class="si">}</span><span class="s2">/output&quot;</span>
 <span class="n">output_paths</span> <span class="o">=</span> <span class="n">synth</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>
     <span class="n">num_rows</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;users&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">},</span>
-    <span class="n">output_path</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span> <span class="c1"># output_format/path might have changed in Facade?</span>
+    <span class="n">output_path</span><span class="o">=</span><span class="n">output_base_path</span><span class="p">,</span>
+    <span class="n">output_format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span>
 <span class="p">)</span>
+
+<span class="c1"># --- 6. INSPECT RESULTS ---</span>
+<span class="c1"># output_paths is a dict mapping table name to the output directory</span>
+<span class="n">synth_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">output_paths</span><span class="p">[</span><span class="s2">&quot;users&quot;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">📊 Generated </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">synth_df</span><span class="p">)</span><span class="si">}</span><span class="s2"> synthetic records:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">synth_df</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+
+<span class="c1"># Clean up</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">spark</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="k">pass</span>
 </code></pre></div>
-Wait, I will verify Synthesizer first.</p>
-<h1 id="-6-inspect-results-">--- 6. INSPECT RESULTS ---<a class="headerlink" href="#-6-inspect-results-" title="Permanent link">&para;</a></h1>
-<p>synth_df = pd.read_parquet(output_paths["users"])
-print(f"\n📊 Generated {len(synth_df)} synthetic records:")
-print(synth_df.head())</p>
-<h1 id="clean-up">Clean up<a class="headerlink" href="#clean-up" title="Permanent link">&para;</a></h1>
-<p>spark.stop()
-```</p>
 <hr />
 <h2 id="explanation">Explanation<a class="headerlink" href="#explanation" title="Permanent link">&para;</a></h2>
 <p>Here is what is happening in the script above:</p>
@@ -1595,7 +1693,7 @@ No manual imputation is required before training.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 13, 2025 05:05:23 UTC">December 13, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 13, 2025 05:15:09 UTC">December 13, 2025</span>
   </span>
 
     
