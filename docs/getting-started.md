@@ -40,18 +40,17 @@ spark = SparkSession.builder \
 # --- 2. CREATE DUMMY DATA ---
 # For this demo, we create a small dataset and save it to disk. 
 # SynthoHive normally reads from data lakes (Delta/Parquet) or Hive tables.
+data_dir = "./quickstart_data"
+if os.path.exists(data_dir):
+    shutil.rmtree(data_dir)
+os.makedirs(data_dir)
+
 raw_data = pd.DataFrame({
     "user_id": range(1, 101),
     "age": [20, 30, 40, 50] * 25,
     "city": ["New York", "London", "Tokyo", "Paris"] * 25,
     "income": [50000.0, 60000.0, 75000.0, 90000.0] * 25
 })
-
-# Setup local data directory
-data_dir = "./quickstart_data"
-if os.path.exists(data_dir):
-    shutil.rmtree(data_dir)
-os.makedirs(data_dir)
 
 input_path = f"{data_dir}/users_input.parquet"
 raw_data.to_parquet(input_path)
@@ -90,18 +89,21 @@ print("✨ Generating data...")
 output_base_path = f"{data_dir}/output"
 output_paths = synth.sample(
     num_rows={"users": 50},
-    output_path="parquet" # output_format/path might have changed in Facade?
+    output_path=output_base_path,
+    output_format="parquet"
 )
-```
-Wait, I will verify Synthesizer first.
 
 # --- 6. INSPECT RESULTS ---
+# output_paths is a dict mapping table name to the output directory
 synth_df = pd.read_parquet(output_paths["users"])
 print(f"\n📊 Generated {len(synth_df)} synthetic records:")
 print(synth_df.head())
 
 # Clean up
-spark.stop()
+try:
+    spark.stop()
+except:
+    pass
 ```
 
 ---
