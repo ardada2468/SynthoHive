@@ -19,4 +19,5 @@ SynthoHive is organized into clear packages:
 3. **Privacy**: sanitizer detects/masks/fakes PII; contextual faker injects locale-aware replacements.
 4. **Validation**: KS/TVD per column, correlation distance, preview tables, HTML/JSON report.
 
+
 See [Data Flow](data-flow.md) for a stepwise diagram and [Guides](guides/fitting.md) for hands-on steps. 
