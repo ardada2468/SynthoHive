@@ -1798,7 +1798,22 @@
 <span class="normal">210</span>
 <span class="normal">211</span>
 <span class="normal">212</span>
-<span class="normal">213</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">StagedOrchestrator</span><span class="p">:</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">StagedOrchestrator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Manage staged relational synthesis across parent/child tables.&quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Metadata</span><span class="p">,</span> <span class="n">spark</span><span class="p">:</span> <span class="n">SparkSession</span><span class="p">):</span>
@@ -1909,23 +1924,27 @@
                 <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">target_pdf</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="n">context_df</span><span class="p">,</span> <span class="n">table_name</span><span class="o">=</span><span class="n">table_name</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_rows_root</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">output_path_base</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_rows_root</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">output_path_base</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute the multi-stage generation pipeline.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            num_rows_root: Mapping of root table name to number of rows to generate.</span>
-<span class="sd">            output_path_base: Base path where generated tables will be stored.</span>
+<span class="sd">            output_path_base: Base path where generated tables will be stored. If None, returns DataFrames in memory.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionary of generated DataFrames {table_name: dataframe}.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">generation_order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">get_generation_order</span><span class="p">()</span>
 
-        <span class="n">generated_tables</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">generated_tables</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">for</span> <span class="n">table_name</span> <span class="ow">in</span> <span class="n">generation_order</span><span class="p">:</span>
             <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
             <span class="n">is_root</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">fk</span>
 
-            <span class="n">output_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_path_base</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span>
+
+            <span class="n">generated_pdf</span> <span class="o">=</span> <span class="kc">None</span>
 
             <span class="k">if</span> <span class="n">is_root</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generating root table: </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -1933,7 +1952,6 @@
                 <span class="n">generated_pdf</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">n_rows</span><span class="p">)</span>
                 <span class="c1"># Assign PKs</span>
                 <span class="n">generated_pdf</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">pk</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_rows</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write_pandas</span><span class="p">(</span><span class="n">generated_pdf</span><span class="p">,</span> <span class="n">output_path</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generating child table: </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -1944,9 +1962,12 @@
                 <span class="n">driver_ref</span> <span class="o">=</span> <span class="n">pk_map</span><span class="p">[</span><span class="n">driver_fk</span><span class="p">]</span>
                 <span class="n">driver_parent_table</span><span class="p">,</span> <span class="n">driver_parent_pk</span> <span class="o">=</span> <span class="n">driver_ref</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
 
-                <span class="c1"># Read Driver Parent Data</span>
-                <span class="n">parent_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_path_base</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">driver_parent_table</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="n">parent_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_dataset</span><span class="p">(</span><span class="n">parent_path</span><span class="p">)</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
+                <span class="c1"># Read Driver Parent Data (From Output or Memory)</span>
+                <span class="k">if</span> <span class="n">output_path_base</span><span class="p">:</span>
+                     <span class="n">parent_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_path_base</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">driver_parent_table</span><span class="si">}</span><span class="s2">&quot;</span>
+                     <span class="n">parent_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_dataset</span><span class="p">(</span><span class="n">parent_path</span><span class="p">)</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                     <span class="n">parent_df</span> <span class="o">=</span> <span class="n">generated_tables</span><span class="p">[</span><span class="n">driver_parent_table</span><span class="p">]</span>
 
                 <span class="n">linkage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linkage_models</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span>
 
@@ -1980,21 +2001,30 @@
                          <span class="n">p_table</span><span class="p">,</span> <span class="n">p_pk</span> <span class="o">=</span> <span class="n">ref</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
 
                          <span class="c1"># Read Secondary Parent</span>
-                         <span class="n">p_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_path_base</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">p_table</span><span class="si">}</span><span class="s2">&quot;</span>
-                         <span class="c1"># Optimization: cache read dfs? For now just read.</span>
-                         <span class="n">p_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_dataset</span><span class="p">(</span><span class="n">p_path</span><span class="p">)</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
+                         <span class="k">if</span> <span class="n">output_path_base</span><span class="p">:</span>
+                             <span class="n">p_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_path_base</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">p_table</span><span class="si">}</span><span class="s2">&quot;</span>
+                             <span class="n">p_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_dataset</span><span class="p">(</span><span class="n">p_path</span><span class="p">)</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
+                         <span class="k">else</span><span class="p">:</span>
+                             <span class="n">p_df</span> <span class="o">=</span> <span class="n">generated_tables</span><span class="p">[</span><span class="n">p_table</span><span class="p">]</span>
+
                          <span class="n">valid_pks</span> <span class="o">=</span> <span class="n">p_df</span><span class="p">[</span><span class="n">p_pk</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
 
                          <span class="c1"># Randomly sample valid PKs for this column</span>
-                         <span class="c1"># Note: This ignores correlations between parents, but ensures Referental Integrity.</span>
                          <span class="n">generated_pdf</span><span class="p">[</span><span class="n">fk_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">valid_pks</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">total_child_rows</span><span class="p">)</span>
 
                      <span class="c1"># Assign PKs</span>
                      <span class="n">generated_pdf</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">pk</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">total_child_rows</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
 
-                     <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write_pandas</span><span class="p">(</span><span class="n">generated_pdf</span><span class="p">,</span> <span class="n">output_path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">generated_pdf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">output_path_base</span><span class="p">:</span>
+                    <span class="n">output_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_path_base</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write_pandas</span><span class="p">(</span><span class="n">generated_pdf</span><span class="p">,</span> <span class="n">output_path</span><span class="p">)</span>
 
-            <span class="n">generated_tables</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+                <span class="c1"># Always store in memory for downstream children if needed (and return if requested)</span>
+                <span class="c1"># For massive datasets this might be risky, but consistent with user request: &quot;save to a df object&quot;</span>
+                <span class="n">generated_tables</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">generated_pdf</span>
+
+        <span class="k">return</span> <span class="n">generated_tables</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -2307,7 +2337,7 @@
 
 
 <a href="#syntho_hive.relational.orchestrator.StagedOrchestrator.generate" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">generate</span><span class="p">(</span><span class="n">num_rows_root</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">output_path_base</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">generate</span><span class="p">(</span><span class="n">num_rows_root</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">output_path_base</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2347,15 +2377,38 @@
                 <code>output_path_base</code>
             </td>
             <td>
-                  <code><span title="str">str</span></code>
+                  <code><span title="typing.Optional">Optional</span>[<span title="str">str</span>]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Base path where generated tables will be stored.</p>
+                <p>Base path where generated tables will be stored. If None, returns DataFrames in memory.</p>
               </div>
             </td>
             <td>
-                <em>required</em>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="typing.Dict">Dict</span>[<span title="str">str</span>, <span title="pandas.DataFrame">DataFrame</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Dictionary of generated DataFrames {table_name: dataframe}.</p>
+              </div>
             </td>
           </tr>
       </tbody>
@@ -2449,23 +2502,42 @@
 <span class="normal">210</span>
 <span class="normal">211</span>
 <span class="normal">212</span>
-<span class="normal">213</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_rows_root</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">output_path_base</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_rows_root</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">output_path_base</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Execute the multi-stage generation pipeline.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        num_rows_root: Mapping of root table name to number of rows to generate.</span>
-<span class="sd">        output_path_base: Base path where generated tables will be stored.</span>
+<span class="sd">        output_path_base: Base path where generated tables will be stored. If None, returns DataFrames in memory.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dictionary of generated DataFrames {table_name: dataframe}.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">generation_order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">get_generation_order</span><span class="p">()</span>
 
-    <span class="n">generated_tables</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">generated_tables</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="k">for</span> <span class="n">table_name</span> <span class="ow">in</span> <span class="n">generation_order</span><span class="p">:</span>
         <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
         <span class="n">is_root</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">fk</span>
 
-        <span class="n">output_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_path_base</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span>
+
+        <span class="n">generated_pdf</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="n">is_root</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generating root table: </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -2473,7 +2545,6 @@
             <span class="n">generated_pdf</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">n_rows</span><span class="p">)</span>
             <span class="c1"># Assign PKs</span>
             <span class="n">generated_pdf</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">pk</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_rows</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write_pandas</span><span class="p">(</span><span class="n">generated_pdf</span><span class="p">,</span> <span class="n">output_path</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generating child table: </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -2484,9 +2555,12 @@
             <span class="n">driver_ref</span> <span class="o">=</span> <span class="n">pk_map</span><span class="p">[</span><span class="n">driver_fk</span><span class="p">]</span>
             <span class="n">driver_parent_table</span><span class="p">,</span> <span class="n">driver_parent_pk</span> <span class="o">=</span> <span class="n">driver_ref</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
 
-            <span class="c1"># Read Driver Parent Data</span>
-            <span class="n">parent_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_path_base</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">driver_parent_table</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="n">parent_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_dataset</span><span class="p">(</span><span class="n">parent_path</span><span class="p">)</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
+            <span class="c1"># Read Driver Parent Data (From Output or Memory)</span>
+            <span class="k">if</span> <span class="n">output_path_base</span><span class="p">:</span>
+                 <span class="n">parent_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_path_base</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">driver_parent_table</span><span class="si">}</span><span class="s2">&quot;</span>
+                 <span class="n">parent_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_dataset</span><span class="p">(</span><span class="n">parent_path</span><span class="p">)</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                 <span class="n">parent_df</span> <span class="o">=</span> <span class="n">generated_tables</span><span class="p">[</span><span class="n">driver_parent_table</span><span class="p">]</span>
 
             <span class="n">linkage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linkage_models</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span>
 
@@ -2520,21 +2594,30 @@
                      <span class="n">p_table</span><span class="p">,</span> <span class="n">p_pk</span> <span class="o">=</span> <span class="n">ref</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
 
                      <span class="c1"># Read Secondary Parent</span>
-                     <span class="n">p_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_path_base</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">p_table</span><span class="si">}</span><span class="s2">&quot;</span>
-                     <span class="c1"># Optimization: cache read dfs? For now just read.</span>
-                     <span class="n">p_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_dataset</span><span class="p">(</span><span class="n">p_path</span><span class="p">)</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
+                     <span class="k">if</span> <span class="n">output_path_base</span><span class="p">:</span>
+                         <span class="n">p_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_path_base</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">p_table</span><span class="si">}</span><span class="s2">&quot;</span>
+                         <span class="n">p_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_dataset</span><span class="p">(</span><span class="n">p_path</span><span class="p">)</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
+                     <span class="k">else</span><span class="p">:</span>
+                         <span class="n">p_df</span> <span class="o">=</span> <span class="n">generated_tables</span><span class="p">[</span><span class="n">p_table</span><span class="p">]</span>
+
                      <span class="n">valid_pks</span> <span class="o">=</span> <span class="n">p_df</span><span class="p">[</span><span class="n">p_pk</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
 
                      <span class="c1"># Randomly sample valid PKs for this column</span>
-                     <span class="c1"># Note: This ignores correlations between parents, but ensures Referental Integrity.</span>
                      <span class="n">generated_pdf</span><span class="p">[</span><span class="n">fk_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">valid_pks</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">total_child_rows</span><span class="p">)</span>
 
                  <span class="c1"># Assign PKs</span>
                  <span class="n">generated_pdf</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">pk</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">total_child_rows</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
 
-                 <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write_pandas</span><span class="p">(</span><span class="n">generated_pdf</span><span class="p">,</span> <span class="n">output_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">generated_pdf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">output_path_base</span><span class="p">:</span>
+                <span class="n">output_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_path_base</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write_pandas</span><span class="p">(</span><span class="n">generated_pdf</span><span class="p">,</span> <span class="n">output_path</span><span class="p">)</span>
 
-        <span class="n">generated_tables</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+            <span class="c1"># Always store in memory for downstream children if needed (and return if requested)</span>
+            <span class="c1"># For massive datasets this might be risky, but consistent with user request: &quot;save to a df object&quot;</span>
+            <span class="n">generated_tables</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">generated_pdf</span>
+
+    <span class="k">return</span> <span class="n">generated_tables</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>

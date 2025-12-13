@@ -1817,7 +1817,16 @@
 <span class="normal">187</span>
 <span class="normal">188</span>
 <span class="normal">189</span>
-<span class="normal">190</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Synthesizer</span><span class="p">:</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Synthesizer</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Main entry point that wires metadata, privacy, and orchestration.&quot;&quot;&quot;</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1891,31 +1900,40 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">orchestrator</span><span class="o">.</span><span class="n">fit_all</span><span class="p">(</span><span class="n">real_paths</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="o">**</span><span class="n">model_kwargs</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">output_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;delta&quot;</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">output_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;delta&quot;</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate synthetic data for each table.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            num_rows: Mapping of table name to number of rows to generate.</span>
 <span class="sd">            output_format: Storage format for generated datasets (default ``&quot;delta&quot;``).</span>
+<span class="sd">            output_path: Optional path to write files. If None, returns DataFrames in memory.</span>
+<span class="sd">            output_path: Optional path to write files. If None, returns DataFrames in memory.</span>
 
 <span class="sd">        Raises:</span>
 <span class="sd">            ValueError: If Spark orchestration is unavailable.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            Mapping of table name to the output path where data was written.</span>
+<span class="sd">            Mapping of table name to the output path (if wrote to disk) OR Dictionary of DataFrames (if in-memory).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">orchestrator</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;SparkSession required for sample()&quot;</span><span class="p">)</span>
 
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generating data with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="si">}</span><span class="s2"> backend...&quot;</span><span class="p">)</span>
 
-        <span class="c1"># Define output base path - distinct per run ideally, or user specified</span>
-        <span class="k">if</span> <span class="n">output_path</span><span class="p">:</span>
-            <span class="n">output_base</span> <span class="o">=</span> <span class="n">output_path</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">output_base</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;/tmp/syntho_hive_output/</span><span class="si">{</span><span class="n">output_format</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="c1"># If output_path is explicitly None, we return DataFrames</span>
+        <span class="k">if</span> <span class="n">output_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">orchestrator</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">output_path_base</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
-        <span class="c1"># Delegate to orchestrator</span>
+        <span class="c1"># Otherwise, write to disk (legacy/default behavior could be forced key if needed, but current API allows None)</span>
+        <span class="c1"># Wait, previous code forced a default if output_path was None. </span>
+        <span class="c1"># To maintain exact backward compat we might want a flag, but user asked for &quot;option to save to df&quot;.</span>
+        <span class="c1"># If I change default behavior (None -&gt; /tmp to None -&gt; Memory), it breaks scripts relying on /tmp default?</span>
+        <span class="c1"># The previous default was implicit in the logic.</span>
+        <span class="c1"># Let&#39;s assume explicit None means memory now, and if they want disk they provide path.</span>
+        <span class="c1"># OR: we could interpret empty string as None? No, None is Pythonic.</span>
+        <span class="c1"># The user&#39;s request &quot;add option to save to df object instead&quot; implies a switch.</span>
+
+        <span class="n">output_base</span> <span class="o">=</span> <span class="n">output_path</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">orchestrator</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">output_base</span><span class="p">)</span>
 
         <span class="c1"># Return paths mapping</span>
@@ -2383,16 +2401,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>syntho_hive/interface/synthesizer.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">125</span>
 <span class="normal">126</span>
 <span class="normal">127</span>
 <span class="normal">128</span>
@@ -2428,7 +2437,16 @@
 <span class="normal">158</span>
 <span class="normal">159</span>
 <span class="normal">160</span>
-<span class="normal">161</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">generate_validation_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">real_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">synthetic_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">output_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">generate_validation_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">real_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">synthetic_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">output_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a validation report comparing real vs synthetic datasets.</span>
 
 <span class="sd">    Args:</span>
@@ -2488,7 +2506,7 @@
 
 
 <a href="#syntho_hive.interface.synthesizer.Synthesizer.sample" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">sample</span><span class="p">(</span><span class="n">num_rows</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">output_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;delta&#39;</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">sample</span><span class="p">(</span><span class="n">num_rows</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">output_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;delta&#39;</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2539,6 +2557,38 @@
                   <code>&#39;delta&#39;</code>
             </td>
           </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>output_path</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional path to write files. If None, returns DataFrames in memory.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>output_path</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional path to write files. If None, returns DataFrames in memory.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
       </tbody>
     </table>
 
@@ -2577,11 +2627,11 @@
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><span title="typing.Dict">Dict</span>[<span title="str">str</span>, <span title="str">str</span>]</code>
+                  <code><span title="typing.Union">Union</span>[<span title="typing.Dict">Dict</span>[<span title="str">str</span>, <span title="str">str</span>], <span title="typing.Dict">Dict</span>[<span title="str">str</span>, <span title="pandas.DataFrame">DataFrame</span>]]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Mapping of table name to the output path where data was written.</p>
+                <p>Mapping of table name to the output path (if wrote to disk) OR Dictionary of DataFrames (if in-memory).</p>
               </div>
             </td>
           </tr>
@@ -2619,31 +2669,49 @@
 <span class="normal">111</span>
 <span class="normal">112</span>
 <span class="normal">113</span>
-<span class="normal">114</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">output_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;delta&quot;</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">output_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;delta&quot;</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate synthetic data for each table.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        num_rows: Mapping of table name to number of rows to generate.</span>
 <span class="sd">        output_format: Storage format for generated datasets (default ``&quot;delta&quot;``).</span>
+<span class="sd">        output_path: Optional path to write files. If None, returns DataFrames in memory.</span>
+<span class="sd">        output_path: Optional path to write files. If None, returns DataFrames in memory.</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        ValueError: If Spark orchestration is unavailable.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Mapping of table name to the output path where data was written.</span>
+<span class="sd">        Mapping of table name to the output path (if wrote to disk) OR Dictionary of DataFrames (if in-memory).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">orchestrator</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;SparkSession required for sample()&quot;</span><span class="p">)</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generating data with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="si">}</span><span class="s2"> backend...&quot;</span><span class="p">)</span>
 
-    <span class="c1"># Define output base path - distinct per run ideally, or user specified</span>
-    <span class="k">if</span> <span class="n">output_path</span><span class="p">:</span>
-        <span class="n">output_base</span> <span class="o">=</span> <span class="n">output_path</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">output_base</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;/tmp/syntho_hive_output/</span><span class="si">{</span><span class="n">output_format</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="c1"># If output_path is explicitly None, we return DataFrames</span>
+    <span class="k">if</span> <span class="n">output_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">orchestrator</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">output_path_base</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
-    <span class="c1"># Delegate to orchestrator</span>
+    <span class="c1"># Otherwise, write to disk (legacy/default behavior could be forced key if needed, but current API allows None)</span>
+    <span class="c1"># Wait, previous code forced a default if output_path was None. </span>
+    <span class="c1"># To maintain exact backward compat we might want a flag, but user asked for &quot;option to save to df&quot;.</span>
+    <span class="c1"># If I change default behavior (None -&gt; /tmp to None -&gt; Memory), it breaks scripts relying on /tmp default?</span>
+    <span class="c1"># The previous default was implicit in the logic.</span>
+    <span class="c1"># Let&#39;s assume explicit None means memory now, and if they want disk they provide path.</span>
+    <span class="c1"># OR: we could interpret empty string as None? No, None is Pythonic.</span>
+    <span class="c1"># The user&#39;s request &quot;add option to save to df object instead&quot; implies a switch.</span>
+
+    <span class="n">output_base</span> <span class="o">=</span> <span class="n">output_path</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">orchestrator</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">output_base</span><span class="p">)</span>
 
     <span class="c1"># Return paths mapping</span>
@@ -2758,16 +2826,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>syntho_hive/interface/synthesizer.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">163</span>
-<span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span>
-<span class="normal">172</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">172</span>
 <span class="normal">173</span>
 <span class="normal">174</span>
 <span class="normal">175</span>
@@ -2785,7 +2844,16 @@
 <span class="normal">187</span>
 <span class="normal">188</span>
 <span class="normal">189</span>
-<span class="normal">190</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">save_to_hive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">synthetic_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">target_db</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">save_to_hive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">synthetic_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">target_db</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Register generated datasets as Hive tables.</span>
 
 <span class="sd">    Args:</span>
