@@ -125,6 +125,7 @@ The `Synthesizer` class is the main entry point. It takes your metadata and priv
 The `fit` method learns the statistical distribution of your real data.
 - **`data`**: A dictionary checking table names to their file paths (or Hive table names).
 - **`epochs`**: Low (10) for this demo, but should be higher (300-500) for high-fidelity results.
+- **`checkpoint_dir`**: (Optional) Directory to save the best model and training metrics.
 
 ### 5. Generate (`sample`)
 The `sample` method creates new data based on the trained model.

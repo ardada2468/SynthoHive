@@ -73,8 +73,21 @@ model = CTGAN(
 ```python
 # data: DataFrame of child table (target)
 # context: DataFrame of parent attributes for each row (optional)
-model.fit(data, context=context, table_name="transactions")
+# checkpoint_dir: Directory to save best model and metrics (optional)
+model.fit(
+    data, 
+    context=context, 
+    table_name="transactions",
+    checkpoint_dir="./checkpoints/transactions",
+    log_metrics=True
+)
 ```
+
+### Checkpointing & Monitoring
+During training, the model can automatically save artifacts to a `checkpoint_dir`:
+-   **`best_model.pt`**: The state dictionary of the model with the lowest Generator Loss.
+-   **`last_model.pt`**: The model state at the end of the last epoch.
+-   **`training_metrics.csv`**: A CSV log containing `epoch`, `loss_g`, and `loss_d` for every epoch.
 
 ### Sampling
 ```python

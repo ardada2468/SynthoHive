@@ -4,6 +4,8 @@ import torch.optim as optim
 import torch.nn.functional as F
 import pandas as pd
 import numpy as np
+import os
+import csv
 from typing import Optional, List, Any, Tuple
 from .base import ConditionalGenerativeModel
 from .layers import ResidualLayer, Discriminator, EntityEmbeddingLayer
@@ -218,15 +220,23 @@ class CTGAN(ConditionalGenerativeModel):
         
         self.discriminator = Discriminator(disc_input_dim, self.discriminator_dim[0]).to(self.device)
         
-    def fit(self, data: pd.DataFrame, context: Optional[pd.DataFrame] = None, table_name: Optional[str] = None, **kwargs: Any) -> None:
+    def fit(self, data: pd.DataFrame, context: Optional[pd.DataFrame] = None, table_name: Optional[str] = None, checkpoint_dir: Optional[str] = None, log_metrics: bool = True, **kwargs: Any) -> None:
         """Train the CTGAN model on tabular data.
 
         Args:
             data: Child table data (target) to model.
             context: Parent attributes to condition on (aligned row-wise).
             table_name: Table name for metadata lookup and constraint handling.
+            checkpoint_dir: Directory to save checkpoints (best model, metrics). Defaults to None.
+            log_metrics: Whether to save training metrics to a CSV file. Defaults to True.
             **kwargs: Extra training options (unused placeholder for compatibility).
         """
+        # 0. Setup Checkpointing
+        if checkpoint_dir:
+            os.makedirs(checkpoint_dir, exist_ok=True)
+        
+        best_loss = float('inf')
+        history = []
         # 1. Fit and Transform Data
         self.transformer.fit(data, table_name=table_name)
         train_data = self.transformer.transform(data)
@@ -389,6 +399,34 @@ class CTGAN(ConditionalGenerativeModel):
                     
             if epoch % 10 == 0:
                 print(f"Epoch {epoch}: Loss D={loss_D.item():.4f}, Loss G={loss_G.item():.4f}")
+
+            # --- Checkpointing & Logging ---
+            current_loss_g = loss_G.item()
+            current_loss_d = loss_D.item()
+            
+            if log_metrics:
+                history.append({
+                    'epoch': epoch,
+                    'loss_g': current_loss_g,
+                    'loss_d': current_loss_d
+                })
+
+            if checkpoint_dir and current_loss_g < best_loss:
+                best_loss = current_loss_g
+                self.save(os.path.join(checkpoint_dir, "best_model.pt"))
+        
+        # End of training: Save metrics and last model
+        if checkpoint_dir:
+            self.save(os.path.join(checkpoint_dir, "last_model.pt"))
+            
+            if log_metrics and history:
+                metrics_path = os.path.join(checkpoint_dir, "training_metrics.csv")
+                keys = history[0].keys()
+                with open(metrics_path, 'w', newline='') as f:
+                    dict_writer = csv.DictWriter(f, fieldnames=keys)
+                    dict_writer.writeheader()
+                    dict_writer.writerows(history)
+                print(f"Training metrics saved to {metrics_path}")
 
     def sample(self, num_rows: int, context: Optional[pd.DataFrame] = None, **kwargs: Any) -> pd.DataFrame:
         """Generate synthetic samples, optionally conditioned on parent context.
