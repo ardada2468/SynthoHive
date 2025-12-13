@@ -30,6 +30,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          # Install CPU-only torch to save massive amount of disk space
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install .[docs]
 
       - name: Build site
