@@ -1,7 +1,7 @@
 # SynthoHive 2.0
 
 [![CI](https://github.com/Start-End/SynthoHive/actions/workflows/ci.yml/badge.svg)](https://github.com/Start-End/SynthoHive/actions/workflows/ci.yml)
-[![PyPI version](https://badge.fury.io/py/syntho-hive.svg)](https://badge.fury.io/py/syntho-hive)
+[![PyPI version](https://badge.fury.io/py/synthohive.svg)](https://badge.fury.io/py/synthohive)
 
 **SynthoHive** is a comprehensive, production-grade synthetic data engine designed for enterprise environments. It specializes in generating high-utility, privacy-preserving synthetic data for complex relational databases.
 
