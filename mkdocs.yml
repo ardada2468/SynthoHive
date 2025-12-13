@@ -1,8 +1,8 @@
 site_name: SynthoHive
 site_description: "Synthetic data engine with relational integrity"
-site_url: https://arnavdadarya.github.io/SynthoHive
-repo_url: https://github.com/arnavdadarya/FedEx/SynthoHive
-repo_name: arnavdadarya/FedEx/SynthoHive
+site_url: https://ardada2468.github.io/SynthoHive
+repo_url: https://github.com/ardada2468/SynthoHive
+repo_name: ardada2468/SynthoHive
 docs_dir: docs
 theme:
   name: material
