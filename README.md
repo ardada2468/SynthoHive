@@ -12,6 +12,7 @@ Beyond simple single-table generation, SynthoHive excels at maintaining referent
 *   **Multi-Table Relational Generation**: Maintains parent-child relationships and foreign key integrity using intelligent graph-based orchestration.
 *   **Privacy-First Design**: Automated PII detection and sanitization logic to ensure no sensitive data leaks into the model training process.
 *   **Deep Generative Models**: State-of-the-art CTGAN (Conditional Tabular GAN) and WGAN-GP implementations for robust statistical fidelity.
+*   **Null Value Support**: Native handling of missing data in both continuous (via null indicators) and categorical (via sentinel tokens) columns.
 *   **Enterprise Scale**: Built with Spark integration to handle large-scale datasets efficiently.
 *   **Comprehensive Validation**: Automated statistical reports (HTML/JSON) comparing real vs. synthetic data utility (KS Test, TVD, Correlation analysis).
 
@@ -110,7 +111,8 @@ orchestrator = Orchestrator(metadata)
 orchestrator.fit_all(real_data_paths={"users": "data/users.csv", "orders": "data/orders.csv"})
 
 # 3. Generate 1000 root users (and associated orders)
-orchestrator.generate(num_rows_root=1000, output_path="synthetic_output/")
+# Returns a dictionary of DataFrames. Can optionally write to disk via `output_path_base`.
+synthetic_data = orchestrator.generate(num_rows_root={"users": 1000})
 ```
 
 ### C. Validation

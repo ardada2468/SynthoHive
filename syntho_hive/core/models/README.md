@@ -36,7 +36,8 @@ The model does not train on raw data. It relies on the `DataTransformer` (in `..
     -   Each value `x` is represented as a concatenation of:
         -   **Mode Vector**: A one-hot vector indicating which cluster/mode the value belongs to.
         -   **Scalar**: The normalized value within that cluster (mean-centered and scaled).
-    -   This allows the model to capture multi-modal distributions (e.g., income distribution with distinct peaks for different brackets).
+        -   **Null Indicator**: (Optional) 1 if the value was missing, 0 otherwise.
+    -   This allows the model to capture multi-modal distributions (e.g., income distribution with distinct peaks for different brackets) and missing data patterns.
 
 2.  **Categorical Columns**:
     -   Converted using **One-Hot Encoding**.

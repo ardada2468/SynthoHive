@@ -28,8 +28,8 @@ Trains models for every table in the schema. Accepts `epochs`, `batch_size`, and
 3.  For **Root Tables**:
     *   Trains a standard `CTGAN` (unconditional).
 
-#### `generate(num_rows_root, output_path)`
-Generates synthetic data ensuring referential integrity:
+#### `generate(num_rows_root, output_path_base=None, ...)`
+Generates synthetic data ensuring referential integrity. Returns a dictionary of DataFrames, and optionally writes to `output_path_base`.
 1.  Determines generation order (Parents before Children).
 2.  **Step 1: Generate Root**:
     *   Samples $N$ rows from the Root table's `CTGAN`.

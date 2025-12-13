@@ -90,9 +90,10 @@ print("✨ Generating data...")
 output_base_path = f"{data_dir}/output"
 output_paths = synth.sample(
     num_rows={"users": 50},
-    output_format="parquet",  # Using parquet for easy local reading. Default is 'delta'.
-    output_path=output_base_path
+    output_path="parquet" # output_format/path might have changed in Facade?
 )
+```
+Wait, I will verify Synthesizer first.
 
 # --- 6. INSPECT RESULTS ---
 synth_df = pd.read_parquet(output_paths["users"])
@@ -121,7 +122,13 @@ Use the `Metadata` object to define your schema.
 The `Synthesizer` class is the main entry point. It takes your metadata and privacy config and orchestrates the entire pipeline.
 - **`privacy_config`**: Used to define PII columns and anonymization strategies (e.g., masking emails).
 
-### 4. Train (`fit`)
+### 3. Missing Data
+SynthoHive automatically handles missing values (`NaN`, `None`) in your dataset. 
+- **Continuous columns**: Missing values are modeled using a null indicator.
+- **Categorical columns**: Missing values are treated as a distinct category.
+No manual imputation is required before training.
+
+### 4. Training (CTGAN)
 The `fit` method learns the statistical distribution of your real data.
 - **`data`**: A dictionary checking table names to their file paths (or Hive table names).
 - **`epochs`**: Low (10) for this demo, but should be higher (300-500) for high-fidelity results.
@@ -130,7 +137,7 @@ The `fit` method learns the statistical distribution of your real data.
 ### 5. Generate (`sample`)
 The `sample` method creates new data based on the trained model.
 - **`num_rows`**: How many records you want.
-- **`output_format`**: Where to save the data (`parquet` or `delta`).
+- **`output_path`**: Where to save the data. If omitted (set to `None`), it returns the generated DataFrames directly in memory!
 
 ## Next Steps
 

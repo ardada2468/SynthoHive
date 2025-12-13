@@ -58,9 +58,9 @@ syntho_hive/
     *   `epochs`: Default 300. Controls CTGAN training duration.
     *   **Raises**: `ValueError` if Spark is missing.
 
-*   `sample(self, num_rows: Dict[str, int], output_format: str = "delta", output_path: Optional[str] = None) -> Dict[str, str]`
+*   `sample(self, num_rows: Dict[str, int], output_format: str = "delta", output_path: Optional[str] = None) -> Union[Dict[str, str], Dict[str, pd.DataFrame]]`
     *   `num_rows`: Count for **Root Tables** only. Child counts are derived.
-    *   **Returns**: Map of `{table_name: absolute_output_path}`.
+    *   **Returns**: Map of `{table_name: path}` (if `output_path` provided) OR `{table_name: pd.DataFrame}` (if `output_path` is None).
 
 #### `Metadata` (Pydantic Model)
 **File**: `syntho_hive/interface/config.py`
@@ -98,10 +98,11 @@ syntho_hive/
 
 *   **Continuous Columns**:
     *   **Model**: `BayesianGaussianMixture` (VGM) with `n_components=10`.
-    *   **Encoded**: `[OneHot(Cluster_Assignment) | Scalar(Normalized_Value)]`.
-    *   **Dim**: $10 + 1 = 11$ dimensions per column.
+    *   **Encoded**: `[OneHot(Cluster_Assignment) | Scalar(Normalized_Value) | Null_Indicator]`.
+    *   **Dim**: $10 + 1 + 1 = 12$ dimensions per column (if nulls present).
+    *   **Null Handling**: Explicitly models missing values via a dedicated indicator column.
 *   **Categorical Columns**:
-    *   **Low Card**: `OneHotEncoder`. Dim = $K$.
+    *   **Low Card**: `OneHotEncoder`. Dim = $K$. Nulls treated as distinct category `<NAN>`.
     *   **High Card**: `LabelEncoder`. Dim = $1$ (Integer Index).
 
 #### `EntityEmbeddingLayer`

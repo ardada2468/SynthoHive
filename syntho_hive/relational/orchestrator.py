@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, Union, Tuple
+from typing import Dict, Any, List, Union, Tuple, Optional
 try:
     from pyspark.sql import SparkSession
     from pyspark.sql.functions import pandas_udf, PandasUDFType
@@ -125,23 +125,27 @@ class StagedOrchestrator:
                 model.fit(target_pdf, context=context_df, table_name=table_name)
                 self.models[table_name] = model
             
-    def generate(self, num_rows_root: Dict[str, int], output_path_base: str):
+    def generate(self, num_rows_root: Dict[str, int], output_path_base: Optional[str] = None) -> Dict[str, pd.DataFrame]:
         """Execute the multi-stage generation pipeline.
 
         Args:
             num_rows_root: Mapping of root table name to number of rows to generate.
-            output_path_base: Base path where generated tables will be stored.
+            output_path_base: Base path where generated tables will be stored. If None, returns DataFrames in memory.
+            
+        Returns:
+            Dictionary of generated DataFrames {table_name: dataframe}.
         """
         generation_order = self.graph.get_generation_order()
         
-        generated_tables = set()
+        generated_tables = {}
         
         for table_name in generation_order:
             config = self.metadata.get_table(table_name)
             is_root = not config.fk
             
-            output_path = f"{output_path_base}/{table_name}"
             model = self.models[table_name]
+            
+            generated_pdf = None
             
             if is_root:
                 print(f"Generating root table: {table_name}")
@@ -149,7 +153,6 @@ class StagedOrchestrator:
                 generated_pdf = model.sample(n_rows)
                 # Assign PKs
                 generated_pdf[config.pk] = range(1, n_rows + 1)
-                self.io.write_pandas(generated_pdf, output_path)
             else:
                 print(f"Generating child table: {table_name}")
                 
@@ -160,9 +163,12 @@ class StagedOrchestrator:
                 driver_ref = pk_map[driver_fk]
                 driver_parent_table, driver_parent_pk = driver_ref.split(".")
                 
-                # Read Driver Parent Data
-                parent_path = f"{output_path_base}/{driver_parent_table}"
-                parent_df = self.io.read_dataset(parent_path).toPandas()
+                # Read Driver Parent Data (From Output or Memory)
+                if output_path_base:
+                     parent_path = f"{output_path_base}/{driver_parent_table}"
+                     parent_df = self.io.read_dataset(parent_path).toPandas()
+                else:
+                     parent_df = generated_tables[driver_parent_table]
                 
                 linkage = self.linkage_models[table_name]
 
@@ -196,18 +202,27 @@ class StagedOrchestrator:
                          p_table, p_pk = ref.split(".")
                          
                          # Read Secondary Parent
-                         p_path = f"{output_path_base}/{p_table}"
-                         # Optimization: cache read dfs? For now just read.
-                         p_df = self.io.read_dataset(p_path).toPandas()
+                         if output_path_base:
+                             p_path = f"{output_path_base}/{p_table}"
+                             p_df = self.io.read_dataset(p_path).toPandas()
+                         else:
+                             p_df = generated_tables[p_table]
+                             
                          valid_pks = p_df[p_pk].values
                          
                          # Randomly sample valid PKs for this column
-                         # Note: This ignores correlations between parents, but ensures Referental Integrity.
                          generated_pdf[fk_col] = np.random.choice(valid_pks, size=total_child_rows)
                      
                      # Assign PKs
                      generated_pdf[config.pk] = range(1, total_child_rows + 1)
                      
-                     self.io.write_pandas(generated_pdf, output_path)
+            if generated_pdf is not None:
+                if output_path_base:
+                    output_path = f"{output_path_base}/{table_name}"
+                    self.io.write_pandas(generated_pdf, output_path)
+                
+                # Always store in memory for downstream children if needed (and return if requested)
+                # For massive datasets this might be risky, but consistent with user request: "save to a df object"
+                generated_tables[table_name] = generated_pdf
             
-            generated_tables.add(table_name)
+        return generated_tables

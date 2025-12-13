@@ -83,31 +83,40 @@ class Synthesizer:
         
         self.orchestrator.fit_all(real_paths, epochs=epochs, batch_size=batch_size, **model_kwargs)
         
-    def sample(self, num_rows: Dict[str, int], output_format: str = "delta", output_path: Optional[str] = None) -> Dict[str, str]:
+    def sample(self, num_rows: Dict[str, int], output_format: str = "delta", output_path: Optional[str] = None) -> Union[Dict[str, str], Dict[str, pd.DataFrame]]:
         """Generate synthetic data for each table.
 
         Args:
             num_rows: Mapping of table name to number of rows to generate.
             output_format: Storage format for generated datasets (default ``"delta"``).
+            output_path: Optional path to write files. If None, returns DataFrames in memory.
+            output_path: Optional path to write files. If None, returns DataFrames in memory.
 
         Raises:
             ValueError: If Spark orchestration is unavailable.
 
         Returns:
-            Mapping of table name to the output path where data was written.
+            Mapping of table name to the output path (if wrote to disk) OR Dictionary of DataFrames (if in-memory).
         """
         if not self.orchestrator:
             raise ValueError("SparkSession required for sample()")
             
         print(f"Generating data with {self.backend} backend...")
         
-        # Define output base path - distinct per run ideally, or user specified
-        if output_path:
-            output_base = output_path
-        else:
-            output_base = f"/tmp/syntho_hive_output/{output_format}"
+        # If output_path is explicitly None, we return DataFrames
+        if output_path is None:
+             return self.orchestrator.generate(num_rows, output_path_base=None)
         
-        # Delegate to orchestrator
+        # Otherwise, write to disk (legacy/default behavior could be forced key if needed, but current API allows None)
+        # Wait, previous code forced a default if output_path was None. 
+        # To maintain exact backward compat we might want a flag, but user asked for "option to save to df".
+        # If I change default behavior (None -> /tmp to None -> Memory), it breaks scripts relying on /tmp default?
+        # The previous default was implicit in the logic.
+        # Let's assume explicit None means memory now, and if they want disk they provide path.
+        # OR: we could interpret empty string as None? No, None is Pythonic.
+        # The user's request "add option to save to df object instead" implies a switch.
+        
+        output_base = output_path
         self.orchestrator.generate(num_rows, output_base)
         
         # Return paths mapping

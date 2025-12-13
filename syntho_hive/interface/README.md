@@ -48,8 +48,11 @@ synthesizer.fit(
     batch_size=500     # Configurable batch size
 )
 
-# Generate
-paths = synthesizer.sample(num_rows={"users": 1000})
+# Generate (returns dict of paths if output_path is set, else dict of DataFrames)
+paths = synthesizer.sample(
+    num_rows={"users": 1000},
+    output_path="/tmp/synthetic_data" # Optional: omit to get DataFrames in memory
+)
 
 # Save results
 synthesizer.save_to_hive(paths, target_db="synthetic_db")

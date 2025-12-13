@@ -41,10 +41,11 @@ The `ClusterBasedNormalizer`:
 2.  **Transforms**:
     -   Predicts the **Cluster Probability** (which mode does this point belong to?).
     -   Calculates a **Normalized Scalar** (where is this point relative to that mode's mean/std?).
-3.  **Output encoding**: A value $x$ becomes a vector:
-    $$ [\underbrace{0, 1, 0, \dots}_{\text{One-Hot Cluster}}, \underbrace{0.45}_{\text{Normalized Scalar}}] $$
+4.  **Null Handling**: If the column contains missing values, a **Null Indicator** is added to the output vector.
+5.  **Output encoding**: A value $x$ becomes a vector:
+    $$ [\underbrace{0, 1, 0, \dots}_{\text{One-Hot Cluster}}, \underbrace{0.45}_{\text{Normalized Scalar}}, \underbrace{0}_{\text{Null Ind}}] $$
 
-This allows the GAN to learn: "This point is in Cluster 2, and it's slightly above the cluster mean."
+This allows the GAN to learn: "This point is in Cluster 2, and it's slightly above the cluster mean." OR "This point is Null."
 
 ## Usage
 

@@ -25,6 +25,13 @@ class DataTransformer:
         self.output_dim = 0
         self._excluded_columns = []
         
+    def _prepare_categorical(self, series: pd.Series) -> pd.Series:
+        """Fill nulls with a sentinel value and ensure string type."""
+        # Convert to object to handle mixed types (e.g. numbers and NaNs)
+        series = series.astype(object)
+        return series.fillna('<NAN>').astype(str)
+
+        
     def fit(self, data: pd.DataFrame, table_name: Optional[str] = None):
         """Fit per-column transformers and collect column layout metadata.
 
@@ -61,8 +68,8 @@ class DataTransformer:
                 transformer = ClusterBasedNormalizer(n_components=10)
                 transformer.fit(col_data)
                 
-                # Dim = n_components (one-hot) + 1 (scalar)
-                dim = transformer.n_components + 1
+                # Dim is managed by the transformer now (dynamic based on nulls)
+                dim = transformer.output_dim
                 self._transformers[col] = transformer
                 self._column_info[col] = {
                     'type': 'continuous',
@@ -81,8 +88,12 @@ class DataTransformer:
                     # Use LabelEncoder for Entity Embeddings
                     from sklearn.preprocessing import LabelEncoder
                     transformer = LabelEncoder()
+                    
+                    # Fill Nulls
+                    col_data_filled = self._prepare_categorical(col_data)
+                    
                     # LabelEncoder expects 1D array
-                    transformer.fit(col_data)
+                    transformer.fit(col_data_filled)
                     
                     dim = 1 # Just the index
                     self._transformers[col] = transformer
@@ -96,7 +107,11 @@ class DataTransformer:
                 else:
                     # Use OneHotEncoder
                     transformer = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
-                    values = col_data.values.reshape(-1, 1)
+                    
+                    # Fill Nulls
+                    col_data_filled = self._prepare_categorical(col_data)
+                    
+                    values = col_data_filled.values.reshape(-1, 1)
                     transformer.fit(values)
                     
                     dim = len(transformer.categories_[0])
@@ -134,15 +149,17 @@ class DataTransformer:
             col_data = data[col]
             
             if info['type'] == 'continuous':
-                # Returns (N, n_components + 1)
+                # Returns (N, n_components + 1 [+ 1 if nulls])
                 transformed = transformer.transform(col_data)
             elif info['type'] == 'categorical_embedding':
                 # Returns (N, 1)
-                values = transformer.transform(col_data)
+                col_data_filled = self._prepare_categorical(col_data)
+                values = transformer.transform(col_data_filled)
                 transformed = values.reshape(-1, 1)
             else:
                 # Returns (N, n_categories)
-                values = col_data.values.reshape(-1, 1)
+                col_data_filled = self._prepare_categorical(col_data)
+                values = col_data_filled.values.reshape(-1, 1)
                 transformed = transformer.transform(values)
             
             output_arrays.append(transformed)
@@ -181,8 +198,12 @@ class DataTransformer:
                  # We need ints for LabelEncoder.
                  indices = np.clip(col_data.flatten().astype(int), 0, info['num_categories'] - 1)
                  original_values = transformer.inverse_transform(indices)
+                 # Restore NaNs
+                 original_values = pd.Series(original_values).replace('<NAN>', np.nan).values
             else:
                 original_values = transformer.inverse_transform(col_data).flatten()
+                # Restore NaNs
+                original_values = pd.Series(original_values).replace('<NAN>', np.nan).values
             
             # Apply Constraints
             if self.metadata and hasattr(self, 'table_name') and self.table_name:
@@ -225,6 +246,9 @@ class ClusterBasedNormalizer:
         )
         self.means = None
         self.stds = None
+        self.has_nulls = False
+        self.fill_value = 0.0
+        self.output_dim = 0
         
     def fit(self, data: pd.Series):
         """Fit the Bayesian GMM on a continuous series.
@@ -232,7 +256,17 @@ class ClusterBasedNormalizer:
         Args:
             data: Continuous pandas Series to normalize.
         """
-        values = data.values.reshape(-1, 1)
+        # 1. Handle Nulls
+        self.has_nulls = data.isnull().any()
+        if self.has_nulls:
+            self.fill_value = data.mean()
+            # Impute for training GMM
+            values = data.fillna(self.fill_value).values.reshape(-1, 1)
+            self.output_dim = self.n_components + 1 + 1 # +1 for null indicator
+        else:
+            values = data.values.reshape(-1, 1)
+            self.output_dim = self.n_components + 1
+
         self.model.fit(values)
         self.means = self.model.means_.flatten() # (n_components,)
         self.stds = np.sqrt(self.model.covariances_).flatten() # (n_components,)
@@ -244,48 +278,76 @@ class ClusterBasedNormalizer:
             data: Continuous pandas Series to transform.
 
         Returns:
-            Numpy array of shape ``(N, n_components + 1)`` with one-hot cluster and scaled value.
+            Numpy array of shape ``(N, n_components + 1 [+1])`` with one-hot cluster, scaled value, [null_ind].
         """
-        values = data.values.reshape(-1, 1)
-        n_samples = len(values)
+        values_raw = data.values.reshape(-1, 1)
+        n_samples = len(values_raw)
         
-        # 1. Get cluster probabilities: P(c|x)
-        probs = self.model.predict_proba(values) # (N, n_components)
+        if self.has_nulls:
+            # 0. Create Null Indicator
+            null_indicator = pd.isnull(data).values.astype(float).reshape(-1, 1)
+            
+            # 1. Impute for projection
+            values_clean = data.fillna(self.fill_value).values.reshape(-1, 1)
+        else:
+            values_clean = values_raw
+        
+        # 2. Get cluster probabilities: P(c|x)
+        probs = self.model.predict_proba(values_clean) # (N, n_components)
         
         # 2. Sample component c ~ P(c|x) (Argmax for simplicity/determinism in this impl)
         # CTGAN uses argmax during interaction but sampling during training prep sometimes. 
         # Using argmax is stable.
+        # 3. Sample component c ~ P(c|x) (Argmax for simplicity/determinism in this impl)
+        # CTGAN uses argmax during interaction but sampling during training prep sometimes. 
+        # Using argmax is stable.
         cluster_assignments = np.argmax(probs, axis=1)
         
-        # 3. Calculate normalized scalar: v = (x - mu_c) / (4 * sigma_c)
+        # 4. Calculate normalized scalar: v = (x - mu_c) / (4 * sigma_c)
         # Clip to [-1, 1] usually, or roughly there.
         means = self.means[cluster_assignments]
         stds = self.stds[cluster_assignments]
         
-        normalized_values = (values.flatten() - means) / (4 * stds)
+        normalized_values = (values_clean.flatten() - means) / (4 * stds)
         normalized_values = normalized_values.reshape(-1, 1)
         
-        # 4. Create One-Hot encoding of cluster assignment
+        # 5. Create One-Hot encoding of cluster assignment
         cluster_one_hot = np.zeros((n_samples, self.n_components))
         cluster_one_hot[np.arange(n_samples), cluster_assignments] = 1
         
-        # Output: [one_hot_cluster, scalar]
-        return np.concatenate([cluster_one_hot, normalized_values], axis=1)
+        # Output: [one_hot_cluster, scalar, (null_indicator)]
+        if self.has_nulls:
+            return np.concatenate([cluster_one_hot, normalized_values, null_indicator], axis=1)
+        else:
+            return np.concatenate([cluster_one_hot, normalized_values], axis=1)
 
     def inverse_transform(self, data: np.ndarray) -> pd.Series:
         """Reconstruct approximate original values from normalized representation.
 
         Args:
-            data: Array shaped ``(N, n_components + 1)`` produced by ``transform``.
+            data: Array shaped ``(N, n_components + 1 [+1])`` produced by ``transform``.
 
         Returns:
             Pandas Series of reconstructed continuous values.
         """
-        # data shape: (N, n_components + 1)
+        # data shape: (N, n_components + 1 [+1])
         
-        # Split into one-hot and scalar
-        cluster_one_hot = data[:, :-1]
-        scalars = data[:, -1]
+        current_idx = 0
+        
+        # 1. Cluster One-Hot
+        cluster_one_hot = data[:, current_idx : current_idx + self.n_components]
+        current_idx += self.n_components
+        
+        # 2. Scalar
+        scalars = data[:, current_idx]
+        current_idx += 1
+        
+        # 3. Null Indicator
+        if self.has_nulls:
+            null_indicators = data[:, current_idx]
+            current_idx += 1
+        else:
+            null_indicators = None
         
         # Identify cluster
         cluster_assignments = np.argmax(cluster_one_hot, axis=1)
@@ -295,5 +357,13 @@ class ClusterBasedNormalizer:
         
         # Reconstruct: x = v * 4 * sigma_c + mu_c
         reconstructed_values = scalars * 4 * stds + means
+        
+        # Apply Null Masking
+        if null_indicators is not None:
+            # If null indicator > 0.5 (generated as sigmoid usually, but here just boolean/float)
+            # Generator should output something close to 0 or 1.
+            # We assume threshold 0.5
+            is_null = null_indicators > 0.5
+            reconstructed_values[is_null] = np.nan
         
         return pd.Series(reconstructed_values)
