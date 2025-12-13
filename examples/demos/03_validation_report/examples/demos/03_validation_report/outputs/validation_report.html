@@ -1,0 +1,253 @@
+<html>
+            <head>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f9f9f9; color: #333; }
+                    h1, h2, h3 { color: #2c3e50; }
+                    .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+                    
+                    /* Tables */
+                    table { border-collapse: collapse; width: 100%; margin-bottom: 20px; font-size: 14px; }
+                    th, td { border: 1px solid #e1e4e8; padding: 10px; text-align: left; }
+                    th { background-color: #f1f8ff; color: #0366d6; font-weight: 600; }
+                    tr:nth-child(even) { background-color: #f8f9fa; }
+                    
+                    /* Status Colors */
+                    .pass { color: #28a745; font-weight: bold; }
+                    .fail { color: #dc3545; font-weight: bold; }
+                    
+                    /* Layout */
+                    .section { margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px; }
+                    .metric-box { background: #f0f4f8; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 5px solid #0366d6; }
+                    .row { display: flex; gap: 20px; }
+                    .col { flex: 1; overflow-x: auto; }
+                    
+                    /* Tabs/Previews */
+                    .preview-header { font-weight: bold; margin-bottom: 10px; color: #555; }
+                    .scroll-table { max-height: 400px; overflow-y: auto; display: block; }
+                </style>
+            </head>
+            <body>
+            <div class="container">
+                <h1>Validation Report</h1>
+                
+                <div class="metric-box">
+                    <h3>Metric Explanations</h3>
+                    <ul>
+                        <li><strong>KS Test (Kolmogorov-Smirnov):</strong> Used for continuous numerical columns. Compares the cumulative distribution functions of the real and synthetic data. <br>
+                            <em>Result:</em> Returns a p-value. If p > 0.05, we fail to reject the null hypothesis (i.e., distributions are likely the same).</li>
+                        <li><strong>TVD (Total Variation Distance):</strong> Used for categorical or discrete columns. Measures the maximum difference between probabilities assigned to the same event by two distributions. <br>
+                            <em>Result:</em> Value between 0 and 1. Lower is better (0 means identical). We consider < 0.1 as passing.</li>
+                        <li><strong>Correlation Distance:</strong> Measures how well the pairwise correlations between numerical columns are preserved. Calculated as the Frobenius norm of the difference between correlation matrices. <br>
+                            <em>Result:</em> Lower is better (0 means identical correlation structure).</li>
+                    </ul>
+                </div>
+            
+<div class='section'><h2>Table: users</h2>
+<p><strong>Correlation Distance:</strong> 0.2625</p>
+<h3>Column Validation Metrics</h3>
+<table><tr><th>Column</th><th>Test Type</th><th>Statistic</th><th>P-Value / Score</th><th>Status</th></tr>
+<tr><td>user_id</td><td>ks_test</td><td>0.0000</td><td>1.0000</td><td class='pass'>PASS</td></tr>
+<tr><td>age</td><td>ks_test</td><td>0.0000</td><td>1.0000</td><td class='pass'>PASS</td></tr>
+<tr><td>region</td><td>tvd</td><td>0.1467</td><td>N/A</td><td class='fail'>FAIL</td></tr>
+<tr><td>monthly_spend</td><td>ks_test</td><td>0.1167</td><td>0.0336</td><td class='fail'>FAIL</td></tr>
+<tr><td>active</td><td>ks_test</td><td>0.1000</td><td>0.0996</td><td class='pass'>PASS</td></tr>
+</table>
+<h3>Detailed Statistics (Real vs Synthetic)</h3>
+<table><tr><th>Column</th><th>Metric</th><th>Real</th><th>Synthetic</th></tr>
+<tr><td rowspan='4'>user_id</td><td>max</td><td>300</td><td>300</td></tr>
+<tr><td>mean</td><td>150.5000</td><td>150.5000</td></tr>
+<tr><td>min</td><td>1</td><td>1</td></tr>
+<tr><td>std</td><td>86.7468</td><td>86.7468</td></tr>
+<tr><td rowspan='4'>age</td><td>max</td><td>69</td><td>69</td></tr>
+<tr><td>mean</td><td>43.9367</td><td>43.9367</td></tr>
+<tr><td>min</td><td>18</td><td>18</td></tr>
+<tr><td>std</td><td>14.9460</td><td>14.9460</td></tr>
+<tr><td rowspan='3'>region</td><td>top_freq</td><td>86</td><td>112</td></tr>
+<tr><td>top_value</td><td>SE</td><td>NE</td></tr>
+<tr><td>unique_count</td><td>4</td><td>4</td></tr>
+<tr><td rowspan='4'>monthly_spend</td><td>max</td><td>230.8000</td><td>253.1300</td></tr>
+<tr><td>mean</td><td>122.8599</td><td>129.1468</td></tr>
+<tr><td>min</td><td>33.9200</td><td>35.4400</td></tr>
+<tr><td>std</td><td>34.4528</td><td>36.9484</td></tr>
+<tr><td rowspan='4'>active</td><td>max</td><td>1</td><td>1</td></tr>
+<tr><td>mean</td><td>0.6733</td><td>0.5733</td></tr>
+<tr><td>min</td><td>0</td><td>0</td></tr>
+<tr><td>std</td><td>0.4698</td><td>0.4954</td></tr>
+</table>
+<h3>Data Preview (First 10 Rows)</h3>
+<div class='row'>
+<div class='col'>
+<div class='preview-header'>Original Data (Real)</div>
+<table class="dataframe scroll-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>user_id</th>
+      <th>age</th>
+      <th>region</th>
+      <th>monthly_spend</th>
+      <th>active</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>33</td>
+      <td>NE</td>
+      <td>138.22</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>58</td>
+      <td>SE</td>
+      <td>129.39</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>38</td>
+      <td>W</td>
+      <td>77.98</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>49</td>
+      <td>NE</td>
+      <td>133.72</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>42</td>
+      <td>MW</td>
+      <td>169.21</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>54</td>
+      <td>NE</td>
+      <td>145.91</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>35</td>
+      <td>W</td>
+      <td>112.15</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>22</td>
+      <td>W</td>
+      <td>139.07</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td>33</td>
+      <td>NE</td>
+      <td>120.22</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td>50</td>
+      <td>W</td>
+      <td>126.28</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<div class='col'>
+<div class='preview-header'>Synthetic Data (Generated)</div>
+<table class="dataframe scroll-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>user_id</th>
+      <th>age</th>
+      <th>region</th>
+      <th>monthly_spend</th>
+      <th>active</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>33</td>
+      <td>NE</td>
+      <td>135.47</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>58</td>
+      <td>SE</td>
+      <td>128.07</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>38</td>
+      <td>NE</td>
+      <td>76.80</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>49</td>
+      <td>NE</td>
+      <td>136.24</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>42</td>
+      <td>NE</td>
+      <td>189.92</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>54</td>
+      <td>NE</td>
+      <td>141.52</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>35</td>
+      <td>SE</td>
+      <td>123.05</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>22</td>
+      <td>NE</td>
+      <td>154.80</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td>33</td>
+      <td>SE</td>
+      <td>124.09</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td>50</td>
+      <td>W</td>
+      <td>128.17</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+</div>
+</div></body></html>

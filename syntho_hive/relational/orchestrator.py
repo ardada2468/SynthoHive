@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Union, Tuple
 try:
     from pyspark.sql import SparkSession
     from pyspark.sql.functions import pandas_udf, PandasUDFType
@@ -15,14 +15,15 @@ from syntho_hive.relational.linkage import LinkageModel
 from syntho_hive.connectors.spark_io import SparkIO
 
 class StagedOrchestrator:
-    """
-    Manages the multi-stage generation process.
-    1. Identify Dependency Order
-    2. Generate Roots
-    3. Generate Children (using Parent context)
-    """
+    """Manage staged relational synthesis across parent/child tables."""
     
     def __init__(self, metadata: Metadata, spark: SparkSession):
+        """Initialize orchestrator dependencies.
+
+        Args:
+            metadata: Dataset metadata with relational details.
+            spark: SparkSession used for IO and potential UDFs.
+        """
         self.metadata = metadata
         self.spark = spark
         self.graph = SchemaGraph(metadata)
@@ -30,10 +31,14 @@ class StagedOrchestrator:
         self.models: Dict[str, CTGAN] = {}
         self.linkage_models: Dict[str, LinkageModel] = {}
         
-    def fit_all(self, real_data_paths: Dict[str, str], epochs: int = 300, batch_size: int = 500, **model_kwargs):
-        """
-        Fit all models.
-        real_data_paths: {table_name: 'db.table_name' or '/path/to/delta'}
+    def fit_all(self, real_data_paths: Dict[str, str], epochs: int = 300, batch_size: int = 500, **model_kwargs: Union[int, str, Tuple[int, int]]):
+        """Fit CTGAN and linkage models for every table.
+
+        Args:
+            real_data_paths: Mapping ``{table_name: 'db.table' or '/path'}``.
+            epochs: Number of training epochs for CTGAN.
+            batch_size: Training batch size.
+            **model_kwargs: Extra parameters forwarded to CTGAN constructor.
         """
         # Topo sort to train parents first? Or independent?
         # Linkage model needs both parent and child data.
@@ -121,8 +126,11 @@ class StagedOrchestrator:
                 self.models[table_name] = model
             
     def generate(self, num_rows_root: Dict[str, int], output_path_base: str):
-        """
-        Execute generation pipeline.
+        """Execute the multi-stage generation pipeline.
+
+        Args:
+            num_rows_root: Mapping of root table name to number of rows to generate.
+            output_path_base: Base path where generated tables will be stored.
         """
         generation_order = self.graph.get_generation_order()
         

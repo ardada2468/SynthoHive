@@ -10,13 +10,15 @@ except ImportError:
 from syntho_hive.interface.config import Metadata
 
 class RelationalSampler:
-    """
-    Implements Relational Stratified Sampling.
-    Goal: Sample parent table efficiently while keeping distribution, 
-    then fetch ALL related children for sampled parents.
-    """
+    """Relational stratified sampler for parent-child table hierarchies."""
     
     def __init__(self, metadata: Metadata, spark: SparkSession):
+        """Initialize the sampler.
+
+        Args:
+            metadata: Metadata describing tables and their keys.
+            spark: Active SparkSession for table access.
+        """
         self.metadata = metadata
         self.spark = spark
         
@@ -26,9 +28,15 @@ class RelationalSampler:
         sample_size: int, 
         stratify_by: Optional[str] = None
     ) -> Dict[str, DataFrame]:
-        """
-        Sample root table and cascade to children.
-        Returns map of {table_name: sampled_dataframe}
+        """Sample a root table and cascade the sample to child tables.
+
+        Args:
+            root_table: Name of the parent/root table to sample.
+            sample_size: Approximate number of rows to retain from the root.
+            stratify_by: Optional column for stratified sampling.
+
+        Returns:
+            Dictionary mapping table name to sampled Spark DataFrame.
         """
         sampled_data = {}
         

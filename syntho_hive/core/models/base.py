@@ -4,37 +4,73 @@ import pandas as pd
 import numpy as np
 
 class GenerativeModel(ABC):
-    """Abstract base class for all generative models."""
+    """Base contract for any tabular generative model."""
 
     @abstractmethod
-    def fit(self, data: pd.DataFrame, **kwargs) -> None:
-        """Train the model on the provided data."""
-        pass
+    def fit(self, data: pd.DataFrame, **kwargs: Any) -> None:
+        """Train the model on the provided data.
+
+        Args:
+            data: Training dataframe for the model to learn from.
+            **kwargs: Model-specific hyperparameters or training options.
+        """
+        pass  # pragma: no cover
 
     @abstractmethod
-    def sample(self, num_rows: int, **kwargs) -> pd.DataFrame:
-        """Generate synthetic data."""
-        pass
+    def sample(self, num_rows: int, **kwargs: Any) -> pd.DataFrame:
+        """Generate synthetic rows using the learned model.
+
+        Args:
+            num_rows: Number of synthetic rows to generate.
+            **kwargs: Optional sampling controls (e.g., temperature).
+
+        Returns:
+            DataFrame containing synthetic samples.
+        """
+        pass  # pragma: no cover
 
     @abstractmethod
     def save(self, path: str) -> None:
-        """Save model to disk."""
-        pass
+        """Persist the trained model to disk.
+
+        Args:
+            path: Filesystem path where the model artifacts are written.
+        """
+        pass  # pragma: no cover
 
     @abstractmethod
     def load(self, path: str) -> None:
-        """Load model from disk."""
-        pass
+        """Load a previously saved model from disk.
+
+        Args:
+            path: Filesystem path pointing to saved model artifacts.
+        """
+        pass  # pragma: no cover
 
 class ConditionalGenerativeModel(GenerativeModel):
-    """Abstract base class for conditional generative models (supporting parent context)."""
+    """Contract for models that condition on parent context during training/sampling."""
 
     @abstractmethod
-    def fit(self, data: pd.DataFrame, context: Optional[pd.DataFrame] = None, **kwargs) -> None:
-        """Train the model with optional context."""
-        pass
+    def fit(self, data: pd.DataFrame, context: Optional[pd.DataFrame] = None, **kwargs: Any) -> None:
+        """Train the model with optional parent context.
+
+        Args:
+            data: Child table data to learn from.
+            context: Optional parent attributes used for conditioning.
+            **kwargs: Model-specific training options.
+        """
+        pass  # pragma: no cover
 
     @abstractmethod
-    def sample(self, num_rows: int, context: Optional[pd.DataFrame] = None, **kwargs) -> pd.DataFrame:
-        """Generate synthetic data conditioned on context."""
-        pass
+    def sample(self, num_rows: int, context: Optional[pd.DataFrame] = None, **kwargs: Any) -> pd.DataFrame:
+        """Generate synthetic rows with optional conditioning context.
+
+        Args:
+            num_rows: Number of rows to generate.
+            context: Optional parent attributes aligned to the requested rows.
+            **kwargs: Additional sampling controls.
+
+        Returns:
+            DataFrame of synthetic samples aligned to the provided context (if any).
+        """
+        pass  # pragma: no cover

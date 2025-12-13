@@ -2,16 +2,19 @@ from typing import List, Dict, Set
 from syntho_hive.interface.config import Metadata
 
 class SchemaGraph:
-    """
-    DAG representation of table dependencies.
-    """
+    """DAG representation of table dependencies derived from metadata."""
     def __init__(self, metadata: Metadata):
+        """Create a dependency graph from table metadata.
+
+        Args:
+            metadata: Dataset metadata containing FK relationships.
+        """
         self.metadata = metadata
         self.adj_list: Dict[str, Set[str]] = {}
         self._build_graph()
         
     def _build_graph(self):
-        """Build adjacency list from FKs."""
+        """Build an adjacency list from FK relationships."""
         for table_name in self.metadata.tables:
             self.adj_list[table_name] = set()
             
@@ -23,8 +26,13 @@ class SchemaGraph:
                     self.adj_list[parent_table].add(table_name)
                     
     def get_generation_order(self) -> List[str]:
-        """
-        Return topological sort of tables.
+        """Return a topologically sorted list of tables.
+
+        Returns:
+            List of table names ordered for parent-before-child generation.
+
+        Raises:
+            ValueError: If a cycle is detected in FK relationships.
         """
         visited = set()
         stack = []

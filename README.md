@@ -76,7 +76,7 @@ The system is organized into several modular components:
 *   **Path**: `syntho_hive/interface`
 *   **Function**: The entry point for users.
 *   **Key Components**:
-    *   CLI tools and high-level Python APIs to abstract complexity.
+    *   High-level Python APIs to abstract complexity.
 
 ---
 

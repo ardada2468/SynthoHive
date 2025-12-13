@@ -7,9 +7,7 @@ from .faker_contextual import ContextualFaker
 
 @dataclass
 class PiiRule:
-    """
-    Configuration for a single PII type.
-    """
+    """Configuration for a single PII type and handling strategy."""
     name: str
     patterns: List[str]  # List of regex patterns to match
     action: str = "drop"  # Options: "drop", "mask", "hash", "fake", "custom", "keep"
@@ -18,13 +16,12 @@ class PiiRule:
 
 @dataclass
 class PrivacyConfig:
-    """
-    Collection of rules for PII detection and handling.
-    """
+    """Collection of rules for PII detection and handling."""
     rules: List[PiiRule] = field(default_factory=list)
 
     @classmethod
     def default(cls) -> 'PrivacyConfig':
+        """Create a default privacy configuration with common PII rules."""
         return cls(rules=[
             PiiRule(name="email", patterns=[r"[^@]+@[^@]+\.[^@]+"], action="fake"),
             PiiRule(name="ssn", patterns=[r"\d{3}-\d{2}-\d{4}"], action="mask"),
@@ -34,18 +31,25 @@ class PrivacyConfig:
         ])
 
 class PIISanitizer:
-    """
-    Detects and sanitizes PII columns based on configurable rules.
-    """
+    """Detect and sanitize PII columns based on configurable rules."""
     
     def __init__(self, config: Optional[PrivacyConfig] = None):
+        """Create a sanitizer with contextual faker support.
+
+        Args:
+            config: Optional privacy configuration; defaults to ``PrivacyConfig.default``.
+        """
         self.config = config or PrivacyConfig.default()
         self.faker = ContextualFaker()
     
     def analyze(self, df: pd.DataFrame) -> Dict[str, str]:
-        """
-        Detect potential PII columns using defined rules.
-        Returns map: col_name -> pii_rule_name
+        """Detect potential PII columns using configured rules.
+
+        Args:
+            df: DataFrame to inspect for PII.
+
+        Returns:
+            Mapping of column name to matched PII rule name.
         """
         detected = {}
         
@@ -98,9 +102,14 @@ class PIISanitizer:
         return detected
 
     def sanitize(self, df: pd.DataFrame, pii_map: Optional[Dict[str, str]] = None) -> pd.DataFrame:
-        """
-        Apply sanitization rules to the dataframe.
-        If pii_map is not provided, it will be generated via analyze().
+        """Apply sanitization rules to a dataframe.
+
+        Args:
+            df: Input dataframe containing potential PII.
+            pii_map: Optional precomputed map of column name to PII rule name.
+
+        Returns:
+            Sanitized dataframe with PII handled according to configured actions.
         """
         if pii_map is None:
             pii_map = self.analyze(df)
@@ -136,17 +145,26 @@ class PIISanitizer:
         return output_df
 
     def _mask_value(self, val: Any) -> str:
+        """Mask a value, preserving only the last four characters."""
         s = str(val)
         if len(s) <= 4:
             return "*" * len(s)
         return "*" * (len(s) - 4) + s[-4:]
     
     def _hash_value(self, val: Any) -> str:
+        """Return a SHA256 hash representation of a value."""
         return hashlib.sha256(str(val).encode()).hexdigest()
 
     def _fake_column(self, df: pd.DataFrame, col: str, rule: PiiRule) -> pd.Series:
-        """
-        Generate fake data for a column, potentially using context from other columns.
+        """Generate fake data for a column using contextual faker.
+
+        Args:
+            df: DataFrame containing the column to fake.
+            col: Column name.
+            rule: PII rule describing the type being faked.
+
+        Returns:
+            Series of fake values aligned to ``df``.
         """
         # Context strategy: 
         # If the rule has a context_key (not yet fully implemented in config, but good for future), use it.

@@ -1,0 +1,113 @@
+{
+  "tables": {
+    "users": {
+      "column_metrics": {
+        "user_id": {
+          "test": "ks_test",
+          "statistic": 0.0,
+          "p_value": 1.0,
+          "passed": "True"
+        },
+        "age": {
+          "test": "ks_test",
+          "statistic": 0.0,
+          "p_value": 1.0,
+          "passed": "True"
+        },
+        "region": {
+          "test": "tvd",
+          "statistic": 0.14666666666666667,
+          "passed": "False"
+        },
+        "monthly_spend": {
+          "test": "ks_test",
+          "statistic": 0.11666666666666667,
+          "p_value": 0.033619141621670706,
+          "passed": "False"
+        },
+        "active": {
+          "test": "ks_test",
+          "statistic": 0.1,
+          "p_value": 0.09956251966128941,
+          "passed": "True"
+        }
+      },
+      "correlation_distance": 0.2625456229887951,
+      "detailed_stats": {
+        "user_id": {
+          "real": {
+            "mean": 150.5,
+            "std": 86.74675786448736,
+            "min": "1",
+            "max": "300"
+          },
+          "synth": {
+            "mean": 150.5,
+            "std": 86.74675786448736,
+            "min": "1",
+            "max": "300"
+          }
+        },
+        "age": {
+          "real": {
+            "mean": 43.93666666666667,
+            "std": 14.946034100724589,
+            "min": "18",
+            "max": "69"
+          },
+          "synth": {
+            "mean": 43.93666666666667,
+            "std": 14.946034100724589,
+            "min": "18",
+            "max": "69"
+          }
+        },
+        "region": {
+          "real": {
+            "unique_count": 4,
+            "top_value": "SE",
+            "top_freq": "86"
+          },
+          "synth": {
+            "unique_count": 4,
+            "top_value": "NE",
+            "top_freq": "112"
+          }
+        },
+        "monthly_spend": {
+          "real": {
+            "mean": 122.85986666666666,
+            "std": 34.45281786508963,
+            "min": 33.92,
+            "max": 230.8
+          },
+          "synth": {
+            "mean": 129.14683333333335,
+            "std": 36.948376998839656,
+            "min": 35.44,
+            "max": 253.13
+          }
+        },
+        "active": {
+          "real": {
+            "mean": 0.6733333333333333,
+            "std": 0.4697778122315973,
+            "min": "0",
+            "max": "1"
+          },
+          "synth": {
+            "mean": 0.5733333333333334,
+            "std": 0.49541937461579416,
+            "min": "0",
+            "max": "1"
+          }
+        }
+      },
+      "preview": {
+        "real_html": "<table class=\"dataframe scroll-table\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th>user_id</th>\n      <th>age</th>\n      <th>region</th>\n      <th>monthly_spend</th>\n      <th>active</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>1</td>\n      <td>33</td>\n      <td>NE</td>\n      <td>138.22</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <td>2</td>\n      <td>58</td>\n      <td>SE</td>\n      <td>129.39</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <td>3</td>\n      <td>38</td>\n      <td>W</td>\n      <td>77.98</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <td>4</td>\n      <td>49</td>\n      <td>NE</td>\n      <td>133.72</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <td>5</td>\n      <td>42</td>\n      <td>MW</td>\n      <td>169.21</td>\n      <td>0</td>\n    </tr>\n    <tr>\n      <td>6</td>\n      <td>54</td>\n      <td>NE</td>\n      <td>145.91</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <td>7</td>\n      <td>35</td>\n      <td>W</td>\n      <td>112.15</td>\n      <td>0</td>\n    </tr>\n    <tr>\n      <td>8</td>\n      <td>22</td>\n      <td>W</td>\n      <td>139.07</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <td>9</td>\n      <td>33</td>\n      <td>NE</td>\n      <td>120.22</td>\n      <td>0</td>\n    </tr>\n    <tr>\n      <td>10</td>\n      <td>50</td>\n      <td>W</td>\n      <td>126.28</td>\n      <td>1</td>\n    </tr>\n  </tbody>\n</table>",
+        "synth_html": "<table class=\"dataframe scroll-table\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th>user_id</th>\n      <th>age</th>\n      <th>region</th>\n      <th>monthly_spend</th>\n      <th>active</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>1</td>\n      <td>33</td>\n      <td>NE</td>\n      <td>135.47</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <td>2</td>\n      <td>58</td>\n      <td>SE</td>\n      <td>128.07</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <td>3</td>\n      <td>38</td>\n      <td>NE</td>\n      <td>76.80</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <td>4</td>\n      <td>49</td>\n      <td>NE</td>\n      <td>136.24</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <td>5</td>\n      <td>42</td>\n      <td>NE</td>\n      <td>189.92</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <td>6</td>\n      <td>54</td>\n      <td>NE</td>\n      <td>141.52</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <td>7</td>\n      <td>35</td>\n      <td>SE</td>\n      <td>123.05</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <td>8</td>\n      <td>22</td>\n      <td>NE</td>\n      <td>154.80</td>\n      <td>0</td>\n    </tr>\n    <tr>\n      <td>9</td>\n      <td>33</td>\n      <td>SE</td>\n      <td>124.09</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <td>10</td>\n      <td>50</td>\n      <td>W</td>\n      <td>128.17</td>\n      <td>1</td>\n    </tr>\n  </tbody>\n</table>"
+      }
+    }
+  },
+  "summary": "Validation Report"
+}

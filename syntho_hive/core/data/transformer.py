@@ -5,13 +5,19 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.mixture import BayesianGaussianMixture
 
 class DataTransformer:
-    """
-    Reversible transformer for tabular data.
-    - Continuous columns: Variational Gaussian Mixture (VGM) mode-specific normalization.
-    - Categorical columns: One-hot encoding or Entity Embeddings (handled in model layer).
+    """Reversible transformer for tabular data.
+
+    Continuous columns use a Bayesian GMM-based normalizer, while categorical
+    columns are either one-hot encoded or mapped to indices for embeddings.
     """
     
     def __init__(self, metadata: Any, embedding_threshold: int = 50):
+        """Create a transformer configured by table metadata.
+
+        Args:
+            metadata: Metadata object describing tables, keys, and constraints.
+            embedding_threshold: Switch to embedding mode when cardinality exceeds this value.
+        """
         self.metadata = metadata
         self.embedding_threshold = embedding_threshold
         self._transformers = {}
@@ -20,7 +26,15 @@ class DataTransformer:
         self._excluded_columns = []
         
     def fit(self, data: pd.DataFrame, table_name: Optional[str] = None):
-        """Fit transformers to the data columns."""
+        """Fit per-column transformers and collect column layout metadata.
+
+        Args:
+            data: DataFrame to profile and transform.
+            table_name: Optional table name for applying PK/FK exclusions and constraints.
+
+        Raises:
+            ValueError: If metadata is missing table configurations.
+        """
         self.table_name = table_name # Store for constraint application later
         if not self.metadata.tables:
             raise ValueError("Metadata must be populated with table configs")
@@ -95,7 +109,17 @@ class DataTransformer:
                     self.output_dim += dim
 
     def transform(self, data: pd.DataFrame) -> np.ndarray:
-        """Transform data into model-ready format."""
+        """Transform a dataframe into model-ready numpy arrays.
+
+        Args:
+            data: DataFrame with the same columns used during ``fit``.
+
+        Raises:
+            ValueError: If the transformer has not been fitted or a column is missing.
+
+        Returns:
+            Concatenated numpy array representing all transformed columns.
+        """
         if not self._transformers:
             raise ValueError("Transformer has not been fitted.")
             
@@ -126,7 +150,17 @@ class DataTransformer:
         return np.concatenate(output_arrays, axis=1)
 
     def inverse_transform(self, data: np.ndarray) -> pd.DataFrame:
-        """Convert model output back to original format."""
+        """Convert model outputs back to the original dataframe schema.
+
+        Args:
+            data: Numpy array produced by a model, aligned to transform layout.
+
+        Raises:
+            ValueError: If called before ``fit``.
+
+        Returns:
+            DataFrame with original column names and value types (constraints applied).
+        """
         if not self._transformers:
             raise ValueError("Transformer has not been fitted.")
             
@@ -174,11 +208,14 @@ class DataTransformer:
         return output_df
 
 class ClusterBasedNormalizer:
+    """VGM-based normalizer for continuous columns.
+
+    Projects a value to a cluster assignment and a normalized scalar relative
+    to the chosen component.
     """
-    VGM-based normalizer for continuous columns.
-    Projects value x to (scalar c, vector u) where u is probability of cluster.
-    """
+
     def __init__(self, n_components: int = 10):
+        """Configure the number of mixture components."""
         self.n_components = n_components
         self.model = BayesianGaussianMixture(
             n_components=n_components,
@@ -190,12 +227,25 @@ class ClusterBasedNormalizer:
         self.stds = None
         
     def fit(self, data: pd.Series):
+        """Fit the Bayesian GMM on a continuous series.
+
+        Args:
+            data: Continuous pandas Series to normalize.
+        """
         values = data.values.reshape(-1, 1)
         self.model.fit(values)
         self.means = self.model.means_.flatten() # (n_components,)
         self.stds = np.sqrt(self.model.covariances_).flatten() # (n_components,)
         
     def transform(self, data: pd.Series) -> np.ndarray:
+        """Project values to one-hot cluster assignment and normalized scalar.
+
+        Args:
+            data: Continuous pandas Series to transform.
+
+        Returns:
+            Numpy array of shape ``(N, n_components + 1)`` with one-hot cluster and scaled value.
+        """
         values = data.values.reshape(-1, 1)
         n_samples = len(values)
         
@@ -223,6 +273,14 @@ class ClusterBasedNormalizer:
         return np.concatenate([cluster_one_hot, normalized_values], axis=1)
 
     def inverse_transform(self, data: np.ndarray) -> pd.Series:
+        """Reconstruct approximate original values from normalized representation.
+
+        Args:
+            data: Array shaped ``(N, n_components + 1)`` produced by ``transform``.
+
+        Returns:
+            Pandas Series of reconstructed continuous values.
+        """
         # data shape: (N, n_components + 1)
         
         # Split into one-hot and scalar

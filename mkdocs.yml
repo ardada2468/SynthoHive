@@ -1,0 +1,86 @@
+site_name: SynthoHive
+site_description: "Synthetic data engine with relational integrity"
+site_url: https://arnavdadarya.github.io/SynthoHive
+repo_url: https://github.com/arnavdadarya/FedEx/SynthoHive
+repo_name: arnavdadarya/FedEx/SynthoHive
+docs_dir: docs
+theme:
+  name: material
+  features:
+    - content.code.copy
+    - navigation.tabs
+    - navigation.top
+    - navigation.expand
+    - navigation.sections
+    - search.highlight
+    - search.share
+    - toc.integrate
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - tables
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:pymdownx.emoji.to_svg
+
+plugins:
+  - search
+  - autorefs
+  - section-index
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_root_heading: true
+            heading_level: 2
+            docstring_style: google
+            separate_signature: true
+            show_signature_annotations: true
+            filters:
+              - "!^_"  # hide private members
+  - git-revision-date-localized:
+      enable_creation_date: false
+      fallback_to_build_date: true
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Concepts:
+      - Architecture: architecture.md
+      - Data Flow: data-flow.md
+  - Guides:
+      - Fitting Models: guides/fitting.md
+      - Relational Concepts: guides/relational.md
+      - Sampling & Relational: guides/sampling.md
+      - Privacy & PII: guides/privacy.md
+      - Validation Reports: guides/validation.md
+  - Demos:
+      - Overview: demos/overview.md
+      - Privacy Sanitization: demos/02_privacy_sanitization.md
+      - Validation Report: demos/03_validation_report.md
+      - Relational Linkage CTGAN: demos/04_relational_linkage_ctgan.md
+      - Transformer Embeddings: demos/05_transformer_embeddings.md
+  - API:
+      - Interface & Config: api/interface.md
+      - Core & Models: api/core.md
+      - Privacy: api/privacy.md
+      - Relational: api/relational.md
+      - Validation: api/validation.md
+      - Connectors: api/connectors.md
+  - Reference:
+      - Config Examples: reference/config-examples.md
+      - Troubleshooting: reference/troubleshooting.md
+  - Changelog: changelog.md

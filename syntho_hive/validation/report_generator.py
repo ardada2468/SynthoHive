@@ -5,16 +5,22 @@ import numpy as np
 from .statistical import StatisticalValidator
 
 class ValidationReport:
-    """
-    Generates summary report of validation metrics.
-    """
+    """Generate summary reports of validation metrics."""
+
     def __init__(self):
+        """Initialize statistical validator and metric store."""
         self.validator = StatisticalValidator()
         self.metrics = {}
         
     def _calculate_detailed_stats(self, real_df: pd.DataFrame, synth_df: pd.DataFrame) -> Dict[str, Any]:
-        """
-        Calculate descriptive statistics for side-by-side comparison.
+        """Calculate descriptive statistics for side-by-side comparison.
+
+        Args:
+            real_df: Real dataframe.
+            synth_df: Synthetic dataframe aligned to the real columns.
+
+        Returns:
+            Nested dict of summary stats for each column.
         """
         stats = {}
         for col in real_df.columns:
@@ -39,8 +45,12 @@ class ValidationReport:
         return stats
 
     def generate(self, real_data: Dict[str, pd.DataFrame], synth_data: Dict[str, pd.DataFrame], output_path: str):
-        """
-        Run validation and save report.
+        """Run validation and save a report.
+
+        Args:
+            real_data: Mapping of table name to real dataframe.
+            synth_data: Mapping of table name to synthetic dataframe.
+            output_path: Destination path for HTML or JSON report.
         """
         report = {
             "tables": {},
@@ -87,8 +97,11 @@ class ValidationReport:
         print(f"Report saved to {os.path.abspath(output_path)}")
 
     def _save_html(self, report: Dict[str, Any], output_path: str):
-        """
-        Generate a rich HTML report with metric explanations, stats, and previews.
+        """Render a rich HTML report with metric explanations, stats, and previews.
+
+        Args:
+            report: Structured report dictionary produced by ``generate``.
+            output_path: Filesystem path to write the HTML file.
         """
         html_content = [
             """<html>

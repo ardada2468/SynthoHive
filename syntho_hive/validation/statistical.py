@@ -4,13 +4,17 @@ import numpy as np
 from scipy.stats import ks_2samp, chisquare
 
 class StatisticalValidator:
-    """
-    Performs statistical checks between Real and Synthetic data.
-    """
+    """Perform statistical checks between real and synthetic data."""
     
     def compare_columns(self, real_df: pd.DataFrame, synth_df: pd.DataFrame) -> Dict[str, Any]:
-        """
-        Compare distributions column by column.
+        """Compare column-wise distributions between real and synthetic data.
+
+        Args:
+            real_df: Real dataframe.
+            synth_df: Synthetic dataframe aligned to the same schema.
+
+        Returns:
+            Mapping of column name to test results or error descriptions.
         """
         results = {}
         
@@ -72,8 +76,14 @@ class StatisticalValidator:
         return results
 
     def check_correlations(self, real_df: pd.DataFrame, synth_df: pd.DataFrame) -> float:
-        """
-        Compare correlation matrices (Frobenius norm).
+        """Compare correlation matrices using Frobenius norm.
+
+        Args:
+            real_df: Real dataframe.
+            synth_df: Synthetic dataframe.
+
+        Returns:
+            Frobenius norm distance between correlation matrices (0 when identical).
         """
         # Numeric only
         real_corr = real_df.select_dtypes(include=[np.number]).corr().fillna(0)

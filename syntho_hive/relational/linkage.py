@@ -4,18 +4,26 @@ from typing import Optional, List, Dict
 from sklearn.mixture import GaussianMixture
 
 class LinkageModel:
-    """
-    Models the cardinality relationship between Parent and Child tables.
-    Learns 'How many children does this parent have?'
-    """
+    """Model cardinality relationships between parent and child tables."""
+
     def __init__(self, method: str = "gmm"):
+        """Create a linkage model.
+
+        Args:
+            method: Distribution family used to model child counts.
+        """
         self.method = method
         self.model = None
         self.max_children = 0
         
     def fit(self, parent_df: pd.DataFrame, child_df: pd.DataFrame, fk_col: str, pk_col: str = "id"):
-        """
-        Fit distribution of child counts per parent.
+        """Fit the distribution of child counts per parent.
+
+        Args:
+            parent_df: Parent table with unique primary keys.
+            child_df: Child table containing foreign keys to parents.
+            fk_col: Name of the foreign key column in the child table.
+            pk_col: Name of the primary key column in the parent table.
         """
         # 1. Aggregate child counts
         # Assumes parent_df has unique PKs
@@ -54,9 +62,16 @@ class LinkageModel:
             self.model.fit(X)
             
     def sample_counts(self, parent_context: pd.DataFrame) -> np.ndarray:
-        """
-        Sample child counts for the given parents.
-        Returns array of integers.
+        """Sample child counts for a set of parents.
+
+        Args:
+            parent_context: Parent dataframe (only length is used here).
+
+        Returns:
+            Numpy array of integer child counts aligned with parents.
+
+        Raises:
+            ValueError: If called before fitting the model.
         """
         n_samples = len(parent_context)
         if self.model is None:

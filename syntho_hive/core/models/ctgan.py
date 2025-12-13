@@ -10,7 +10,17 @@ from .layers import ResidualLayer, Discriminator, EntityEmbeddingLayer
 from syntho_hive.core.data.transformer import DataTransformer
 
 def compute_gradient_penalty(discriminator, real_samples, fake_samples, device):
-    """Calculates the gradient penalty loss for WGAN GP"""
+    """Calculate the WGAN-GP gradient penalty term.
+
+    Args:
+        discriminator: Discriminator network used to score samples.
+        real_samples: Tensor of real samples after preprocessing.
+        fake_samples: Tensor of generated samples.
+        device: Torch device for computation.
+
+    Returns:
+        Scalar gradient penalty encouraging Lipschitz continuity.
+    """
     # Random weight term for interpolation between real and fake samples
     alpha = torch.rand((real_samples.size(0), 1)).to(device)
     # Get random interpolation between real and fake samples
@@ -31,9 +41,7 @@ def compute_gradient_penalty(discriminator, real_samples, fake_samples, device):
     return gradient_penalty
 
 class CTGAN(ConditionalGenerativeModel):
-    """
-    Conditional Tabular GAN with support for Entity Embeddings and Parent Context.
-    """
+    """Conditional Tabular GAN with entity embeddings and parent context."""
     def __init__(
         self,
         metadata: Any,
@@ -46,6 +54,19 @@ class CTGAN(ConditionalGenerativeModel):
         embedding_threshold: int = 50,
         discriminator_steps: int = 5
     ):
+        """Create a CTGAN instance configured for tabular synthesis.
+
+        Args:
+            metadata: Table metadata describing columns and constraints.
+            embedding_dim: Dimension of input noise vector.
+            generator_dim: Hidden layer widths for the generator.
+            discriminator_dim: Hidden layer widths for the discriminator.
+            batch_size: Training batch size.
+            epochs: Number of training epochs.
+            device: Torch device string, e.g. ``"cpu"`` or ``"cuda"``.
+            embedding_threshold: Cardinality threshold for switching to embeddings.
+            discriminator_steps: Number of discriminator steps per generator step.
+        """
         self.metadata = metadata
         self.embedding_dim = embedding_dim
         self.generator_dim = generator_dim
@@ -69,7 +90,11 @@ class CTGAN(ConditionalGenerativeModel):
 
 
     def _compile_layout(self, transformer):
-        """Analyze transformer output to map column indices and types."""
+        """Analyze transformer output to map column indices and types.
+
+        Args:
+            transformer: Fitted ``DataTransformer`` for the child table.
+        """
         self.data_column_info = []
         self.embedding_layers = nn.ModuleDict()
         
@@ -103,9 +128,14 @@ class CTGAN(ConditionalGenerativeModel):
                 current_idx += info['dim']
                 
     def _apply_embeddings(self, data, is_fake=False):
-        """
-        Convert data to embedding space.
-        data: (Batch, InputDim)
+        """Convert a mixed categorical/continuous tensor into embedding space.
+
+        Args:
+            data: Input tensor with mixed column representations.
+            is_fake: Whether the tensor came from the generator (logits) or real data (indices).
+
+        Returns:
+            Tensor with embeddings applied to categorical columns.
         """
         parts = []
         for info in self.data_column_info:
@@ -153,6 +183,12 @@ class CTGAN(ConditionalGenerativeModel):
         return torch.cat(parts, dim=1)
 
     def _build_model(self, transformer_output_dim: int, context_dim: int = 0):
+        """Instantiate generator and discriminator modules.
+
+        Args:
+            transformer_output_dim: Flattened dimension of transformed child data.
+            context_dim: Flattened dimension of transformed context (if any).
+        """
         # 1. Compile Layout first
         self._compile_layout(self.transformer)
         
@@ -182,14 +218,14 @@ class CTGAN(ConditionalGenerativeModel):
         
         self.discriminator = Discriminator(disc_input_dim, self.discriminator_dim[0]).to(self.device)
         
-    def fit(self, data: pd.DataFrame, context: Optional[pd.DataFrame] = None, table_name: Optional[str] = None, **kwargs) -> None:
-        """
-        Train the CTGAN model.
-        
+    def fit(self, data: pd.DataFrame, context: Optional[pd.DataFrame] = None, table_name: Optional[str] = None, **kwargs: Any) -> None:
+        """Train the CTGAN model on tabular data.
+
         Args:
-            data: Child table data (target).
-            context: Parent attributes (conditional context).
-            table_name: Name of the table being fitted (for metadata lookup).
+            data: Child table data (target) to model.
+            context: Parent attributes to condition on (aligned row-wise).
+            table_name: Table name for metadata lookup and constraint handling.
+            **kwargs: Extra training options (unused placeholder for compatibility).
         """
         # 1. Fit and Transform Data
         self.transformer.fit(data, table_name=table_name)
@@ -354,9 +390,16 @@ class CTGAN(ConditionalGenerativeModel):
             if epoch % 10 == 0:
                 print(f"Epoch {epoch}: Loss D={loss_D.item():.4f}, Loss G={loss_G.item():.4f}")
 
-    def sample(self, num_rows: int, context: Optional[pd.DataFrame] = None, **kwargs) -> pd.DataFrame:
-        """
-        Generate synthetic data.
+    def sample(self, num_rows: int, context: Optional[pd.DataFrame] = None, **kwargs: Any) -> pd.DataFrame:
+        """Generate synthetic samples, optionally conditioned on parent context.
+
+        Args:
+            num_rows: Number of rows to generate.
+            context: Optional parent attributes aligned to the requested rows.
+            **kwargs: Additional sampling controls (unused placeholder).
+
+        Returns:
+            DataFrame of synthetic rows mapped back to original schema.
         """
         self.generator.eval()
         with torch.no_grad():
@@ -399,6 +442,11 @@ class CTGAN(ConditionalGenerativeModel):
         return self.transformer.inverse_transform(fake_data_np)
         
     def save(self, path: str) -> None:
+        """Persist generator and discriminator state dicts to disk.
+
+        Args:
+            path: Filesystem path to write the checkpoint to.
+        """
         torch.save({
             "generator": self.generator.state_dict(),
             "discriminator": self.discriminator.state_dict(),
@@ -407,6 +455,11 @@ class CTGAN(ConditionalGenerativeModel):
         }, path)
 
     def load(self, path: str) -> None:
+        """Load generator and discriminator weights from disk.
+
+        Args:
+            path: Filesystem path containing a saved checkpoint.
+        """
         checkpoint = torch.load(path)
         self.generator.load_state_dict(checkpoint["generator"])
         self.discriminator.load_state_dict(checkpoint["discriminator"])

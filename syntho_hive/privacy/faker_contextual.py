@@ -5,10 +5,7 @@ import numpy as np
 import logging
 
 class ContextualFaker:
-    """
-    Direct PII generation with context awareness.
-    Example: Country='JP' -> Faker('ja_JP').name()
-    """
+    """Context-aware PII generator leveraging Faker locales."""
     
     LOCALE_MAP = {
         "JP": "ja_JP",
@@ -23,12 +20,21 @@ class ContextualFaker:
     }
     
     def __init__(self):
+        """Initialize faker cache and logger."""
         self._fakers: Dict[str, Faker] = {}
         # Initialize default
         self._fakers["default"] = Faker()
         self.logger = logging.getLogger(__name__)
         
     def _get_faker(self, locale: Optional[str]) -> Faker:
+        """Get or create a Faker instance for a locale.
+
+        Args:
+            locale: Optional locale string (e.g., ``"JP"`` or ``"en_US"``).
+
+        Returns:
+            Faker instance configured for the requested locale.
+        """
         if not locale:
             return self._fakers["default"]
             
@@ -44,9 +50,15 @@ class ContextualFaker:
         return self._fakers[mapped_locale]
 
     def generate_pii(self, pii_type: str, context: Optional[Dict[str, Any]] = None, count: int = 1) -> List[str]:
-        """
-        Generate PII based on context.
-        Context is expected to be a row from the dataset (e.g., {'country': 'JP'}).
+        """Generate PII values with optional contextual locale.
+
+        Args:
+            pii_type: Faker provider name (e.g., ``"email"`` or ``"phone"``).
+            context: Optional row context used to infer locale (country/locale/region keys).
+            count: Number of values to generate.
+
+        Returns:
+            List of generated PII strings.
         """
         if context is None:
             context = {}
@@ -65,7 +77,7 @@ class ContextualFaker:
         return results
 
     def _generate_single_value(self, fake: Faker, pii_type: str) -> str:
-        """Helper to generate a single value safely."""
+        """Generate a single PII value using a Faker instance."""
         try:
             if hasattr(fake, pii_type):
                  # Dynamic method call on Faker instance
@@ -86,9 +98,14 @@ class ContextualFaker:
             return "REDACTED"
 
     def process_dataframe(self, df: pd.DataFrame, pii_cols: Dict[str, str]) -> pd.DataFrame:
-        """
-        Replace synthetic placeholders in DF with context-aware PII.
-        pii_cols: {col_name: pii_type} e.g. {'user_email': 'email'}
+        """Replace placeholders with generated PII in a dataframe.
+
+        Args:
+            df: Input dataframe containing placeholder columns.
+            pii_cols: Mapping of column name to PII type (e.g., ``{"user_email": "email"}``).
+
+        Returns:
+            DataFrame with specified columns replaced by generated PII.
         """
         output_df = df.copy()
         
