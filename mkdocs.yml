@@ -69,6 +69,7 @@ nav:
       - Validation Reports: guides/validation.md
   - Demos:
       - Overview: demos/overview.md
+      - Single Table CTGAN: demos/01_single_table_ctgan.md
       - Privacy Sanitization: demos/02_privacy_sanitization.md
       - Validation Report: demos/03_validation_report.md
       - Relational Linkage CTGAN: demos/04_relational_linkage_ctgan.md

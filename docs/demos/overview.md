@@ -13,6 +13,7 @@ pip install -e .[docs]
 Each demo has a `run.py` script and an `outputs/` folder with sample artifacts.
 
 ## Available demos
+- **01_single_table_ctgan**: Train CTGAN on a single table with mixed data types.
 - **02_privacy_sanitization**: Detect and sanitize PII, compare raw vs sanitized outputs.
 - **03_validation_report**: Generate validation metrics and HTML report comparing real vs synthetic.
 - **04_relational_linkage_ctgan**: Train relational CTGAN with linkage, synthesize users/orders.
