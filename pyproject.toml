@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "synthohive"
-version = "1.2.2"
+version = "1.2.3"
 description = "Production Synthetic Data Engine with Relational Integrity"
 authors = [
   { name = "SynthoHive Team", email = "ardada2468@gmail.com" },

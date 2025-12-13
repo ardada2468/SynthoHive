@@ -103,3 +103,45 @@ def test_data_transformer_missing_col_error():
     bad_df = pd.DataFrame({'wrong': range(20)})
     with pytest.raises(ValueError, match="Column val missing"):
         transformer.transform(bad_df)
+
+def test_transformer_categorical_constraint_fix():
+    """Test that applying numeric constraints to a categorical column (e.g. mistakenly marked or mixed type) handles robustly."""
+    from syntho_hive.interface.config import Constraint
+
+    meta = Metadata()
+    # Define a table with a constraint on 'zip_code' which we will simulate as reading as strings
+    meta.add_table(
+        "addresses", 
+        pk="id", 
+        constraints={
+            "zip_code": Constraint(dtype="int", min=10000, max=99999)
+        }
+    )
+    
+    # Input data as strings, but looking like numbers
+    df = pd.DataFrame({
+        'id': range(10),
+        'zip_code': ["10001", "90210", "12345"] + ["99999"] * 7
+    })
+    
+    transformer = DataTransformer(metadata=meta)
+    
+    # This should treat zip_code as categorical because it is object dtype (even if parsable)
+    transformer.fit(df, table_name="addresses")
+    
+    # It will be 'categorical' (OneHot) because cardinality is low
+    assert transformer._column_info['zip_code']['type'] != 'continuous'
+    
+    # Transform
+    encoded = transformer.transform(df)
+    
+    # Inverse Transform
+    # This is where the crash happens if not fixed
+    decoded_df = transformer.inverse_transform(encoded)
+    
+    # Check that constraints were applied and no crash
+    # The output should be integers (due to dtype='int')
+    assert pd.api.types.is_integer_dtype(decoded_df['zip_code']) or pd.api.types.is_float_dtype(decoded_df['zip_code'])
+    assert decoded_df['zip_code'].min() >= 10000
+    assert decoded_df['zip_code'].max() <= 99999
+

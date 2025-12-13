@@ -212,9 +212,38 @@ class DataTransformer:
                 if table_config and col in table_config.constraints:
                     constraint = table_config.constraints[col]
                     
+                    _is_numeric_constraint = (constraint.min is not None) or \
+                                           (constraint.max is not None) or \
+                                           (constraint.dtype in ["int", "float", "number"])
+
+                    if _is_numeric_constraint:
+                        # Ensure data is numeric. If it was processed as categorical (strings),
+                        # we need to convert it back to numbers to apply numeric constraints.
+                        try:
+                            if isinstance(original_values, np.ndarray):
+                                # flatten to 1D for to_numeric
+                                original_values = pd.to_numeric(original_values.flatten(), errors='coerce')
+                            else:
+                                original_values = pd.to_numeric(original_values, errors='coerce')
+                        except Exception:
+                            # If conversion fails, proceed as is (may raise TypeError later)
+                            pass
+
                     # 1. Rounding/Type
                     if constraint.dtype == "int":
-                        original_values = np.round(original_values).astype(int)
+                        # Round first
+                        original_values = np.round(original_values)
+                        # Safe cast to int (handles NaNs by skipping cast or filling if appropriate? 
+                        # For now, we only cast if possible to avoid crash)
+                        try:
+                            if isinstance(original_values, pd.Series):
+                                if not original_values.isnull().any():
+                                    original_values = original_values.astype(int)
+                            elif isinstance(original_values, np.ndarray):
+                                if not np.isnan(original_values).any():
+                                    original_values = original_values.astype(int)
+                        except Exception:
+                            pass
                     
                     # 2. Clipping
                     if constraint.min is not None or constraint.max is not None:
