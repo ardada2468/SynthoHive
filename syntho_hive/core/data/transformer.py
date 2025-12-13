@@ -96,11 +96,12 @@ class DataTransformer:
                     transformer.fit(col_data_filled)
                     
                     dim = 1 # Just the index
+                    num_categories = len(transformer.classes_)  # include sentinel for nulls
                     self._transformers[col] = transformer
                     self._column_info[col] = {
                         'type': 'categorical_embedding',
                         'dim': dim,
-                        'num_categories': n_unique,
+                        'num_categories': num_categories,
                         'transformer': transformer
                     }
                     self.output_dim += dim
