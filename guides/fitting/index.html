@@ -711,33 +711,50 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#inputs" class="md-nav__link">
+  <a href="#concepts" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Inputs
+        Concepts
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Concepts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-role-of-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Role of Metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#minimal-relational-fit" class="md-nav__link">
+  <a href="#the-fitting-workflow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Minimal relational fit
+        The Fitting Workflow
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Minimal relational fit">
+    <nav class="md-nav" aria-label="The Fitting Workflow">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#what-happens-during-fit" class="md-nav__link">
+  <a href="#1-data-ingestion" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What happens during fit
+        1. Data Ingestion
       
     </span>
   </a>
@@ -745,10 +762,121 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tips" class="md-nav__link">
+  <a href="#2-preprocessing-transformation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tips
+        2. Preprocessing &amp; Transformation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-linkage-learning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Linkage Learning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-conditional-training-the-magic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Conditional Training (The "Magic")
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hardware-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hardware &amp; Performance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#out-of-memory-oom-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Out of Memory (OOM) Errors
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mode-collapse-output-is-constant-or-repetitive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mode Collapse (Output is constant or repetitive)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#training-is-too-slow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Training is too slow
       
     </span>
   </a>
@@ -1539,54 +1667,121 @@
 
 
 <h1 id="fitting-models">Fitting Models<a class="headerlink" href="#fitting-models" title="Permanent link">&para;</a></h1>
-<h2 id="inputs">Inputs<a class="headerlink" href="#inputs" title="Permanent link">&para;</a></h2>
-<ul>
-<li><code>Metadata</code> with tables, PK/FK, constraints, and parent context columns.</li>
-<li>Optional <code>PrivacyConfig</code> for PII handling.</li>
-<li>SparkSession (required for full relational flows in current prototype).</li>
-</ul>
-<h2 id="minimal-relational-fit">Minimal relational fit<a class="headerlink" href="#minimal-relational-fit" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">syntho_hive.interface.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">Metadata</span><span class="p">,</span> <span class="n">PrivacyConfig</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">syntho_hive.interface.synthesizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">Synthesizer</span>
-
-<span class="n">metadata</span> <span class="o">=</span> <span class="n">Metadata</span><span class="p">()</span>
-<span class="n">metadata</span><span class="o">.</span><span class="n">add_table</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;users&quot;</span><span class="p">,</span>
-    <span class="n">pk</span><span class="o">=</span><span class="s2">&quot;user_id&quot;</span><span class="p">,</span>
-    <span class="n">fk</span><span class="o">=</span><span class="p">{},</span>  <span class="c1"># root</span>
-    <span class="n">parent_context_cols</span><span class="o">=</span><span class="p">[],</span>
-<span class="p">)</span>
-<span class="n">metadata</span><span class="o">.</span><span class="n">add_table</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;orders&quot;</span><span class="p">,</span>
-    <span class="n">pk</span><span class="o">=</span><span class="s2">&quot;order_id&quot;</span><span class="p">,</span>
-    <span class="n">fk</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="s2">&quot;users.user_id&quot;</span><span class="p">},</span>
-    <span class="n">parent_context_cols</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;region&quot;</span><span class="p">],</span>
-<span class="p">)</span>
-
-<span class="n">privacy</span> <span class="o">=</span> <span class="n">PrivacyConfig</span><span class="p">()</span>
-<span class="n">synth</span> <span class="o">=</span> <span class="n">Synthesizer</span><span class="p">(</span><span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span> <span class="n">privacy_config</span><span class="o">=</span><span class="n">privacy</span><span class="p">,</span> <span class="n">spark_session</span><span class="o">=</span><span class="n">spark</span><span class="p">)</span>
-
-<span class="n">synth</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
-    <span class="n">database</span><span class="o">=</span><span class="s2">&quot;my_db&quot;</span><span class="p">,</span>
-    <span class="n">sampling_strategy</span><span class="o">=</span><span class="s2">&quot;relational_stratified&quot;</span><span class="p">,</span>
-    <span class="n">sample_size</span><span class="o">=</span><span class="mi">5_000_000</span><span class="p">,</span>
+<p>The <code>fit</code> process is the core of SynthoHive's generative engine. It takes your real relational database and trains a set of machine learning models that learn both the <strong>structure</strong> (relationships between tables) and the <strong>content</strong> (statistical distribution of data within tables).</p>
+<h2 id="concepts">Concepts<a class="headerlink" href="#concepts" title="Permanent link">&para;</a></h2>
+<p>SynthoHive uses a <strong>Hybrid Relational Approach</strong>. Instead of trying to train one massive model for the entire database (which is often computationally infeasible), it breaks the problem down:</p>
+<ol>
+<li><strong>Linkage Models</strong>: Learn <em>how many</em> child records typically exist for a given parent record. For example, "How many <code>Orders</code> does a typical <code>User</code> have?"</li>
+<li><strong>Generative Models (CTGAN)</strong>: Learn the content of each table individually. To preserve relational integrity dev-to-dev (e.g., ensuring an Order's <code>city</code> matches the User's <code>region</code>), child models are <strong>conditioned</strong> on context from their parent tables.</li>
+</ol>
+<h3 id="the-role-of-metadata">The Role of Metadata<a class="headerlink" href="#the-role-of-metadata" title="Permanent link">&para;</a></h3>
+<p>Your <code>Metadata</code> object is the blueprint for this process. It tells the synthesizer:
+*   <strong>Hierarchy</strong>: Which tables are parents and which are children (defined by Foreign Keys).
+*   <strong>Context</strong>: Which columns from a parent should influence the generation of a child (e.g., <code>region</code> affecting <code>shipping_speed</code>).
+*   <strong>Constraints</strong>: Data types and logical rules that must be preserved.</p>
+<h2 id="the-fitting-workflow">The Fitting Workflow<a class="headerlink" href="#the-fitting-workflow" title="Permanent link">&para;</a></h2>
+<p>When you call <code>synthesizer.fit()</code>, the following steps occur for each table in your metadata:</p>
+<h3 id="1-data-ingestion">1. Data Ingestion<a class="headerlink" href="#1-data-ingestion" title="Permanent link">&para;</a></h3>
+<p>The system reads your real data using Spark.
+*   <strong>Note</strong>: Currently, the system converts Spark DataFrames to <strong>Pandas</strong> for checking into the CTGAN backend. This means the working set for a single table must fit in memory.</p>
+<h3 id="2-preprocessing-transformation">2. Preprocessing &amp; Transformation<a class="headerlink" href="#2-preprocessing-transformation" title="Permanent link">&para;</a></h3>
+<p>Each column is analyzed and transformed:
+*   <strong>Continuous Columns</strong>: Modeled using <strong>Variational Gaussian Mixture Models (VGM)</strong> to handle multi-modal distributions (e.g., a salary distribution with peaks at $40k and $120k).
+*   <strong>Categorical Columns</strong>:
+    *   <strong>Low Cardinality</strong>: Converted using One-Hot Encoding.
+    *   <strong>High Cardinality</strong>: Converted using <strong>Entity Embeddings</strong> (see <a href="../embeddings/">Embeddings Guide</a>).
+*   <strong>Primary/Foreign Keys</strong>: Excluded from the content model (CTGAN) because they are structural identifiers, not semantic content.</p>
+<h3 id="3-linkage-learning">3. Linkage Learning<a class="headerlink" href="#3-linkage-learning" title="Permanent link">&para;</a></h3>
+<p>For child tables, a <code>LinkageModel</code> describes the relationship with its "Driver" parent (the primary foreign key table).
+*   It calculates the probability distribution of child counts given parent attributes.
+*   <em>Example</em>: A <code>User</code> in the "Enterprise" segment might have 50-100 <code>logs</code>, while a "Free" user has 0-5.</p>
+<h3 id="4-conditional-training-the-magic">4. Conditional Training (The "Magic")<a class="headerlink" href="#4-conditional-training-the-magic" title="Permanent link">&para;</a></h3>
+<p>To ensure relational consistency, child tables are trained with <strong>Context</strong>.
+1.  The system performs a left join of the Child table with selected columns from the Parent table.
+2.  The CTGAN model is trained on this joined dataset.
+3.  <strong>Result</strong>: When generating a new <code>Order</code>, the model receives the specific <code>User</code>'s context (e.g., <code>Region=US</code>) and generates an invoice meant for that region.</p>
+<h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
+<p>You can tune the fitting process via the <code>fit()</code> arguments and global config.</p>
+<div class="highlight"><pre><span></span><code><span class="n">synth</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="s2">&quot;metrics_db&quot;</span><span class="p">,</span>
     <span class="n">epochs</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
     <span class="n">batch_size</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
-    <span class="n">embedding_threshold</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+    <span class="n">embedding_threshold</span><span class="o">=</span><span class="mi">50</span>
 <span class="p">)</span>
 </code></pre></div>
-<h3 id="what-happens-during-fit">What happens during fit<a class="headerlink" href="#what-happens-during-fit" title="Permanent link">&para;</a></h3>
-<ol>
-<li>Each table is read via <code>SparkIO</code>.</li>
-<li><code>DataTransformer.fit</code> profiles columns (continuous VGM, categorical OHE/embedding).</li>
-<li><code>LinkageModel.fit</code> learns child counts (per driver parent).</li>
-<li><code>CTGAN.fit</code> trains generator/discriminator; context columns are merged for conditional learning.</li>
-</ol>
-<h3 id="tips">Tips<a class="headerlink" href="#tips" title="Permanent link">&para;</a></h3>
+<h3 id="key-parameters">Key Parameters<a class="headerlink" href="#key-parameters" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Type</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>epochs</code></td>
+<td style="text-align: left;"><code>int</code></td>
+<td style="text-align: left;"><code>300</code></td>
+<td style="text-align: left;">Number of training iterations. Higher means better quality but longer training. <br>• <strong>Testing/Dev</strong>: Use <code>10-50</code> to verify the pipeline runs.<br>• <strong>Production</strong>: Use <code>300+</code> for high-fidelity data.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>batch_size</code></td>
+<td style="text-align: left;"><code>int</code></td>
+<td style="text-align: left;"><code>500</code></td>
+<td style="text-align: left;">Number of samples processed at once. <br>• Increase for speed (if GPU memory allows).<br>• Decrease if you hit Out-Of-Memory (OOM) errors.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>embedding_threshold</code></td>
+<td style="text-align: left;"><code>int</code></td>
+<td style="text-align: left;"><code>50</code></td>
+<td style="text-align: left;">Columns with unique values &gt; this number will use Embeddings instead of One-Hot.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>validate</code></td>
+<td style="text-align: left;"><code>bool</code></td>
+<td style="text-align: left;"><code>False</code></td>
+<td style="text-align: left;">If <code>True</code>, automatically runs a validation report after training (requires <code>validate</code> extra dependencies).</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">Unused Parameters</p>
+<p>The parameters <code>sample_size</code> and <code>sampling_strategy</code> currently appear in the <code>fit()</code> signature but are <strong>not yet implemented</strong>. The system currently uses the full dataset provided in the <code>data</code> argument. Future versions will support downsampling large datasets before training.</p>
+</div>
+<h3 id="hardware-performance">Hardware &amp; Performance<a class="headerlink" href="#hardware-performance" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Ensure PK/FK are correctly set in <code>Metadata</code> so transformers exclude them from modeling.</li>
-<li>For high-cardinality categoricals, tune <code>embedding_threshold</code>.</li>
-<li>Start with smaller <code>epochs</code>/<code>batch_size</code> to validate the flow, then scale up. </li>
+<li><strong>Memory</strong>: The most critical resource. Since data is converted to Pandas/Numpy for training, you generally need <strong>2-3x the size of your largest single table</strong> in RAM.</li>
+<li><strong>CPU vs GPU</strong>:<ul>
+<li><strong>CPU</strong>: Default. Works fine for smaller datasets (&lt; 100k rows/table).</li>
+<li><strong>GPU</strong>: Highly recommended for production training. CTGAN is a neural network; training on a GPU is 10-50x faster.</li>
+<li>To use GPU, ensure you have a CUDA-compatible PyTorch version installed. The synthesizer automatically detects and uses CUDA if available.</li>
+</ul>
+</li>
+</ul>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<h3 id="out-of-memory-oom-errors">Out of Memory (OOM) Errors<a class="headerlink" href="#out-of-memory-oom-errors" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Symptom</strong>: Process crashes with <code>MemoryError</code> or <code>CUDA out of memory</code>.</li>
+<li><strong>Fix 1</strong>: Reduce <code>batch_size</code> (e.g., to 100 or 50).</li>
+<li><strong>Fix 2</strong>: Reduce the number of context columns in <code>Metadata</code>. Joining parent context increases the width of the training data.</li>
+<li><strong>Fix 3</strong>: Increase <code>embedding_threshold</code> carefully (embeddings use less memory than massive One-Hot vectors, but the transformation step itself needs memory).</li>
+</ul>
+<h3 id="mode-collapse-output-is-constant-or-repetitive">Mode Collapse (Output is constant or repetitive)<a class="headerlink" href="#mode-collapse-output-is-constant-or-repetitive" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Symptom</strong>: The generated data looks very repetitive (e.g., every User is named "John").</li>
+<li><strong>Cause</strong>: The Generator found a "safe" output that fools the Discriminator, or the Discriminator is too weak.</li>
+<li><strong>Fix</strong>:<ul>
+<li>Increase <code>epochs</code>. In early epochs, GANs often produce noise or mode-collapsed data before converging.</li>
+<li>Check for data skew. If 99% of your real data is "John", the model is actually correct!</li>
+</ul>
+</li>
+</ul>
+<h3 id="training-is-too-slow">Training is too slow<a class="headerlink" href="#training-is-too-slow" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Fix</strong>: Enable GPU acceleration.</li>
+<li><strong>Fix</strong>: Explicitly exclude irrelevant text columns (e.g., "Description" fields that are unique per row) from <code>Metadata</code> or mark them as PII to be faked rather than modeled. Learning free-text fields with a tabular GAN is inefficient.</li>
 </ul>
 
 
@@ -1608,7 +1803,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 13, 2025 03:01:14 UTC">December 13, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 14, 2025 21:29:37 UTC">December 14, 2025</span>
   </span>
 
     

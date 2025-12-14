@@ -795,10 +795,60 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#root-tables" class="md-nav__link">
+  <a href="#the-generation-logic" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Root tables
+        The Generation Logic
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The Generation Logic">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-root-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Root Tables
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-child-tables-the-cascade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Child Tables (The Cascade)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-multi-parent-tables-secondary-fks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Multi-Parent Tables (Secondary FKs)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scaling-volume" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scaling &amp; Volume
       
     </span>
   </a>
@@ -806,35 +856,80 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#child-tables" class="md-nav__link">
+  <a href="#api-usage" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Child tables
+        API Usage
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="API Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#synthesizersample" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        synthesizer.sample()
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#code-sketch-after-fit" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#example-in-memory-generation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Code sketch (after fit)
+        Example: In-Memory Generation
       
     </span>
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#stratified-sampling-from-source" class="md-nav__link">
+  <a href="#performance-limitations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Stratified sampling from source
+        Performance &amp; Limitations
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Performance &amp; Limitations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#memory-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Memory Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#referential-integrity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Referential Integrity
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1533,28 +1628,79 @@
 
 
 <h1 id="sampling-relational-generation">Sampling &amp; Relational Generation<a class="headerlink" href="#sampling-relational-generation" title="Permanent link">&para;</a></h1>
-<h2 id="root-tables">Root tables<a class="headerlink" href="#root-tables" title="Permanent link">&para;</a></h2>
-<ul>
-<li><code>CTGAN.sample</code> generates <code>num_rows</code> rows.</li>
-<li>PKs are assigned sequentially after generation.</li>
-</ul>
-<h2 id="child-tables">Child tables<a class="headerlink" href="#child-tables" title="Permanent link">&para;</a></h2>
-<ol>
-<li><code>LinkageModel.sample_counts</code> predicts child counts per parent.</li>
-<li>Parent PKs are repeated based on sampled counts to form FKs.</li>
-<li>Optional parent context columns are repeated for conditional sampling.</li>
-<li>Secondary FKs (multiple parents) are filled by random selection from respective parent PKs.</li>
-</ol>
-<h2 id="code-sketch-after-fit">Code sketch (after fit)<a class="headerlink" href="#code-sketch-after-fit" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="n">num_rows</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;users&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span> <span class="s2">&quot;orders&quot;</span><span class="p">:</span> <span class="mi">4000</span><span class="p">}</span>
-<span class="n">output_paths</span> <span class="o">=</span> <span class="n">synth</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">num_rows</span><span class="o">=</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">output_format</span><span class="o">=</span><span class="s2">&quot;delta&quot;</span><span class="p">)</span>
-<span class="c1"># Returns mapping of table -&gt; output path</span>
+<p>Once your models are trained, you can generate synthetic data. SynthoHive uses a <strong>Top-Down Logic</strong> for generation, ensuring that parent records are created before their children, preserving referential integrity.</p>
+<h2 id="the-generation-logic">The Generation Logic<a class="headerlink" href="#the-generation-logic" title="Permanent link">&para;</a></h2>
+<h3 id="1-root-tables">1. Root Tables<a class="headerlink" href="#1-root-tables" title="Permanent link">&para;</a></h3>
+<p>Generation starts with tables that have no foreign keys (Roots).
+*   <strong>Method</strong>: The CTGAN model samples <code>n</code> rows directly from the learned latent space.
+*   <strong>Identity</strong>: Primary Keys (e.g., <code>user_id</code>) are assigned sequentially (1, 2, 3...) to these new rows.</p>
+<h3 id="2-child-tables-the-cascade">2. Child Tables (The Cascade)<a class="headerlink" href="#2-child-tables-the-cascade" title="Permanent link">&para;</a></h3>
+<p>Once a parent table exists, its children are generated using the <strong>Linkage Model</strong>.
+*   <strong>Step A: Sample Counts</strong>: For every row in the Parent table, the Linkage Model predicts <em>how many</em> children it should have.
+    *   <em>Real World Analogy</em>: For User #1, the model predicts 2 orders. For User #2, it predicts 0.
+*   <strong>Step B: Expand Context</strong>: The Parent's "Context Columns" (e.g., <code>Region</code>) are repeated <code>k</code> times, where <code>k</code> is the predicted count.
+*   <strong>Step C: Conditional Sampling</strong>: The Child CTGAN model generates the specific details for these rows, <em>conditioned</em> on the repeated parent context.
+*   <strong>Step D: Assign FKs</strong>: The Parent's ID is assigned to the foreign key column (<code>user_id</code>).</p>
+<h3 id="3-multi-parent-tables-secondary-fks">3. Multi-Parent Tables (Secondary FKs)<a class="headerlink" href="#3-multi-parent-tables-secondary-fks" title="Permanent link">&para;</a></h3>
+<p>If a table has multiple parents (e.g., <code>OrderItems</code> has <code>order_id</code> AND <code>product_id</code>):
+1.  One parent is chosen as the <strong>Driver</strong> (usually the first FK alphabetically or by configuration). This driver controls the <em>volume</em> (how many items per order).
+2.  The other parent (<code>product_id</code>) is assigned via <strong>Random Sampling</strong>.
+    *   The system creates the rows based on the Order driver.
+    *   For the <code>product_id</code> column, it randomly picks valid IDs from the already-generated <code>Products</code> table.
+    *   <em>Note</em>: This random assignment preserves the validity of the FK (it points to a real Product), but does not currently enforce strict joint distributions between two parents.</p>
+<h2 id="scaling-volume">Scaling &amp; Volume<a class="headerlink" href="#scaling-volume" title="Permanent link">&para;</a></h2>
+<p>You control the volume of the generated database by setting the row counts for <strong>Root Tables</strong>.</p>
+<div class="highlight"><pre><span></span><code><span class="n">num_rows</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;users&quot;</span><span class="p">:</span> <span class="mi">100_000</span><span class="p">,</span>    <span class="c1"># Root table: Exact count</span>
+    <span class="s2">&quot;products&quot;</span><span class="p">:</span> <span class="mi">500</span>      <span class="c1"># Root table: Exact count</span>
+<span class="p">}</span>
+
+<span class="c1"># Child tables (e.g., &quot;orders&quot;) are NOT specified here. </span>
+<span class="c1"># Their volume is determined by the Linkage Model ratios (e.g., avg 5 orders/user).</span>
 </code></pre></div>
-<h2 id="stratified-sampling-from-source">Stratified sampling from source<a class="headerlink" href="#stratified-sampling-from-source" title="Permanent link">&para;</a></h2>
+<div class="admonition tip">
+<p class="admonition-title">Scaling Factor</p>
+<p>If you want a 2x larger database, simply double the root counts. The child tables will naturally scale up by ~2x because the linkage ratios (children per parent) remain constant.</p>
+</div>
+<h2 id="api-usage">API Usage<a class="headerlink" href="#api-usage" title="Permanent link">&para;</a></h2>
+<h3 id="synthesizersample"><code>synthesizer.sample()</code><a class="headerlink" href="#synthesizersample" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">output</span> <span class="o">=</span> <span class="n">synth</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>
+    <span class="n">num_rows</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;users&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">},</span>
+    <span class="n">output_format</span><span class="o">=</span><span class="s2">&quot;delta&quot;</span><span class="p">,</span>
+    <span class="n">output_path</span><span class="o">=</span><span class="s2">&quot;/tmp/synthetic_db&quot;</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Arguments:
+-   <code>num_rows</code> (Dict[str, int]): Map of root table names to desired row counts.
+-   <code>output_format</code> (str): Format for writing files. Default is <code>"delta"</code>.
+-   <code>output_path</code> (Optional[str]):
+    -   If provided (str): Writes files to disk at this path. Returns a dictionary of table paths.
+    -   If <code>None</code>: Returns a dictionary of <strong>Pandas DataFrames</strong> in memory.</p>
+<h3 id="example-in-memory-generation">Example: In-Memory Generation<a class="headerlink" href="#example-in-memory-generation" title="Permanent link">&para;</a></h3>
+<p>Useful for smaller datasets or unit tests.</p>
+<div class="highlight"><pre><span></span><code><span class="n">dfs</span> <span class="o">=</span> <span class="n">synth</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>
+    <span class="n">num_rows</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;users&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">},</span> 
+    <span class="n">output_path</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">)</span>
+
+<span class="n">users_df</span> <span class="o">=</span> <span class="n">dfs</span><span class="p">[</span><span class="s2">&quot;users&quot;</span><span class="p">]</span>
+<span class="n">orders_df</span> <span class="o">=</span> <span class="n">dfs</span><span class="p">[</span><span class="s2">&quot;orders&quot;</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">users_df</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+</code></pre></div>
+<h2 id="performance-limitations">Performance &amp; Limitations<a class="headerlink" href="#performance-limitations" title="Permanent link">&para;</a></h2>
+<h3 id="memory-usage">Memory Usage<a class="headerlink" href="#memory-usage" title="Permanent link">&para;</a></h3>
+<p>The current implementation generates data in <strong>batches per table</strong>.
+-   <strong>Limitation</strong>: The entire generated table must fit in memory before writing to disk.
+-   <strong>Workaround</strong>: If you need 100M rows, do not generate them in one generic call. Write a loop to generate 1M rows 100 times, saving each batch to disk.</p>
+<h3 id="referential-integrity">Referential Integrity<a class="headerlink" href="#referential-integrity" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>RelationalSampler</code> can downsample roots and cascade to children while keeping distribution via semijoins.</li>
-<li>Configure <code>sample_size</code> and optional <code>stratify_by</code> to balance classes. </li>
+<li><strong>Primary Keys</strong>: Guaranteed unique for the generated batch.</li>
+<li><strong>Foreign Keys</strong>: Guaranteed valid (always point to an existing parent in the current batch).</li>
 </ul>
+<div class="admonition warning">
+<p class="admonition-title">Partitioning</p>
+<p>Generation is not currently distributed across Spark workers. It runs on the driver logic. Future versions will support distributed generation for massive scale.</p>
+</div>
 
 
 
@@ -1575,7 +1721,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 13, 2025 03:01:14 UTC">December 13, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 14, 2025 21:29:37 UTC">December 14, 2025</span>
   </span>
 
     
