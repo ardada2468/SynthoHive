@@ -1472,7 +1472,7 @@
 
 
 <h1 id="data-flow">Data Flow<a class="headerlink" href="#data-flow" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code>flowchart TD
+<pre class="mermaid"><code>flowchart TD
     A[Real tables] --&gt; B[DataTransformer fit/transform]
     B --&gt; C[CTGAN training]
     A --&gt; D[LinkageModel (child counts)]
@@ -1480,8 +1480,7 @@
     D --&gt; E
     E --&gt; F[Inverse transform]
     F --&gt; G[Privacy sanitizer (optional)]
-    G --&gt; H[Validation report]
-</code></pre></div>
+    G --&gt; H[Validation report]</code></pre>
 <h2 id="steps">Steps<a class="headerlink" href="#steps" title="Permanent link">&para;</a></h2>
 <ol>
 <li><strong>Transform</strong>: <code>DataTransformer.fit/transform</code> profiles each column (continuous via VGM, categorical via OHE or embeddings) and excludes PK/FK where configured.</li>

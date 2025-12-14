@@ -1529,13 +1529,12 @@
 <h1 id="privacy-guardrails">Privacy Guardrails<a class="headerlink" href="#privacy-guardrails" title="Permanent link">&para;</a></h1>
 <p>Synthetic data is only useful if it effectively masks sensitive information while retaining utility. SynthoHive applies privacy controls <strong>before</strong> any finding or training occurs, ensuring that no raw PII ever enters the generative models.</p>
 <h2 id="the-sanitize-workflow">The Sanitize workflow<a class="headerlink" href="#the-sanitize-workflow" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code>flowchart LR
+<pre class="mermaid"><code>flowchart LR
     A[Raw Data] --&gt; B{PII Analyzer}
     B -- Regex/NER --&gt; C[Detected Map]
     C --&gt; D[Sanitizer Engine]
     D -- Rules --&gt; E(Clean Data)
-    E --&gt; F[Training]
-</code></pre></div>
+    E --&gt; F[Training]</code></pre>
 <h2 id="detection-strategies">Detection Strategies<a class="headerlink" href="#detection-strategies" title="Permanent link">&para;</a></h2>
 <p>We use a combination of heuristics to detect Personal Identifiable Information (PII):</p>
 <ol>
