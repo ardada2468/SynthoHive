@@ -22,7 +22,7 @@ Other foreign keys (e.g., `Product`) are treated as **Secondary**. These are ass
 To preserve correlations across tables (e.g., "Users in NY order Winter Coats"), we use **Conditional Generation**.
 
 1.  **Fit Phase**: We join relevant columns from the Driver Parent (e.g., `User.City`) to the Child Table.
-2.  **Training**: The CTGAN model learns not just $P(Order)$, but $P(Order | User.City)$.
+2.  **Training**: The CTGAN model learns not just `P(Order)`, but `P(Order | User.City)`.
 3.  **Generation Phase**:
     *   We generate a synthetic User: `{ID: 1, City: "NY"}`.
     *   The `LinkageModel` says "Generate 3 orders for User 1".

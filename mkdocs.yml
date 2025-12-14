@@ -68,6 +68,7 @@ nav:
   - Guides:
       - Fitting Models: guides/fitting.md
       - Relational Concepts: guides/relational.md
+      - Embeddings & High Cardinality: guides/embeddings.md
       - Sampling & Relational: guides/sampling.md
       - Privacy & PII: guides/privacy.md
       - Validation Reports: guides/validation.md

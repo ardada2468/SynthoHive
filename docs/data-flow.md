@@ -6,14 +6,14 @@ title: Data Flow
 
 ```mermaid
 flowchart TD
-    A[Real tables] --> B[DataTransformer fit/transform]
-    B --> C[CTGAN training]
-    A --> D[LinkageModel (child counts)]
-    C --> E[Generator]
+    A["Real tables"] --> B["DataTransformer fit/transform"]
+    B --> C["CTGAN training"]
+    A --> D["LinkageModel (child counts)"]
+    C --> E["Generator"]
     D --> E
-    E --> F[Inverse transform]
-    F --> G[Privacy sanitizer (optional)]
-    G --> H[Validation report]
+    E --> F["Inverse transform"]
+    F --> G["Privacy sanitizer (optional)"]
+    G --> H["Validation report"]
 ```
 
 ## Steps

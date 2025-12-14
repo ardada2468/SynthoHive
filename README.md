@@ -135,7 +135,7 @@ report.generate(
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-Huge thannks to the CTGAN Team!
+Huge thanks to the CTGAN Team!
 
 @inproceedings{ctgan,
   title={Modeling Tabular data using Conditional GAN},

@@ -14,7 +14,7 @@ How do you know your synthetic data is good? SynthoHive provides a comprehensive
 *   **Interpretation**:
     *   `0.0` = Perfect fit (Distributions are identical).
     *   `1.0` = Totally different.
-    *   Typically, $< 0.1$ is considered excellent quality.
+    *   Typically, < 0.1 is considered excellent quality.
 
 ### 2. Total Variation Distance (TVD)
 *   **Target**: Categorical Columns
