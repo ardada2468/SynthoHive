@@ -849,6 +849,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#custom-logic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Logic
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1518,7 +1529,7 @@
 <h1 id="privacy-guardrails">Privacy Guardrails<a class="headerlink" href="#privacy-guardrails" title="Permanent link">&para;</a></h1>
 <p>Synthetic data is only useful if it effectively masks sensitive information while retaining utility. SynthoHive applies privacy controls <strong>before</strong> any finding or training occurs, ensuring that no raw PII ever enters the generative models.</p>
 <h2 id="the-sanitize-workflow">The Sanitize workflow<a class="headerlink" href="#the-sanitize-workflow" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code>graph LR
+<div class="highlight"><pre><span></span><code>flowchart LR
     A[Raw Data] --&gt; B{PII Analyzer}
     B -- Regex/NER --&gt; C[Detected Map]
     C --&gt; D[Sanitizer Engine]
@@ -1563,18 +1574,51 @@
 <td style="text-align: left;">Replaces with realistic fake data.</td>
 <td style="text-align: left;">Names, Addresses, Emails that need to look "real" for the model.</td>
 </tr>
+<tr>
+<td style="text-align: left;"><strong><code>keep</code></strong></td>
+<td style="text-align: left;">Retains the original value.</td>
+<td style="text-align: left;">Low-sensitivity fields or when data is already sanitized source.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>custom</code></strong></td>
+<td style="text-align: left;">Uses a user-provided function.</td>
+<td style="text-align: left;">complex logic requiring row-level context.</td>
+</tr>
 </tbody>
 </table>
 <h2 id="context-aware-faking">Context-Aware Faking<a class="headerlink" href="#context-aware-faking" title="Permanent link">&para;</a></h2>
-<p>Standard fakers generate random data. <strong>Contextual Faking</strong> ensures consistency.</p>
-<p>Example: If a record has <code>Country="US"</code>, the sanitizer will generate a US-formatted phone number, not a UK one. This preserves the statistical structure of the data even in faked columns.</p>
+<p>Standard fakers generate random data. <strong>Contextual Faking</strong> ensures consistency across columns.</p>
+<p>The <code>ContextualFaker</code> looks for specific keys in the row data to determine the locale for generation:
+*   <code>country</code>
+*   <code>locale</code>
+*   <code>region</code></p>
+<p>Example: If a record has <code>Country="US"</code>, the sanitizer will generate a US-formatted phone number (e.g., <code>+1-555...</code>). If <code>Country="JP"</code>, it generates a Japanese number.</p>
+<p>Supported locales include: <code>US</code>, <code>UK</code>/<code>GB</code>, <code>JP</code>, <code>DE</code>, <code>FR</code>, <code>CN</code>, <code>IN</code>.</p>
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
 <p>You can customize rules via the <code>PrivacyConfig</code> object:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">syntho_hive.interface.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">PrivacyConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">syntho_hive.privacy.sanitizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">PiiRule</span>
 
 <span class="n">config</span> <span class="o">=</span> <span class="n">PrivacyConfig</span><span class="p">(</span><span class="n">rules</span><span class="o">=</span><span class="p">[</span>
-    <span class="n">PiiRule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;custom_code&quot;</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s2">&quot;^[A-Z]</span><span class="si">{2}</span><span class="s2">-\d</span><span class="si">{4}</span><span class="s2">$&quot;</span><span class="p">],</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;mask&quot;</span><span class="p">)</span>
+    <span class="n">PiiRule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;custom_code&quot;</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s2">&quot;^[A-Z]</span><span class="si">{2}</span><span class="s2">-\d</span><span class="si">{4}</span><span class="s2">$&quot;</span><span class="p">],</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;mask&quot;</span><span class="p">),</span>
+    <span class="n">PiiRule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;audit_id&quot;</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s2">&quot;^AUD-\d+&quot;</span><span class="p">],</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;keep&quot;</span><span class="p">)</span>
+<span class="p">])</span>
+</code></pre></div>
+<h2 id="custom-logic">Custom Logic<a class="headerlink" href="#custom-logic" title="Permanent link">&para;</a></h2>
+<p>For complex scenarios, you can define a custom generator function that receives the entire row context. This is useful for conditional sanitization or format-preserving encryption.</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">redact_sensitive_id</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="c1"># Example: Redact differently based on user role from another column</span>
+    <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;role&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;admin&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;user_id&#39;</span><span class="p">]</span> <span class="c1"># Keep visible for admins (in this hypothetical flow)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;REDACTED-</span><span class="si">{</span><span class="nb">hash</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;user_id&#39;</span><span class="p">])</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">1000</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">PrivacyConfig</span><span class="p">(</span><span class="n">rules</span><span class="o">=</span><span class="p">[</span>
+    <span class="n">PiiRule</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;custom_logic&quot;</span><span class="p">,</span> 
+        <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s2">&quot;user_\d+&quot;</span><span class="p">],</span> 
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;custom&quot;</span><span class="p">,</span> 
+        <span class="n">custom_generator</span><span class="o">=</span><span class="n">redact_sensitive_id</span>
+    <span class="p">)</span>
 <span class="p">])</span>
 </code></pre></div>
 
@@ -1597,7 +1641,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 13, 2025 03:01:14 UTC">December 13, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 14, 2025 20:58:09 UTC">December 14, 2025</span>
   </span>
 
     
