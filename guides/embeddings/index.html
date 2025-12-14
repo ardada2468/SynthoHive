@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://ardada2468.github.io/SynthoHive/guides/privacy/">
+        <link rel="canonical" href="https://ardada2468.github.io/SynthoHive/guides/embeddings/">
       
       
-        <link rel="prev" href="../sampling/">
+        <link rel="prev" href="../relational/">
       
       
-        <link rel="next" href="../validation/">
+        <link rel="next" href="../sampling/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Privacy & PII - SynthoHive</title>
+        <title>Embeddings & High Cardinality - SynthoHive</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#privacy-guardrails" class="md-skip">
+        <a href="#feature-embeddings" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Privacy & PII
+              Embeddings & High Cardinality
             
           </span>
         </div>
@@ -704,10 +704,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../embeddings/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Embeddings & High Cardinality
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -723,6 +750,165 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#when-to-use-embeddings-vs-one-hot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to use Embeddings vs One-Hot?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it Works
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How it Works">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-transformation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Transformation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-model-training-ctgan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Model Training (CTGAN)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#global-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Global Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use Cases
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Use Cases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-geographical-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Geographical Data
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-id-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. ID Columns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-medical-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Medical Codes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -760,37 +946,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Privacy & PII
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../privacy/" class="md-nav__link">
         
   
   
@@ -806,131 +965,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#the-sanitize-workflow" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The Sanitize workflow
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#faker-vs-embeddings" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Faker vs. Embeddings
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#detection-strategies" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Detection Strategies
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#sanitization-actions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Sanitization Actions
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#context-aware-faking" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Context-Aware Faking
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Context-Aware Faking">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#how-it-works" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        How it works
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#internal-mechanism" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Internal Mechanism
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#configuration" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Configuration
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#custom-logic" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Custom Logic
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1593,119 +1627,77 @@
   
 
 
-<h1 id="privacy-guardrails">Privacy Guardrails<a class="headerlink" href="#privacy-guardrails" title="Permanent link">&para;</a></h1>
-<p>Synthetic data is only useful if it effectively masks sensitive information while retaining utility. SynthoHive applies privacy controls <strong>before</strong> any finding or training occurs, ensuring that no raw PII ever enters the generative models.</p>
-<h2 id="the-sanitize-workflow">The Sanitize workflow<a class="headerlink" href="#the-sanitize-workflow" title="Permanent link">&para;</a></h2>
-<pre class="mermaid"><code>flowchart LR
-    A[Raw Data] --&gt; B{PII Analyzer}
-    B -- Regex/NER --&gt; C[Detected Map]
-    C --&gt; D[Sanitizer Engine]
-    D -- Rules --&gt; E(Clean Data)
-    E --&gt; F[Training]</code></pre>
-<h2 id="faker-vs-embeddings">Faker vs. Embeddings<a class="headerlink" href="#faker-vs-embeddings" title="Permanent link">&para;</a></h2>
-<p>It is important to distinguish when to use <strong>Faker</strong> versus <strong>Embeddings</strong>:</p>
-<ul>
-<li><strong>Faker (Sanitization)</strong>: Used when you need to <strong>hide</strong> the original values and replace them with plausible dummies. This creates <em>new</em> values (names, emails) that never existed in your real dataset. Use this for PII.</li>
-<li><strong>Embeddings (Modeling)</strong>: Used when you want the model to <strong>learn associations</strong> between high-cardinality categories (e.g., "ZipCode" correllated with "Income"). The generative model uses embeddings to capture these patterns but typically reproduces values from the <em>existing vocabulary</em> of the training data.</li>
-</ul>
-<blockquote>
-<p>[!TIP]
-Use <strong>Faker</strong> for privacy (hiding identity). Use <strong>Embeddings</strong> for utility (preserving statistical relationships in categories like Brands, Cities, or Diagnosis Codes).</p>
-</blockquote>
-<h2 id="detection-strategies">Detection Strategies<a class="headerlink" href="#detection-strategies" title="Permanent link">&para;</a></h2>
-<p>We use a combination of heuristics to detect Personal Identifiable Information (PII):</p>
-<ol>
-<li><strong>Column Naming</strong>: Checks for keywords like "email", "ssn", "phone", "address".</li>
-<li><strong>Pattern Matching</strong>: Scans a sample of data against a library of regular expressions (Email, IPv4, Credit Cards, Social Security Numbers).</li>
-<li><strong>Thresholding</strong>: A column is flagged only if &gt; 50% of non-null values match a pattern.</li>
-</ol>
-<h2 id="sanitization-actions">Sanitization Actions<a class="headerlink" href="#sanitization-actions" title="Permanent link">&para;</a></h2>
-<p>Once PII is detected (or manually configured), you can apply one of several actions:</p>
+<h1 id="feature-embeddings">Feature Embeddings<a class="headerlink" href="#feature-embeddings" title="Permanent link">&para;</a></h1>
+<p>SynthoHive provides specialized handling for <strong>High Cardinality</strong> categorical columns (e.g., Use ID, Zip Code, Product ID) using <strong>Entity Embeddings</strong>. This avoids the computational explosion of One-Hot Encoding and allows the model to learn semantic relationships between categories.</p>
+<h2 id="when-to-use-embeddings-vs-one-hot">When to use Embeddings vs One-Hot?<a class="headerlink" href="#when-to-use-embeddings-vs-one-hot" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Action</th>
-<th style="text-align: left;">Description</th>
-<th style="text-align: left;">Use Case</th>
+<th style="text-align: left;">Feature</th>
+<th style="text-align: left;">One-Hot Encoding</th>
+<th style="text-align: left;">Entity Embeddings</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><strong><code>drop</code></strong></td>
-<td style="text-align: left;">Removes the column entirely.</td>
-<td style="text-align: left;">High-risk fields with zero utility (e.g., internal system IDs).</td>
+<td style="text-align: left;"><strong>Technique</strong></td>
+<td style="text-align: left;">Creates a binary column for every unique category.</td>
+<td style="text-align: left;">Maps each category to a dense vector of floating point numbers.</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong><code>mask</code></strong></td>
-<td style="text-align: left;">Replaces all but the last 4 characters with <code>*</code>.</td>
-<td style="text-align: left;">Credit cards, phone numbers where visual format matters.</td>
+<td style="text-align: left;"><strong>Cardinality</strong></td>
+<td style="text-align: left;">Low (&lt; 50 unique values).</td>
+<td style="text-align: left;">High (&gt; 50 unique values).</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong><code>hash</code></strong></td>
-<td style="text-align: left;">Replaces value with SHA-256 hash.</td>
-<td style="text-align: left;">Maintaining distinctness for joining without revealing value (e.g., User IDs).</td>
+<td style="text-align: left;"><strong>Memory Usage</strong></td>
+<td style="text-align: left;">High (Sparse but wide).</td>
+<td style="text-align: left;">Low (Compact dense vectors).</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong><code>fake</code></strong></td>
-<td style="text-align: left;">Replaces with realistic fake data.</td>
-<td style="text-align: left;">Names, Addresses, Emails that need to look "real" for the model.</td>
+<td style="text-align: left;"><strong>Relationships</strong></td>
+<td style="text-align: left;">Independent. No relationship between 'A' and 'B'.</td>
+<td style="text-align: left;">Learned. Similar categories end up close in vector space.</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong><code>keep</code></strong></td>
-<td style="text-align: left;">Retains the original value.</td>
-<td style="text-align: left;">Low-sensitivity fields or when data is already sanitized source.</td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong><code>custom</code></strong></td>
-<td style="text-align: left;">Uses a user-provided function.</td>
-<td style="text-align: left;">complex logic requiring row-level context.</td>
+<td style="text-align: left;"><strong>Example</strong></td>
+<td style="text-align: left;"><code>Gender</code>, <code>MaritalStatus</code>.</td>
+<td style="text-align: left;"><code>ZipCode</code>, <code>UserID</code>, <code>ICD9_Code</code>.</td>
 </tr>
 </tbody>
 </table>
-<h2 id="context-aware-faking">Context-Aware Faking<a class="headerlink" href="#context-aware-faking" title="Permanent link">&para;</a></h2>
-<p>Standard fakers generate random data. <strong>Contextual Faking</strong> ensures consistency across columns.</p>
-<h3 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h3>
-<p>The <code>ContextualFaker</code> looks for specific keys in the row data to determine the locale for generation:
-*   <code>country</code>
-*   <code>locale</code>
-*   <code>region</code></p>
-<p>Example: If a record has <code>Country="US"</code>, the sanitizer will generate a US-formatted phone number (e.g., <code>+1-555...</code>). If <code>Country="JP"</code>, it generates a Japanese number.</p>
-<p>Supported locales include: <code>US</code>, <code>UK</code>/<code>GB</code>, <code>JP</code>, <code>DE</code>, <code>FR</code>, <code>CN</code>, <code>IN</code>.</p>
-<h3 id="internal-mechanism">Internal Mechanism<a class="headerlink" href="#internal-mechanism" title="Permanent link">&para;</a></h3>
-<p>Internally, <code>ContextualFaker</code> leverages the <strong><code>faker</code></strong> python library. It optimizes performance by maintaining a <strong>cache of Faker instances</strong> initiated for each required locale (e.g., <code>ja_JP</code> for Japan, <code>de_DE</code> for Germany).</p>
-<ol>
-<li><strong>Locale Resolution</strong>: It scans the row for the context keys.</li>
-<li><strong>Instance Selection</strong>: It maps the value (e.g., "JP") to a specific <code>Faker</code> locale identifier (e.g., <code>ja_JP</code>) using an internal <code>LOCALE_MAP</code>.</li>
-<li><strong>Generation</strong>: It delegates the generation to that specific locale's provider. For example, <code>fake.phone_number()</code> for <code>ja_JP</code> produces a valid Japanese format compliant with local regex rules.</li>
-</ol>
-<p>If no context is found, it falls back to a default <code>en_US</code> generator.</p>
+<h2 id="how-it-works">How it Works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
+<p>The transformation pipeline automatically detects high-cardinality columns based on a threshold.</p>
+<h3 id="1-detection">1. Detection<a class="headerlink" href="#1-detection" title="Permanent link">&para;</a></h3>
+<p>During <code>DataTransformer.fit()</code>, the system checks the number of unique values in each categorical column.
+If <code>num_unique &gt; embedding_threshold</code> (default: 50), the column is flagged for embedding.</p>
+<h3 id="2-transformation">2. Transformation<a class="headerlink" href="#2-transformation" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>One-Hot</strong>: Converts string <code>"A"</code> -&gt; <code>[1, 0, 0]</code>.</li>
+<li><strong>Embedding</strong>: Converts string <code>"A"</code> -&gt; <code>Integer Index (42)</code>.</li>
+</ul>
+<h3 id="3-model-training-ctgan">3. Model Training (CTGAN)<a class="headerlink" href="#3-model-training-ctgan" title="Permanent link">&para;</a></h3>
+<p>Inside the neural network model:
+*   <strong>Generator</strong>: Outputs a probability distribution (logits) over all possible categories.
+*   <strong>Discriminator</strong>: Feeds the index (for real data) or probability-weighted vector (for fake data) into a learnable <strong>Embedding Layer</strong>.
+*   <strong>Learning</strong>: The model learns to place similar entities near each other. For example, if Zip Codes <code>10001</code> and <code>10002</code> have similar correlations with <code>Income</code>, their embedding vectors will become similar during training.</p>
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
-<p>You can customize rules via the <code>PrivacyConfig</code> object:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">syntho_hive.interface.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">PrivacyConfig</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">syntho_hive.privacy.sanitizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">PiiRule</span>
-
-<span class="n">config</span> <span class="o">=</span> <span class="n">PrivacyConfig</span><span class="p">(</span><span class="n">rules</span><span class="o">=</span><span class="p">[</span>
-    <span class="n">PiiRule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;custom_code&quot;</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s2">&quot;^[A-Z]</span><span class="si">{2}</span><span class="s2">-\d</span><span class="si">{4}</span><span class="s2">$&quot;</span><span class="p">],</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;mask&quot;</span><span class="p">),</span>
-    <span class="n">PiiRule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;audit_id&quot;</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s2">&quot;^AUD-\d+&quot;</span><span class="p">],</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;keep&quot;</span><span class="p">)</span>
-<span class="p">])</span>
+<p>You can control the threshold for switching to embeddings globally or per-model.</p>
+<h3 id="global-configuration">Global Configuration<a class="headerlink" href="#global-configuration" title="Permanent link">&para;</a></h3>
+<p>Set the <code>embedding_threshold</code> when initializing the synthesizer or calling <code>fit</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="n">synth</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+    <span class="n">embedding_threshold</span><span class="o">=</span><span class="mi">100</span>  <span class="c1"># Only use embeddings if &gt; 100 unique values</span>
+<span class="p">)</span>
 </code></pre></div>
-<h2 id="custom-logic">Custom Logic<a class="headerlink" href="#custom-logic" title="Permanent link">&para;</a></h2>
-<p>For complex scenarios, you can define a custom generator function that receives the entire row context. This is useful for conditional sanitization or format-preserving encryption.</p>
-<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">redact_sensitive_id</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="c1"># Example: Redact differently based on user role from another column</span>
-    <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;role&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;admin&#39;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;user_id&#39;</span><span class="p">]</span> <span class="c1"># Keep visible for admins (in this hypothetical flow)</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;REDACTED-</span><span class="si">{</span><span class="nb">hash</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;user_id&#39;</span><span class="p">])</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">1000</span><span class="si">}</span><span class="s2">&quot;</span>
-
-<span class="n">config</span> <span class="o">=</span> <span class="n">PrivacyConfig</span><span class="p">(</span><span class="n">rules</span><span class="o">=</span><span class="p">[</span>
-    <span class="n">PiiRule</span><span class="p">(</span>
-        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;custom_logic&quot;</span><span class="p">,</span> 
-        <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s2">&quot;user_\d+&quot;</span><span class="p">],</span> 
-        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;custom&quot;</span><span class="p">,</span> 
-        <span class="n">custom_generator</span><span class="o">=</span><span class="n">redact_sensitive_id</span>
-    <span class="p">)</span>
-<span class="p">])</span>
-</code></pre></div>
+<p>Lowering this value forces more columns to use embeddings, which saves memory but might reduce precision for small categorical sets. increasing it uses One-Hot for more columns, which is more precise but memory-intensive.</p>
+<h2 id="use-cases">Use Cases<a class="headerlink" href="#use-cases" title="Permanent link">&para;</a></h2>
+<h3 id="1-geographical-data">1. Geographical Data<a class="headerlink" href="#1-geographical-data" title="Permanent link">&para;</a></h3>
+<p>Zip codes, Cities, or State abbreviations often have hundreds of values. Embeddings allow the model to learn valid geography (e.g., that "NY" and "NJ" are related) rather than treating them as unrelated tokens.</p>
+<h3 id="2-id-columns">2. ID Columns<a class="headerlink" href="#2-id-columns" title="Permanent link">&para;</a></h3>
+<p>While primary keys like <code>UserID</code> are usually excluded, you might have <strong>Foreign Keys</strong> or distinct identifiers like <code>ProductCode</code> that you want to synthesize while preserving their statistical properties.</p>
+<h3 id="3-medical-codes">3. Medical Codes<a class="headerlink" href="#3-medical-codes" title="Permanent link">&para;</a></h3>
+<p>ICD-9 or CPT codes have thousands of distinct values. Embeddings are essential for synthesizing electronic health records (EHR) effectively.</p>
 
 
 
