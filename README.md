@@ -143,3 +143,5 @@ Huge thanks to the CTGAN Team!
   booktitle={Advances in Neural Information Processing Systems},
   year={2019}
 }
+
+Used by FedEx Dataworks
