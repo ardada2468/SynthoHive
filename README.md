@@ -144,4 +144,7 @@ Huge thanks to the CTGAN Team!
   year={2019}
 }
 
+---
+## Usage Notes
 Used by FedEx Dataworks
+
