@@ -6,10 +6,14 @@ import pandas as pd
 import numpy as np
 import os
 import csv
+import structlog
 from typing import Optional, List, Any, Tuple
 from .base import ConditionalGenerativeModel
 from .layers import ResidualLayer, Discriminator, EntityEmbeddingLayer
 from syntho_hive.core.data.transformer import DataTransformer
+from syntho_hive.exceptions import SerializationError, TrainingError  # noqa: F401 – re-raised by CTGAN save/load
+
+log = structlog.get_logger()
 
 def compute_gradient_penalty(discriminator, real_samples, fake_samples, device):
     """Calculate the WGAN-GP gradient penalty term.
@@ -484,20 +488,40 @@ class CTGAN(ConditionalGenerativeModel):
 
         Args:
             path: Filesystem path to write the checkpoint to.
+
+        Raises:
+            SerializationError: If saving the checkpoint fails.
         """
-        torch.save({
-            "generator": self.generator.state_dict(),
-            "discriminator": self.discriminator.state_dict(),
-            # Ideally we pickle the transformer, but for now we assume it's reconstructible or part of the object state
-            # A distinct save mechanism for the full object is better (e.g. pickle or joblib)
-        }, path)
+        try:
+            torch.save({
+                "generator": self.generator.state_dict(),
+                "discriminator": self.discriminator.state_dict(),
+                # Ideally we pickle the transformer, but for now we assume it's reconstructible or part of the object state
+                # A distinct save mechanism for the full object is better (e.g. pickle or joblib)
+            }, path)
+            log.info("ctgan_checkpoint_saved", path=path)
+        except Exception as exc:
+            log.error("ctgan_save_failed", path=path, error=str(exc))
+            raise SerializationError(
+                f"CTGAN.save() failed writing checkpoint to '{path}'. Original error: {exc}"
+            ) from exc
 
     def load(self, path: str) -> None:
         """Load generator and discriminator weights from disk.
 
         Args:
             path: Filesystem path containing a saved checkpoint.
+
+        Raises:
+            SerializationError: If loading the checkpoint fails.
         """
-        checkpoint = torch.load(path)
-        self.generator.load_state_dict(checkpoint["generator"])
-        self.discriminator.load_state_dict(checkpoint["discriminator"])
+        try:
+            checkpoint = torch.load(path, weights_only=True)
+            self.generator.load_state_dict(checkpoint["generator"])
+            self.discriminator.load_state_dict(checkpoint["discriminator"])
+            log.info("ctgan_checkpoint_loaded", path=path)
+        except Exception as exc:
+            log.error("ctgan_load_failed", path=path, error=str(exc))
+            raise SerializationError(
+                f"CTGAN.load() failed reading checkpoint from '{path}'. Original error: {exc}"
+            ) from exc
