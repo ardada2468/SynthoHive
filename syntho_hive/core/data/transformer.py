@@ -1,8 +1,12 @@
 import numpy as np
 import pandas as pd
+import structlog
 from typing import List, Dict, Optional, Tuple, Any
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.mixture import BayesianGaussianMixture
+from syntho_hive.exceptions import ConstraintViolationError  # noqa: F401 – used in Plan 03
+
+log = structlog.get_logger()
 
 class DataTransformer:
     """Reversible transformer for tabular data.
@@ -225,9 +229,14 @@ class DataTransformer:
                                 original_values = pd.to_numeric(original_values.flatten(), errors='coerce')
                             else:
                                 original_values = pd.to_numeric(original_values, errors='coerce')
-                        except Exception:
-                            # If conversion fails, proceed as is (may raise TypeError later)
-                            pass
+                        except Exception as exc:
+                            log.warning(
+                                "column_cast_failed",
+                                column=col,
+                                target_type="numeric",
+                                error=str(exc),
+                            )
+                            # Leave the column as-is (do not set to NaN silently)
 
                     # 1. Rounding/Type
                     if constraint.dtype == "int":
@@ -242,8 +251,14 @@ class DataTransformer:
                             elif isinstance(original_values, np.ndarray):
                                 if not np.isnan(original_values).any():
                                     original_values = original_values.astype(int)
-                        except Exception:
-                            pass
+                        except Exception as exc:
+                            log.warning(
+                                "column_cast_failed",
+                                column=col,
+                                target_type="int",
+                                error=str(exc),
+                            )
+                            # Leave the column as-is (do not set to NaN silently)
                     
                     # 2. Clipping
                     if constraint.min is not None or constraint.max is not None:
