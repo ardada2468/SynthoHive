@@ -1,4 +1,5 @@
 from typing import Dict, Optional, Any, Union, Tuple
+import re
 import pandas as pd
 import structlog
 from syntho_hive.interface.config import Metadata, PrivacyConfig
@@ -10,6 +11,11 @@ from syntho_hive.exceptions import (
     TrainingError,
     SerializationError,
 )
+
+# Allowlist regex for Hive/SQL identifier validation.
+# Only letters, digits, and underscores are permitted — everything else is rejected
+# before any spark.sql() interpolation occurs, preventing SQL injection via user input.
+_SAFE_IDENTIFIER = re.compile(r'^[a-zA-Z0-9_]+$')
 
 try:
     from pyspark.sql import SparkSession
@@ -254,6 +260,23 @@ class Synthesizer:
         """
         if not self.spark:
             raise ValueError("SparkSession required for Hive registration")
+
+        # Validate database name against allowlist before any SQL interpolation.
+        # Raises SchemaError immediately — no Spark context touched for invalid names.
+        if not _SAFE_IDENTIFIER.match(target_db):
+            raise SchemaError(
+                f"SchemaError: Database name '{target_db}' contains invalid characters. "
+                f"Only letters, digits, and underscores [a-zA-Z0-9_] are allowed. "
+                f"This validation prevents SQL injection via unsanitized user input."
+            )
+
+        # Validate table names from synthetic_data keys
+        for table_name in synthetic_data:
+            if not _SAFE_IDENTIFIER.match(str(table_name)):
+                raise SchemaError(
+                    f"SchemaError: Table name '{table_name}' contains invalid characters. "
+                    f"Only letters, digits, and underscores [a-zA-Z0-9_] are allowed."
+                )
 
         print(f"Save to Hive database: {target_db}")
 
