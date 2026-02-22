@@ -52,30 +52,29 @@ def test_ctgan_full_cycle():
     assert synthetic_data['income'].mean() != 0
     
     # 6. Save and Load
+    # save() now writes a directory checkpoint (7-file bundle) instead of a single .pt file
     tmp_path = "test_ctgan_model.pth"
     try:
         model.save(tmp_path)
-        assert os.path.exists(tmp_path)
-        
+        assert os.path.isdir(tmp_path), "save() should produce a directory checkpoint"
+
+        # Cold load — fresh instance, no prior fit needed
         new_model = CTGAN(
             metadata=meta,
             embedding_dim=16,
             generator_dim=(32, 32),
             discriminator_dim=(32, 32)
         )
-        # Need to "build" model first usually if strict loading, 
-        # but our load should ideally handle handling dimensions or we need to fit/build structure first.
-        # In this impl, we must build structure to load state dicts.
-        # We can cheat by fitting on dummy data or calling _build_model using the saved transformer dims (not saved yet in this weak impl)
-        # For this test, let's fit the new model briefly to build structure, then load weights.
-        new_model.fit(data, table_name="users") 
         new_model.load(tmp_path)
-        
+
         sample_loaded = new_model.sample(10)
         assert len(sample_loaded) == 10
-        
+
     finally:
-        if os.path.exists(tmp_path):
+        # save() writes a directory now, so use shutil.rmtree instead of os.remove
+        if os.path.isdir(tmp_path):
+            shutil.rmtree(tmp_path)
+        elif os.path.exists(tmp_path):
             os.remove(tmp_path)
 
 def test_ctgan_conditional():
