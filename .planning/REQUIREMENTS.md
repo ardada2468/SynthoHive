@@ -8,8 +8,8 @@
 ### Core Reliability
 
 - [x] **CORE-01**: Training completes without crashes, hangs, or silent failures — all exceptions surface with actionable error messages
-- [ ] **CORE-02**: `save()` persists full model state (DataTransformer, context_transformer, data_column_info, embedding_layers, generator/discriminator weights) to a single artifact
-- [ ] **CORE-03**: `load()` restores a saved model and runs `sample()` successfully without requiring the original training data or retraining
+- [x] **CORE-02**: `save()` persists full model state (DataTransformer, context_transformer, data_column_info, embedding_layers, generator/discriminator weights) to a single artifact
+- [x] **CORE-03**: `load()` restores a saved model and runs `sample()` successfully without requiring the original training data or retraining
 - [x] **CORE-04**: Bare `except:` and silent `except Exception: pass` blocks are eliminated project-wide; all exceptions are typed and logged with context
 - [ ] **CORE-05**: Training emits structured progress feedback (epoch number, loss values, ETA) so engineers know the job is alive
 
@@ -92,8 +92,8 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | CORE-01 | Phase 1 | Complete (01-01) |
-| CORE-02 | Phase 1 | Pending |
-| CORE-03 | Phase 1 | Pending |
+| CORE-02 | Phase 1 | Complete |
+| CORE-03 | Phase 1 | Complete |
 | CORE-04 | Phase 1 | Complete (01-01) |
 | CORE-05 | Phase 4 | Pending |
 | REL-01 | Phase 2 | Pending |

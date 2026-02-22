@@ -108,7 +108,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core Reliability | 2/4 | In Progress|  |
+| 1. Core Reliability | 3/4 | In Progress|  |
 | 2. Relational Correctness | 0/3 | Not started | - |
 | 3. Model Pluggability | 0/2 | Not started | - |
 | 4. Validation and Quality Gates | 0/3 | Not started | - |
