@@ -87,7 +87,7 @@
 
 ## Traceability
 
-*Updated during roadmap creation*
+*Updated during roadmap creation — 2026-02-22*
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
@@ -126,4 +126,4 @@
 
 ---
 *Requirements defined: 2026-02-22*
-*Last updated: 2026-02-22 after initial definition*
+*Last updated: 2026-02-22 after roadmap creation*
