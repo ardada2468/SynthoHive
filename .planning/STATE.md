@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 ## Current Position
 
 Phase: 1 of 5 (Core Reliability)
-Plan: 3 of 4 in current phase
-Status: In progress
-Last activity: 2026-02-22 — Completed 01-03 (seed control + enforce_constraints in CTGAN)
+Plan: 4 of 4 in current phase (COMPLETE)
+Status: Phase 1 complete — all 4 plans executed
+Last activity: 2026-02-22 — Completed 01-04 (SQL injection patch + TEST-01/03/05 regression suite)
 
-Progress: [███░░░░░░░] 15%
+Progress: [████████░░] 20%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 5 min
-- Total execution time: 0.2 hours
+- Total plans completed: 4
+- Average duration: 4.5 min
+- Total execution time: 0.3 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-core-reliability | 3/4 | 14 min | 5 min |
+| 01-core-reliability | 4/4 | 18 min | 4.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (5 min), 01-02 (5 min), 01-03 (4 min)
+- Last 5 plans: 01-01 (5 min), 01-02 (5 min), 01-03 (4 min), 01-04 (4 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -59,6 +59,8 @@ Recent decisions affecting current work:
 - [01-03]: Per-column seed derived via hash to prevent correlated BayesianGMM fitting across columns
 - [01-03]: enforce_constraints=False default preserves backward compatibility; inverse_transform() already clips values
 - [01-03]: Constraint violations return partial data (valid rows) with WARNING log — caller decides if violation rate is acceptable
+- [Phase 01-04]: Allowlist approach for SQL identifier validation — any character not in [a-zA-Z0-9_] rejected before Spark is touched
+- [Phase 01-04]: Validate both target_db and all table name keys in save_to_hive() — both are interpolated into spark.sql() strings
 
 ### Pending Todos
 
@@ -77,5 +79,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 01-02-PLAN.md — directory-based CTGAN save/load serialization complete
+Stopped at: Completed 01-04-PLAN.md — SQL injection patch and TEST-01/03/05 regression suite complete. Phase 1 all 4 plans done.
 Resume file: None
