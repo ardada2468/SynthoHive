@@ -36,12 +36,15 @@ class DataTransformer:
         return series.fillna('<NAN>').astype(str)
 
         
-    def fit(self, data: pd.DataFrame, table_name: Optional[str] = None):
+    def fit(self, data: pd.DataFrame, table_name: Optional[str] = None, seed: Optional[int] = None):
         """Fit per-column transformers and collect column layout metadata.
 
         Args:
             data: DataFrame to profile and transform.
             table_name: Optional table name for applying PK/FK exclusions and constraints.
+            seed: Optional integer seed propagated to each ``ClusterBasedNormalizer``
+                  for deterministic BayesianGMM fitting.  A per-column seed is derived
+                  from ``seed`` to avoid correlated RNG sequences across columns.
 
         Raises:
             ValueError: If metadata is missing table configurations.
@@ -49,9 +52,9 @@ class DataTransformer:
         self.table_name = table_name # Store for constraint application later
         if not self.metadata.tables:
             raise ValueError("Metadata must be populated with table configs")
-            
+
         columns_to_transform = data.columns.tolist()
-        
+
         # Handle relational constraints if table_name is provided
         if table_name:
             table_config = self.metadata.get_table(table_name)
@@ -63,13 +66,16 @@ class DataTransformer:
                 columns_to_transform = [c for c in columns_to_transform if c not in self._excluded_columns]
 
         self.output_dim = 0
-        
+
         for col in columns_to_transform:
             col_data = data[col]
-            
+
             if pd.api.types.is_numeric_dtype(col_data):
+                # Derive a per-column deterministic seed from the parent seed to avoid
+                # correlated RNG sequences across columns when all columns share one seed.
+                col_seed = (seed + abs(hash(col)) % 100_000) if seed is not None else None
                 # Continuous column
-                transformer = ClusterBasedNormalizer(n_components=10)
+                transformer = ClusterBasedNormalizer(n_components=10, seed=col_seed)
                 transformer.fit(col_data)
                 
                 # Dim is managed by the transformer now (dynamic based on nulls)
@@ -280,14 +286,22 @@ class ClusterBasedNormalizer:
     to the chosen component.
     """
 
-    def __init__(self, n_components: int = 10):
-        """Configure the number of mixture components."""
+    def __init__(self, n_components: int = 10, seed: Optional[int] = None):
+        """Configure the number of mixture components.
+
+        Args:
+            n_components: Number of Gaussian mixture components.
+            seed: Random state for the BayesianGaussianMixture. When None,
+                  defaults to 42 for backward compatibility.
+        """
         self.n_components = n_components
+        # Use provided seed; fall back to 42 for backward compatibility when no seed given.
+        random_state = seed if seed is not None else 42
         self.model = BayesianGaussianMixture(
             n_components=n_components,
             weight_concentration_prior_type='dirichlet_process',
             n_init=1,
-            random_state=42
+            random_state=random_state
         )
         self.means = None
         self.stds = None

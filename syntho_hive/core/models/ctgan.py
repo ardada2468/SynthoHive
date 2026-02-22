@@ -15,6 +15,28 @@ from syntho_hive.exceptions import SerializationError, TrainingError  # noqa: F4
 
 log = structlog.get_logger()
 
+
+def _set_seed(seed: int) -> None:
+    """Set all RNG seeds for deterministic behavior.
+
+    Covers PyTorch, NumPy, and Python's random module. Spark code paths are
+    explicitly excluded — Spark's distributed shuffle is inherently
+    non-deterministic and cannot be seeded via this function.
+
+    Args:
+        seed: Integer seed value to apply across all supported RNG backends.
+    """
+    import random
+    import numpy as np
+    import torch
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    # CuDNN determinism (no-op on CPU, required for GPU reproducibility)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+
 def compute_gradient_penalty(discriminator, real_samples, fake_samples, device):
     """Calculate the WGAN-GP gradient penalty term.
 
@@ -224,7 +246,7 @@ class CTGAN(ConditionalGenerativeModel):
         
         self.discriminator = Discriminator(disc_input_dim, self.discriminator_dim[0]).to(self.device)
         
-    def fit(self, data: pd.DataFrame, context: Optional[pd.DataFrame] = None, table_name: Optional[str] = None, checkpoint_dir: Optional[str] = None, log_metrics: bool = True, **kwargs: Any) -> None:
+    def fit(self, data: pd.DataFrame, context: Optional[pd.DataFrame] = None, table_name: Optional[str] = None, checkpoint_dir: Optional[str] = None, log_metrics: bool = True, seed: Optional[int] = None, **kwargs: Any) -> None:
         """Train the CTGAN model on tabular data.
 
         Args:
@@ -233,16 +255,33 @@ class CTGAN(ConditionalGenerativeModel):
             table_name: Table name for metadata lookup and constraint handling.
             checkpoint_dir: Directory to save checkpoints (best model, metrics). Defaults to None.
             log_metrics: Whether to save training metrics to a CSV file. Defaults to True.
+            seed: Integer seed for deterministic training. When None, an integer is
+                  auto-generated and logged so the run can be reproduced later.
             **kwargs: Extra training options (unused placeholder for compatibility).
         """
+        import random as _random
+
+        # Seed handling — auto-generate when not provided so every run is reproducible.
+        if seed is None:
+            seed = _random.randint(0, 2**31 - 1)
+            log.info(
+                "training_seed",
+                seed=seed,
+                message="No seed provided — auto-generated. Log this value to reproduce this run.",
+            )
+        else:
+            log.info("training_seed", seed=seed)
+
+        _set_seed(seed)
+
         # 0. Setup Checkpointing
         if checkpoint_dir:
             os.makedirs(checkpoint_dir, exist_ok=True)
-        
+
         best_loss = float('inf')
         history = []
         # 1. Fit and Transform Data
-        self.transformer.fit(data, table_name=table_name)
+        self.transformer.fit(data, table_name=table_name, seed=seed)
         train_data = self.transformer.transform(data)
         train_data = torch.from_numpy(train_data).float().to(self.device)
         
@@ -432,17 +471,23 @@ class CTGAN(ConditionalGenerativeModel):
                     dict_writer.writerows(history)
                 print(f"Training metrics saved to {metrics_path}")
 
-    def sample(self, num_rows: int, context: Optional[pd.DataFrame] = None, **kwargs: Any) -> pd.DataFrame:
+    def sample(self, num_rows: int, context: Optional[pd.DataFrame] = None, seed: Optional[int] = None, **kwargs: Any) -> pd.DataFrame:
         """Generate synthetic samples, optionally conditioned on parent context.
 
         Args:
             num_rows: Number of rows to generate.
             context: Optional parent attributes aligned to the requested rows.
+            seed: Optional integer seed for deterministic sampling. Only applied
+                  when provided; no auto-generation (fits and samples may use
+                  independent seeds per CONTEXT.md decision).
             **kwargs: Additional sampling controls (unused placeholder).
 
         Returns:
             DataFrame of synthetic rows mapped back to original schema.
         """
+        if seed is not None:
+            _set_seed(seed)
+
         self.generator.eval()
         with torch.no_grad():
             noise = torch.randn(num_rows, self.embedding_dim, device=self.device)
@@ -483,27 +528,85 @@ class CTGAN(ConditionalGenerativeModel):
             
         return self.transformer.inverse_transform(fake_data_np)
         
-    def save(self, path: str) -> None:
-        """Persist generator and discriminator state dicts to disk.
+    def save(self, path: str, *, overwrite: bool = False) -> None:
+        """Persist full model state to a directory checkpoint.
+
+        Saves all components required for a cold load-and-sample without the
+        original training data: network weights, DataTransformer state,
+        context_transformer state, embedding layer weights, column layout, and
+        human-readable metadata.
+
+        The directory contains:
+            - generator.pt — generator state_dict
+            - discriminator.pt — discriminator state_dict
+            - transformer.joblib — fitted DataTransformer for child table
+            - context_transformer.joblib — fitted DataTransformer for context
+            - embedding_layers.joblib — nn.ModuleDict with entity embedding weights
+            - data_column_info.joblib — column layout list
+            - metadata.json — hyperparameters and version info
 
         Args:
-            path: Filesystem path to write the checkpoint to.
+            path: Directory path to save into.
+            overwrite: If False (default), raises SerializationError if path already exists.
 
         Raises:
-            SerializationError: If saving the checkpoint fails.
+            SerializationError: If path exists and overwrite=False, or if any
+                component fails to serialize.
         """
-        try:
-            torch.save({
-                "generator": self.generator.state_dict(),
-                "discriminator": self.discriminator.state_dict(),
-                # Ideally we pickle the transformer, but for now we assume it's reconstructible or part of the object state
-                # A distinct save mechanism for the full object is better (e.g. pickle or joblib)
-            }, path)
-            log.info("ctgan_checkpoint_saved", path=path)
-        except Exception as exc:
-            log.error("ctgan_save_failed", path=path, error=str(exc))
+        import joblib
+        import json
+        from pathlib import Path
+        from datetime import datetime, timezone
+
+        p = Path(path)
+        if p.exists() and not overwrite:
             raise SerializationError(
-                f"CTGAN.save() failed writing checkpoint to '{path}'. Original error: {exc}"
+                f"SerializationError: Save path '{path}' already exists. "
+                f"Pass overwrite=True to replace it."
+            )
+
+        try:
+            p.mkdir(parents=True, exist_ok=True)
+
+            # Network weights — torch native format
+            torch.save(self.generator.state_dict(), p / "generator.pt")
+            torch.save(self.discriminator.state_dict(), p / "discriminator.pt")
+
+            # sklearn and numpy-heavy objects — joblib for efficient NumPy serialization
+            joblib.dump(self.transformer, p / "transformer.joblib")
+            joblib.dump(self.context_transformer, p / "context_transformer.joblib")
+
+            # Embedding layers (nn.ModuleDict) — joblib serializes via pickle
+            joblib.dump(self.embedding_layers, p / "embedding_layers.joblib")
+
+            # Column layout list (list of dicts describing each column)
+            joblib.dump(self.data_column_info, p / "data_column_info.joblib")
+
+            # Metadata — human-readable, enables version mismatch detection on load
+            try:
+                from syntho_hive import __version__
+                current_version = __version__
+            except Exception:
+                current_version = "unknown"
+
+            meta = {
+                "synthohive_version": current_version,
+                "embedding_dim": self.embedding_dim,
+                "generator_dim": list(self.generator_dim),
+                "discriminator_dim": list(self.discriminator_dim),
+                "saved_at": datetime.now(timezone.utc).isoformat(),
+            }
+            with open(p / "metadata.json", "w") as f:
+                json.dump(meta, f, indent=2)
+
+            log.info("model_saved", path=str(p))
+
+        except SerializationError:
+            raise
+        except Exception as exc:
+            raise SerializationError(
+                f"SerializationError: Failed to save model to '{path}'. "
+                f"Original error: {exc}"
             ) from exc
 
     def load(self, path: str) -> None:
