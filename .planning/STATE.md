@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 ## Current Position
 
 Phase: 1 of 5 (Core Reliability)
-Plan: 0 of 4 in current phase
-Status: Ready to plan
-Last activity: 2026-02-22 — Roadmap created; phases derived from 27 v1 requirements
+Plan: 1 of 4 in current phase
+Status: In progress
+Last activity: 2026-02-22 — Completed 01-01 (exception hierarchy + bare except elimination)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█░░░░░░░░░] 5%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: 0 hours
+- Total plans completed: 1
+- Average duration: 5 min
+- Total execution time: 0.1 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01-core-reliability | 1/4 | 5 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: none yet
+- Last 5 plans: 01-01 (5 min)
 - Trend: -
 
 *Updated after each plan completion*
@@ -46,20 +46,26 @@ Recent decisions affecting current work:
 - [Roadmap]: CTGAN as default model; pluggable strategy deferred to Phase 3 after CTGAN is reliable
 - [Roadmap]: SQL connectors deferred to Phase 5 — pure addition; needs stable pipeline to be meaningful
 - [Phase 1 prereq]: joblib (already installed transitively) chosen for full CTGAN checkpoint serialization over cloudpickle/dill
+- [01-01]: raise...from exc used throughout so callers always see chained tracebacks with root cause
+- [01-01]: transformer.py column cast failures log at WARNING (not raise) — single column failure should not abort whole batch
+- [01-01]: Synthesizer.save()/load() use joblib for full-object persistence (not just state_dict)
+- [01-01]: torch.load() now passes weights_only=True — addressed PyTorch 2.6+ blocker
 
 ### Pending Todos
 
-None yet.
+None.
 
 ### Blockers/Concerns
 
-- [Phase 1]: `torch.load()` default changed to `weights_only=True` in PyTorch 2.6+ — must be addressed in serialization fix
 - [Phase 1]: Pandas 2.x copy-on-write semantics may affect `transformer.py` `.values` mutations — audit needed before pinning `pandas>=2.0.0`
 - [Phase 3]: TVAE architecture (encoder/decoder, KL-divergence, reparameterization) warrants `/gsd:research-phase` before implementation to avoid repeating the CTGAN embedding stub pattern
 - [Phase 5]: SQLAlchemy dialect-specific behavior for Snowflake and BigQuery warrants `/gsd:research-phase` before implementation
 
+**RESOLVED:**
+- ~~[Phase 1]: `torch.load()` default changed to `weights_only=True` in PyTorch 2.6+~~ — Fixed in 01-01 (cf87152)
+
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Roadmap written; REQUIREMENTS.md traceability confirmed; ready to plan Phase 1
+Stopped at: Completed 01-01-PLAN.md — exception hierarchy + bare except elimination complete
 Resume file: None
