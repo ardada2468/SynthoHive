@@ -471,7 +471,7 @@ class CTGAN(ConditionalGenerativeModel):
                     dict_writer.writerows(history)
                 print(f"Training metrics saved to {metrics_path}")
 
-    def sample(self, num_rows: int, context: Optional[pd.DataFrame] = None, seed: Optional[int] = None, **kwargs: Any) -> pd.DataFrame:
+    def sample(self, num_rows: int, context: Optional[pd.DataFrame] = None, seed: Optional[int] = None, enforce_constraints: bool = False, **kwargs: Any) -> pd.DataFrame:
         """Generate synthetic samples, optionally conditioned on parent context.
 
         Args:
@@ -480,6 +480,13 @@ class CTGAN(ConditionalGenerativeModel):
             seed: Optional integer seed for deterministic sampling. Only applied
                   when provided; no auto-generation (fits and samples may use
                   independent seeds per CONTEXT.md decision).
+            enforce_constraints: When True, inspects generated rows against column
+                  constraints defined in the table's Metadata config.  Any rows
+                  that violate a min/max constraint are dropped and a structlog
+                  WARNING is emitted listing each violation.  When False (default),
+                  constraint checking is skipped entirely — this matches the
+                  pre-existing behavior where inverse_transform() already clips
+                  values within each column's defined range.
             **kwargs: Additional sampling controls (unused placeholder).
 
         Returns:
@@ -491,21 +498,21 @@ class CTGAN(ConditionalGenerativeModel):
         self.generator.eval()
         with torch.no_grad():
             noise = torch.randn(num_rows, self.embedding_dim, device=self.device)
-            
+
             if context is not None:
                 # Assuming context is provided for exactly num_rows
                 assert len(context) == num_rows
-                
+
                 # Transform context using the fitted context transformer
                 context_transformed = self.context_transformer.transform(context)
                 context_data = torch.from_numpy(context_transformed).float().to(self.device)
-                
+
                 gen_input = torch.cat([noise, context_data], dim=1)
             else:
                 gen_input = noise
-                
+
             fake_raw = self.generator(gen_input)
-            
+
             # Post-process logits to indices for output
             output_parts = []
             fake_ptr = 0
@@ -514,7 +521,7 @@ class CTGAN(ConditionalGenerativeModel):
                     dim = info['num_categories']
                     logits = fake_raw[:, fake_ptr:fake_ptr+dim]
                     fake_ptr += dim
-                    
+
                     # Argmax to get index
                     indices = torch.argmax(logits, dim=1, keepdim=True)
                     output_parts.append(indices.cpu().numpy())
@@ -523,10 +530,80 @@ class CTGAN(ConditionalGenerativeModel):
                     val = fake_raw[:, fake_ptr:fake_ptr+dim]
                     fake_ptr += dim
                     output_parts.append(val.cpu().numpy())
-            
+
             fake_data_np = np.concatenate(output_parts, axis=1)
-            
-        return self.transformer.inverse_transform(fake_data_np)
+
+        result_df = self.transformer.inverse_transform(fake_data_np)
+
+        # Constraint violation checking (opt-in via enforce_constraints=True).
+        # Note: inverse_transform() already clips values within defined column ranges,
+        # so enforce_constraints=True is primarily useful for post-hoc auditing or
+        # catching any residual violations before returning rows to the caller.
+        if enforce_constraints:
+            table_config = None
+            table_name = getattr(self.transformer, 'table_name', None)
+            if hasattr(self, 'metadata') and table_name:
+                try:
+                    table_config = self.metadata.get_table(table_name)
+                except Exception:
+                    table_config = None
+
+            # If the table has constraints defined, scan generated rows.
+            # If no constraints are configured this block is a no-op.
+            if table_config is not None and table_config.constraints:
+                violations = []
+                valid_mask = pd.Series([True] * len(result_df), index=result_df.index)
+
+                for col_name, constraint in table_config.constraints.items():
+                    if col_name not in result_df.columns:
+                        continue
+                    col_data = result_df[col_name]
+
+                    # Check min constraint
+                    min_val = constraint.min
+                    if min_val is not None:
+                        try:
+                            col_numeric = pd.to_numeric(col_data, errors='coerce')
+                            bad = col_numeric < min_val
+                            if bad.any():
+                                observed = col_numeric[bad].min()
+                                violations.append(
+                                    f"{col_name}: got {observed:.4g} (min={min_val})"
+                                )
+                                valid_mask &= ~bad
+                        except Exception:
+                            pass  # Non-numeric column — skip min check
+
+                    # Check max constraint
+                    max_val = constraint.max
+                    if max_val is not None:
+                        try:
+                            col_numeric = pd.to_numeric(col_data, errors='coerce')
+                            bad = col_numeric > max_val
+                            if bad.any():
+                                observed = col_numeric[bad].max()
+                                violations.append(
+                                    f"{col_name}: got {observed:.4g} (max={max_val})"
+                                )
+                                valid_mask &= ~bad
+                        except Exception:
+                            pass  # Non-numeric column — skip max check
+
+                if violations:
+                    summary = "; ".join(violations)
+                    log.warning(
+                        "constraint_violations_detected",
+                        violation_count=len(violations),
+                        violations=summary,
+                        valid_rows=int(valid_mask.sum()),
+                        total_rows=len(result_df),
+                        action="returning valid rows only",
+                    )
+                    # Per CONTEXT.md decision: return valid rows, warn about violations.
+                    # Caller decides whether the violation rate is acceptable.
+                    result_df = result_df[valid_mask].reset_index(drop=True)
+
+        return result_df
         
     def save(self, path: str, *, overwrite: bool = False) -> None:
         """Persist full model state to a directory checkpoint.
