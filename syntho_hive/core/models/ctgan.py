@@ -687,21 +687,121 @@ class CTGAN(ConditionalGenerativeModel):
             ) from exc
 
     def load(self, path: str) -> None:
-        """Load generator and discriminator weights from disk.
+        """Load full model state from a directory checkpoint.
+
+        Reconstructs the complete model — DataTransformer, context_transformer,
+        embedding_layers, column layout, and network weights — without requiring
+        the original training data.
 
         Args:
-            path: Filesystem path containing a saved checkpoint.
+            path: Directory path produced by save().
 
         Raises:
-            SerializationError: If loading the checkpoint fails.
+            SerializationError: If path does not exist, is missing required files,
+                or if any component fails to deserialize.
         """
-        try:
-            checkpoint = torch.load(path, weights_only=True)
-            self.generator.load_state_dict(checkpoint["generator"])
-            self.discriminator.load_state_dict(checkpoint["discriminator"])
-            log.info("ctgan_checkpoint_loaded", path=path)
-        except Exception as exc:
-            log.error("ctgan_load_failed", path=path, error=str(exc))
+        import joblib
+        import json
+        from pathlib import Path
+
+        p = Path(path)
+        if not p.exists():
             raise SerializationError(
-                f"CTGAN.load() failed reading checkpoint from '{path}'. Original error: {exc}"
+                f"SerializationError: Checkpoint path '{path}' does not exist."
+            )
+
+        required_files = [
+            "generator.pt", "discriminator.pt",
+            "transformer.joblib", "context_transformer.joblib",
+            "embedding_layers.joblib", "data_column_info.joblib",
+        ]
+        missing = [f for f in required_files if not (p / f).exists()]
+        if missing:
+            raise SerializationError(
+                f"SerializationError: Checkpoint at '{path}' is incomplete. "
+                f"Missing files: {', '.join(missing)}. "
+                f"The checkpoint may have been saved by an older version or is corrupt."
+            )
+
+        saved_version = "unknown"
+        try:
+            # Version check — warn but do not fail
+            meta_path = p / "metadata.json"
+            if meta_path.exists():
+                with open(meta_path) as f:
+                    meta = json.load(f)
+                try:
+                    from syntho_hive import __version__
+                    current_version = __version__
+                except Exception:
+                    current_version = "unknown"
+                saved_version = meta.get("synthohive_version", "unknown")
+                if saved_version != current_version:
+                    log.warning(
+                        "checkpoint_version_mismatch",
+                        saved_version=saved_version,
+                        current_version=current_version,
+                        path=str(p),
+                        note="Attempting load — schema changes between versions may cause failures",
+                    )
+                # Restore hyperparams from metadata so _build_model() uses correct dims
+                if "embedding_dim" in meta:
+                    self.embedding_dim = meta["embedding_dim"]
+                if "generator_dim" in meta:
+                    self.generator_dim = tuple(meta["generator_dim"])
+                if "discriminator_dim" in meta:
+                    self.discriminator_dim = tuple(meta["discriminator_dim"])
+
+            # Load sklearn objects first — transformer must be in place before _build_model()
+            self.transformer = joblib.load(p / "transformer.joblib")
+            self.context_transformer = joblib.load(p / "context_transformer.joblib")
+
+            # Load saved column layout and embedding layers (will be restored after _build_model)
+            saved_data_column_info = joblib.load(p / "data_column_info.joblib")
+            saved_embedding_layers = joblib.load(p / "embedding_layers.joblib")
+
+            # Validate transformer round-trip integrity
+            if not hasattr(self.transformer, 'output_dim') or self.transformer.output_dim <= 0:
+                raise SerializationError(
+                    f"SerializationError: Loaded transformer has invalid output_dim "
+                    f"({getattr(self.transformer, 'output_dim', 'missing')}). "
+                    f"The checkpoint may be corrupt."
+                )
+
+            # Derive dimensions needed to reconstruct the generator/discriminator architecture.
+            # context_transformer.output_dim is 0 when no context was used during training.
+            data_dim = self.transformer.output_dim
+            context_dim = getattr(self.context_transformer, 'output_dim', 0)
+
+            # Reconstruct generator/discriminator architecture.
+            # _build_model() internally calls _compile_layout(self.transformer) which overwrites
+            # self.data_column_info and self.embedding_layers with freshly-initialised layers.
+            # We restore the saved values immediately after so weights can be loaded correctly.
+            self._build_model(data_dim, context_dim)
+
+            # Restore saved column layout and trained embedding weights (overwrite fresh ones)
+            self.data_column_info = saved_data_column_info
+            self.embedding_layers = saved_embedding_layers
+
+            # Load network weights — weights_only=False REQUIRED for PyTorch 2.6+
+            # (PyTorch 2.6 changed default to weights_only=True; custom objects fail without False)
+            self.generator.load_state_dict(
+                torch.load(p / "generator.pt", weights_only=False)
+            )
+            self.discriminator.load_state_dict(
+                torch.load(p / "discriminator.pt", weights_only=False)
+            )
+
+            # Set model to eval mode for inference
+            self.generator.eval()
+            self.discriminator.eval()
+
+            log.info("model_loaded", path=str(p), version=saved_version)
+
+        except SerializationError:
+            raise
+        except Exception as exc:
+            raise SerializationError(
+                f"SerializationError: Failed to load model from '{path}'. "
+                f"Original error: {exc}"
             ) from exc
