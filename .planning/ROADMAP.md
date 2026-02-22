@@ -30,13 +30,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. `Synthesizer(seed=42).fit(data).sample(100)` produces bit-identical output across two independent runs in the same environment
   4. Numeric constraints (min, max, dtype) on generated columns raise with the column name and observed value when violated rather than silently passing
   5. `save_to_hive()` with a database name containing characters outside `[a-zA-Z0-9_]` raises a validation error before any SQL is executed
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 01-01: Replace all bare `except:` and silent `except Exception: pass` blocks project-wide with typed catches; add structlog structured logging
-- [ ] 01-02: Fix `CTGAN.save()`/`load()` to persist full checkpoint (DataTransformer, context_transformer, data_column_info, embedding_layers, network weights) via joblib
-- [ ] 01-03: Add `seed` parameter to `Synthesizer.fit()` for deterministic DataTransformer encoding, training init, and sample output; enforce numeric constraint violations
-- [ ] 01-04: Patch `save_to_hive()` SQL injection; write TEST-01 (single-table e2e), TEST-03 (serialization round-trip), TEST-05 (seed regression)
+- [ ] 01-01-PLAN.md — Create exception hierarchy; audit and replace all bare/silent excepts; wrap synthesizer public API boundaries
+- [ ] 01-02-PLAN.md — Fix CTGAN.save()/load() to persist full checkpoint via directory-based layout using joblib + torch
+- [ ] 01-03-PLAN.md — Add seed parameter to CTGAN.fit()/sample() and DataTransformer; add enforce_constraints opt-in to sample()
+- [ ] 01-04-PLAN.md — Patch save_to_hive() SQL injection; write TEST-01, TEST-03, TEST-05 test files
 
 ### Phase 2: Relational Correctness
 **Goal**: Multi-table synthesis produces correct referential integrity — FK columns join cleanly with zero orphans, cardinality reflects the real parent distribution, and generation stays memory-bounded regardless of schema size
