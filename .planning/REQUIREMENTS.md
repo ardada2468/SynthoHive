@@ -26,8 +26,8 @@
 - [ ] **QUAL-01**: `sample()` optionally enforces statistical quality gates (configurable TVD threshold per column); generation raises if output fails validation
 - [ ] **QUAL-02**: Column-level quality metrics (KS statistic, TVD, correlation delta) are emitted after every `sample()` call, not just on explicit report request
 - [ ] **QUAL-03**: Model checkpointing uses validation metrics (TVD or KS) as the criterion — not generator loss, which does not correlate with output quality in WGAN-GP
-- [ ] **QUAL-04**: Numeric constraints (min, max, dtype) are enforced on generated output; violations raise with the column name and observed value, not silently pass
-- [ ] **QUAL-05**: `Synthesizer.fit()` accepts a `seed` parameter that produces deterministic DataTransformer encoding, training initialization, and sample output
+- [x] **QUAL-04**: Numeric constraints (min, max, dtype) are enforced on generated output; violations raise with the column name and observed value, not silently pass
+- [x] **QUAL-05**: `Synthesizer.fit()` accepts a `seed` parameter that produces deterministic DataTransformer encoding, training initialization, and sample output
 
 ### Connectors
 
@@ -104,8 +104,8 @@
 | QUAL-01 | Phase 4 | Pending |
 | QUAL-02 | Phase 4 | Pending |
 | QUAL-03 | Phase 4 | Pending |
-| QUAL-04 | Phase 1 | Pending |
-| QUAL-05 | Phase 1 | Pending |
+| QUAL-04 | Phase 1 | Complete |
+| QUAL-05 | Phase 1 | Complete |
 | CONN-01 | Phase 5 | Pending |
 | CONN-02 | Phase 2 | Pending |
 | CONN-03 | Phase 5 | Pending |

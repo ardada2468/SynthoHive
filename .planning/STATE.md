@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 ## Current Position
 
 Phase: 1 of 5 (Core Reliability)
-Plan: 1 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In progress
-Last activity: 2026-02-22 — Completed 01-01 (exception hierarchy + bare except elimination)
+Last activity: 2026-02-22 — Completed 01-03 (seed control + enforce_constraints in CTGAN)
 
-Progress: [█░░░░░░░░░] 5%
+Progress: [███░░░░░░░] 15%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
+- Total plans completed: 3
 - Average duration: 5 min
-- Total execution time: 0.1 hours
+- Total execution time: 0.2 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-core-reliability | 1/4 | 5 min | 5 min |
+| 01-core-reliability | 3/4 | 14 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (5 min)
-- Trend: -
+- Last 5 plans: 01-01 (5 min), 01-02 (5 min), 01-03 (4 min)
+- Trend: stable
 
 *Updated after each plan completion*
 
@@ -50,6 +50,11 @@ Recent decisions affecting current work:
 - [01-01]: transformer.py column cast failures log at WARNING (not raise) — single column failure should not abort whole batch
 - [01-01]: Synthesizer.save()/load() use joblib for full-object persistence (not just state_dict)
 - [01-01]: torch.load() now passes weights_only=True — addressed PyTorch 2.6+ blocker
+- [01-03]: Separate seeds for fit() and sample() — each independently controlled; no coupling between training and inference RNG
+- [01-03]: Auto-generate seed in fit() when None, log at INFO so any run can be reproduced without pre-planning
+- [01-03]: Per-column seed derived via hash to prevent correlated BayesianGMM fitting across columns
+- [01-03]: enforce_constraints=False default preserves backward compatibility; inverse_transform() already clips values
+- [01-03]: Constraint violations return partial data (valid rows) with WARNING log — caller decides if violation rate is acceptable
 
 ### Pending Todos
 
@@ -58,6 +63,7 @@ None.
 ### Blockers/Concerns
 
 - [Phase 1]: Pandas 2.x copy-on-write semantics may affect `transformer.py` `.values` mutations — audit needed before pinning `pandas>=2.0.0`
+- [Phase 1]: Pre-existing test failure `test_ctgan_full_cycle` — test tries `os.remove('test_ctgan_model.pth')` but 01-02 changed save() to write a directory; needs test update
 - [Phase 3]: TVAE architecture (encoder/decoder, KL-divergence, reparameterization) warrants `/gsd:research-phase` before implementation to avoid repeating the CTGAN embedding stub pattern
 - [Phase 5]: SQLAlchemy dialect-specific behavior for Snowflake and BigQuery warrants `/gsd:research-phase` before implementation
 
@@ -67,5 +73,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 01-01-PLAN.md — exception hierarchy + bare except elimination complete
+Stopped at: Completed 01-03-PLAN.md — seed control + enforce_constraints in CTGAN complete
 Resume file: None
