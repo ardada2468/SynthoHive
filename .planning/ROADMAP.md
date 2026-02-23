@@ -12,7 +12,7 @@ SynthoHive has a sound architecture with five specific, fixable bugs blocking pr
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [x] **Phase 1: Core Reliability** - Error handling, full model serialization, deterministic output, and security hardening (completed 2026-02-22)
+- [ ] **Phase 1: Core Reliability** - Error handling, full model serialization, deterministic output, and security hardening (gap closure in progress)
 - [ ] **Phase 2: Relational Correctness** - Fix FK context conditioning, cardinality distribution, memory safety, and schema validation
 - [ ] **Phase 3: Model Pluggability** - Decouple CTGAN from orchestrator; expose pluggable model strategy via ConditionalGenerativeModel ABC
 - [ ] **Phase 4: Validation and Quality Gates** - Wire statistical validation into sample(), emit training metrics, checkpoint on quality not generator loss
@@ -30,13 +30,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. `Synthesizer(seed=42).fit(data).sample(100)` produces bit-identical output across two independent runs in the same environment
   4. Numeric constraints (min, max, dtype) on generated columns raise with the column name and observed value when violated rather than silently passing
   5. `save_to_hive()` with a database name containing characters outside `[a-zA-Z0-9_]` raises a validation error before any SQL is executed
-**Plans**: 4 plans
+**Plans**: 5 plans
 
 Plans:
 - [x] 01-01-PLAN.md — Create exception hierarchy; audit and replace all bare/silent excepts; wrap synthesizer public API boundaries
-- [ ] 01-02-PLAN.md — Fix CTGAN.save()/load() to persist full checkpoint via directory-based layout using joblib + torch
-- [ ] 01-03-PLAN.md — Add seed parameter to CTGAN.fit()/sample() and DataTransformer; add enforce_constraints opt-in to sample()
-- [ ] 01-04-PLAN.md — Patch save_to_hive() SQL injection; write TEST-01, TEST-03, TEST-05 test files
+- [x] 01-02-PLAN.md — Fix CTGAN.save()/load() to persist full checkpoint via directory-based layout using joblib + torch
+- [x] 01-03-PLAN.md — Add seed parameter to CTGAN.fit()/sample() and DataTransformer; add enforce_constraints opt-in to sample()
+- [x] 01-04-PLAN.md — Patch save_to_hive() SQL injection; write TEST-01, TEST-03, TEST-05 test files
+- [ ] 01-05-PLAN.md — Gap closure: raise ConstraintViolationError on enforce_constraints=True violations; replace three silent except blocks with logged warnings; add constraint violation test
 
 ### Phase 2: Relational Correctness
 **Goal**: Multi-table synthesis produces correct referential integrity — FK columns join cleanly with zero orphans, cardinality reflects the real parent distribution, and generation stays memory-bounded regardless of schema size
@@ -108,7 +109,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core Reliability | 4/4 | Complete   | 2026-02-22 |
+| 1. Core Reliability | 4/5 | Gap closure in progress | - |
 | 2. Relational Correctness | 0/3 | Not started | - |
 | 3. Model Pluggability | 0/2 | Not started | - |
 | 4. Validation and Quality Gates | 0/3 | Not started | - |
