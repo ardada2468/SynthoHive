@@ -88,6 +88,9 @@ class Synthesizer:
             if sample_size <= 0:
                 raise ValueError("sample_size must be positive")
 
+            if validate:
+                self.metadata.validate_schema()
+
             print(f"Fitting on data source with {sampling_strategy} (target: {sample_size} rows)...")
             print(f"Training Config: epochs={epochs}, batch_size={batch_size}")
 
