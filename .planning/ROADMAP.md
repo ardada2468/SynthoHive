@@ -110,6 +110,6 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 1. Core Reliability | v1.0 | 5/5 | ✅ Complete | 2026-02-22 |
 | 2. Relational Correctness | 4/5 | In Progress | - | - |
-| 3. Model Pluggability | v1.1 | 0/2 | Planned | - |
+| 3. Model Pluggability | 1/2 | In Progress|  | - |
 | 4. Validation and Quality Gates | v1.2 | 0/3 | Not started | - |
 | 5. SQL Connectors | v1.2 | 0/3 | Not started | - |

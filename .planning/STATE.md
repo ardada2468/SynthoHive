@@ -9,11 +9,11 @@ See: .planning/PROJECT.md (updated 2026-02-22 after v1.0 milestone)
 
 ## Current Position
 
-Phase: 02-relational-correctness — Plan 05 complete (all 5 plans complete)
-Status: Phase 02 complete. Plan 02-05 (gap closure: SchemaValidationError test fix, REL-03 and TEST-02 fulfilled) complete.
-Last activity: 2026-02-23 - Completed quick task 2: Close 2 wiring gaps: add SchemaValidationError to __init__.py and wire validate_schema into Synthesizer.fit
+Phase: 03-model-pluggability — Plan 01 complete (1/1 plans so far)
+Status: Phase 03 in progress. Plan 03-01 (MODEL-01: StagedOrchestrator model_cls DI + ConditionalGenerativeModel constructor convention docstring) complete.
+Last activity: 2026-02-23 - Completed plan 03-01: model_cls dependency injection in StagedOrchestrator
 
-Progress: [████████░░] v1.0 shipped · v1.1 phase 02 complete (5/5 plans)
+Progress: [████████░░] v1.0 shipped · v1.1 phase 02 complete · phase 03 plan 01 complete
 
 ## Performance Metrics
 
@@ -28,6 +28,7 @@ Progress: [████████░░] v1.0 shipped · v1.1 phase 02 complet
 |-------|-------|-------|----------|
 | 01-core-reliability | 5/5 | 23 min | 4.6 min |
 | 02-relational-correctness | 5/5 | 21 min | 4.2 min |
+| 03-model-pluggability | 1/? | 2 min | 2 min |
 
 ## Accumulated Context
 
@@ -50,6 +51,11 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 02-relational-correctness]: Zero-orphan check uses inner join row count == child table row count to catch exact counts (not set inclusion)
 - [Phase 02-relational-correctness]: No new decisions — gap-closure fix only; test assertions updated to match SchemaValidationError hierarchy introduced in Plan 01
 
+**03-01 decisions:**
+- model_cls defaults to CTGAN — existing callers that don't pass model_cls see identical behavior, no breaking change
+- issubclass() guard fires at __init__ time, not fit_all() — fail-fast pattern surfaces misconfiguration before any data is loaded
+- CTGAN import stays in orchestrator.py as the default value for model_cls; it is no longer used as a constructor call site
+
 ### Pending Todos
 
 None.
@@ -70,6 +76,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-22
-Stopped at: Completed quick task 2 (SchemaValidationError export + validate_schema wiring in fit())
+Last session: 2026-02-23
+Stopped at: Completed plan 03-01 (model_cls DI in StagedOrchestrator; ConditionalGenerativeModel constructor convention docstring)
 Resume file: None
