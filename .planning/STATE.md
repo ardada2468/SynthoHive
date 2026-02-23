@@ -2,26 +2,25 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-22)
+See: .planning/PROJECT.md (updated 2026-02-22 after v1.0 milestone)
 
 **Core value:** A data engineer can train on any multi-table schema, generate synthetic data, and trust that code written against that data will work on the real thing — without babysitting training or manually validating output.
-**Current focus:** Phase 1 — Core Reliability
+**Current focus:** v1.0 archived — planning next milestone (v1.1 Relational Correctness)
 
 ## Current Position
 
-Phase: 1 of 5 (Core Reliability)
-Plan: 5 of 5 in current phase (COMPLETE)
-Status: Phase 1 complete — all 5 plans executed (includes gap-closure plan 01-05)
-Last activity: 2026-02-22 — Completed 01-05 (QUAL-04 ConstraintViolationError raise + CORE-04 silent except elimination)
+Phase: v1.0 complete — next milestone planning
+Status: Milestone v1.0 archived. Ready for `/gsd:new-milestone` to define v1.1 requirements and roadmap.
+Last activity: 2026-02-22 — Archived v1.0 milestone (10/10 requirements, 12 tests passing)
 
-Progress: [████████░░] 22%
+Progress: [██░░░░░░░░] v1.0 shipped · v1.1 not started
 
 ## Performance Metrics
 
-**Velocity:**
+**v1.0 Velocity:**
 - Total plans completed: 5
 - Average duration: 4.6 min
-- Total execution time: 0.38 hours
+- Total execution time: 0.38 hours (23 min)
 
 **By Phase:**
 
@@ -29,57 +28,25 @@ Progress: [████████░░] 22%
 |-------|-------|-------|----------|
 | 01-core-reliability | 5/5 | 23 min | 4.6 min |
 
-**Recent Trend:**
-- Last 5 plans: 01-01 (5 min), 01-02 (5 min), 01-03 (4 min), 01-04 (4 min), 01-05 (5 min)
-- Trend: stable
-
-*Updated after each plan completion*
-
 ## Accumulated Context
 
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
-
-- [Roadmap]: Fix existing codebase rather than rewrite — architecture is sound, bugs are specific and locatable
-- [Roadmap]: CTGAN as default model; pluggable strategy deferred to Phase 3 after CTGAN is reliable
-- [Roadmap]: SQL connectors deferred to Phase 5 — pure addition; needs stable pipeline to be meaningful
-- [Phase 1 prereq]: joblib (already installed transitively) chosen for full CTGAN checkpoint serialization over cloudpickle/dill
-- [01-01]: raise...from exc used throughout so callers always see chained tracebacks with root cause
-- [01-01]: transformer.py column cast failures log at WARNING (not raise) — single column failure should not abort whole batch
-- [01-01]: Synthesizer.save()/load() use joblib for full-object persistence (not just state_dict)
-- [01-01]: torch.load() now passes weights_only=True — addressed PyTorch 2.6+ blocker
-- [01-02]: joblib chosen for DataTransformer, context_transformer, embedding_layers, data_column_info serialization — handles sklearn objects and nn.ModuleDict via pickle
-- [01-02]: weights_only=False required for torch.load() in CTGAN.load() — loading custom objects from joblib-serialized nn.ModuleDict requires this flag on PyTorch 2.6+
-- [01-02]: _build_model() overwrites data_column_info and embedding_layers; load() must restore from joblib after _build_model() to preserve trained embedding weights
-- [01-02]: Version mismatch logs structlog WARNING but does not raise — allows cross-version loads with user awareness
-- [01-03]: Separate seeds for fit() and sample() — each independently controlled; no coupling between training and inference RNG
-- [01-03]: Auto-generate seed in fit() when None, log at INFO so any run can be reproduced without pre-planning
-- [01-03]: Per-column seed derived via hash to prevent correlated BayesianGMM fitting across columns
-- [01-03]: enforce_constraints=False default preserves backward compatibility; inverse_transform() already clips values
-- [01-03]: Constraint violations originally returned partial data with WARNING log (superseded by 01-05)
-- [Phase 01-04]: Allowlist approach for SQL identifier validation — any character not in [a-zA-Z0-9_] rejected before Spark is touched
-- [Phase 01-04]: Validate both target_db and all table name keys in save_to_hive() — both are interpolated into spark.sql() strings
-- [Phase 01-core-reliability]: ConstraintViolationError raised (not warn+return) when enforce_constraints=True — satisfies QUAL-04 and ROADMAP success criterion 4
-- [Phase 01-core-reliability]: enforce_constraints=False (default) preserved for backward compatibility — callers use this to opt out of raise behavior
 
 ### Pending Todos
 
 None.
 
-### Blockers/Concerns
+### Blockers/Concerns (carry to v1.1)
 
-- [Phase 1]: Pandas 2.x copy-on-write semantics may affect `transformer.py` `.values` mutations — audit needed before pinning `pandas>=2.0.0`
-- [Phase 3]: TVAE architecture (encoder/decoder, KL-divergence, reparameterization) warrants `/gsd:research-phase` before implementation to avoid repeating the CTGAN embedding stub pattern
+- [Phase 2 prereq]: `pip install -e .` required before Phase 2 — stale `.venv` produces test failures when PYTHONPATH is not set
+- [Phase 2]: Pandas 2.x copy-on-write semantics may affect `transformer.py` `.values` mutations — audit before pinning `pandas>=2.0.0`
+- [Phase 3]: TVAE architecture (encoder/decoder, KL-divergence, reparameterization) warrants `/gsd:research-phase` before implementation
 - [Phase 5]: SQLAlchemy dialect-specific behavior for Snowflake and BigQuery warrants `/gsd:research-phase` before implementation
-
-**RESOLVED:**
-- ~~[Phase 1]: `torch.load()` default changed to `weights_only=True` in PyTorch 2.6+~~ — Fixed in 01-01 (cf87152)
-- ~~[Phase 1]: Pre-existing test failure `test_ctgan_full_cycle` — test tried `os.remove()` on directory checkpoint~~ — Fixed in 01-02 (57aa3d5)
 
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 01-05-PLAN.md — QUAL-04 ConstraintViolationError raise + CORE-04 silent except elimination. Phase 1 all 5 plans done (32 tests pass).
+Stopped at: Archived v1.0 milestone. All planning documents updated. Git tag pending.
 Resume file: None
