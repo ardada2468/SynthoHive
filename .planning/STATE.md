@@ -9,11 +9,11 @@ See: .planning/PROJECT.md (updated 2026-02-22 after v1.0 milestone)
 
 ## Current Position
 
-Phase: 03-model-pluggability — Plan 01 complete (1/1 plans so far)
-Status: Phase 03 in progress. Plan 03-01 (MODEL-01: StagedOrchestrator model_cls DI + ConditionalGenerativeModel constructor convention docstring) complete.
-Last activity: 2026-02-23 - Completed plan 03-01: model_cls dependency injection in StagedOrchestrator
+Phase: 03-model-pluggability — Plan 02 complete (2/2 plans)
+Status: Phase 03 complete. Plan 03-02 (MODEL-02: Synthesizer model= API + MODEL-03: StubModel integration test) complete.
+Last activity: 2026-02-23 - Completed plan 03-02: Synthesizer model parameter + StubModel end-to-end test
 
-Progress: [████████░░] v1.0 shipped · v1.1 phase 02 complete · phase 03 plan 01 complete
+Progress: [█████████░] v1.0 shipped · v1.1 phase 02 complete · phase 03 complete (MODEL-01, MODEL-02, MODEL-03)
 
 ## Performance Metrics
 
@@ -28,7 +28,7 @@ Progress: [████████░░] v1.0 shipped · v1.1 phase 02 complet
 |-------|-------|-------|----------|
 | 01-core-reliability | 5/5 | 23 min | 4.6 min |
 | 02-relational-correctness | 5/5 | 21 min | 4.2 min |
-| 03-model-pluggability | 1/? | 2 min | 2 min |
+| 03-model-pluggability | 2/2 | 5 min | 2.5 min |
 
 ## Accumulated Context
 
@@ -56,6 +56,12 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - issubclass() guard fires at __init__ time, not fit_all() — fail-fast pattern surfaces misconfiguration before any data is loaded
 - CTGAN import stays in orchestrator.py as the default value for model_cls; it is no longer used as a constructor call site
 
+**03-02 decisions:**
+- Type import added to synthesizer.py alongside ConditionalGenerativeModel and CTGAN imports — self.model_cls = model stored in __init__
+- StagedOrchestrator constructed with model_cls=self.model_cls — end-to-end injection confirmed
+- sample() uses self.model_cls.__name__ — progress prints accurate for any plugged-in model
+- StubModel constructor matches ABC convention (metadata, batch_size, epochs, **kwargs) — validates docstring from Plan 01 is actionable
+
 ### Pending Todos
 
 None.
@@ -77,5 +83,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed plan 03-01 (model_cls DI in StagedOrchestrator; ConditionalGenerativeModel constructor convention docstring)
+Stopped at: Completed plan 03-02 (Synthesizer model= API; StubModel integration test proving MODEL-03 end-to-end contract)
 Resume file: None
