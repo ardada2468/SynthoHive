@@ -9,11 +9,11 @@ See: .planning/PROJECT.md (updated 2026-02-22 after v1.0 milestone)
 
 ## Current Position
 
-Phase: 02-relational-correctness — Plan 03 complete
-Status: Executing v1.1 Relational Correctness. Plan 02-03 (LinkageModel empirical/NegBinom rewrite, GaussianMixture removed, REL-02) complete.
-Last activity: 2026-02-23 - Completed 02-03: LinkageModel GaussianMixture replaced with empirical/NegBinom (REL-02)
+Phase: 02-relational-correctness — Plan 04 complete (all 4 plans complete)
+Status: Phase 02 complete. Plan 02-04 (TEST-02 FK chain integrity suite, REL-05 and TEST-02 fulfilled) complete.
+Last activity: 2026-02-23 - Completed 02-04: TestFKChainIntegrity — zero-orphan FK chain tests, schema validation tests, cardinality accuracy test
 
-Progress: [████░░░░░░] v1.0 shipped · v1.1 plan 01/N complete
+Progress: [████████░░] v1.0 shipped · v1.1 phase 02 complete (4/4 plans)
 
 ## Performance Metrics
 
@@ -27,7 +27,7 @@ Progress: [████░░░░░░] v1.0 shipped · v1.1 plan 01/N comple
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-core-reliability | 5/5 | 23 min | 4.6 min |
-| 02-relational-correctness | 3/N | 12 min | 4 min |
+| 02-relational-correctness | 4/4 | 19 min | 4.75 min |
 
 ## Accumulated Context
 
@@ -46,6 +46,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 02-relational-correctness]: pyproject.toml Spark pins capped at <5.0.0 to prevent delta-spark major version incompatibility
 - [Phase 02-relational-correctness]: Empirical resampler (numpy.random.choice) is the default LinkageModel method — draws directly from observed child counts, guaranteed non-negative
 - [Phase 02-relational-correctness]: NegBinom falls back to empirical with structlog WARNING when variance <= mean; silent except/fallback block removed from linkage.py
+- [Phase 02-relational-correctness]: test_relational.py is the canonical location for relational tests (inside package, not top-level tests/)
+- [Phase 02-relational-correctness]: Zero-orphan check uses inner join row count == child table row count to catch exact counts (not set inclusion)
 
 ### Pending Todos
 
@@ -67,5 +69,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed 02-03-PLAN.md (LinkageModel empirical/NegBinom rewrite, GaussianMixture removed, REL-02)
+Stopped at: Completed 02-04-PLAN.md (TEST-02 FK chain integrity suite, REL-05 and TEST-02 fulfilled, phase 02 complete)
 Resume file: None
