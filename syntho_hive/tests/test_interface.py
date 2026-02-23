@@ -210,3 +210,35 @@ def test_issubclass_guard_rejects_invalid_model_cls():
 
     with pytest.raises(TypeError, match="ConditionalGenerativeModel"):
         StagedOrchestrator(metadata=meta, model_cls=NotAModel)
+
+
+def test_synthesizer_rejects_invalid_model_cls_without_spark(metadata, privacy_config):
+    """TD-04 fix: Synthesizer raises TypeError at __init__ even when spark_session=None.
+
+    Before the fix, invalid model_cls was silently accepted when spark_session=None
+    because the issubclass guard lived only inside StagedOrchestrator.__init__(),
+    which is never called when no Spark session is provided.
+    """
+    class NotAModel:
+        pass
+
+    with pytest.raises(TypeError, match="ConditionalGenerativeModel"):
+        Synthesizer(metadata, privacy_config, spark_session=None, model=NotAModel)
+
+
+def test_synthesizer_fit_validate_catches_fk_type_mismatch(metadata, privacy_config):
+    """TD-01 fix: fit(validate=True, data=DataFrames) raises SchemaValidationError on FK mismatch.
+
+    The metadata fixture defines users.user_id (PK) and orders.user_id (FK).
+    Passing users_df with int user_id and orders_df with str user_id creates a
+    dtype mismatch that validate_schema(real_data=dfs) detects.
+
+    Before the fix, validate_schema() was called without real_data, so data-level
+    FK type checks were silently skipped through the Synthesizer facade.
+    """
+    users_df = pd.DataFrame({"user_id": [1, 2, 3], "name": ["alice", "bob", "carol"]})
+    orders_df = pd.DataFrame({"order_id": [10, 11], "user_id": ["1", "2"]})  # str FK — mismatch
+
+    syn = Synthesizer(metadata, privacy_config, spark_session=None)
+    with pytest.raises(SchemaValidationError):
+        syn.fit(data={"users": users_df, "orders": orders_df}, validate=True)
