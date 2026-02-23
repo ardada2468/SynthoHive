@@ -11,7 +11,7 @@ from typing import Optional, List, Any, Tuple
 from .base import ConditionalGenerativeModel
 from .layers import ResidualLayer, Discriminator, EntityEmbeddingLayer
 from syntho_hive.core.data.transformer import DataTransformer
-from syntho_hive.exceptions import SerializationError, TrainingError  # noqa: F401 – re-raised by CTGAN save/load
+from syntho_hive.exceptions import SerializationError, TrainingError, ConstraintViolationError  # noqa: F401 – re-raised by CTGAN save/load
 
 log = structlog.get_logger()
 
@@ -545,7 +545,13 @@ class CTGAN(ConditionalGenerativeModel):
             if hasattr(self, 'metadata') and table_name:
                 try:
                     table_config = self.metadata.get_table(table_name)
-                except Exception:
+                except Exception as exc:
+                    log.warning(
+                        "constraint_config_lookup_failed",
+                        table_name=table_name,
+                        error=str(exc),
+                        note="Skipping constraint enforcement — table config could not be retrieved",
+                    )
                     table_config = None
 
             # If the table has constraints defined, scan generated rows.
@@ -571,8 +577,13 @@ class CTGAN(ConditionalGenerativeModel):
                                     f"{col_name}: got {observed:.4g} (min={min_val})"
                                 )
                                 valid_mask &= ~bad
-                        except Exception:
-                            pass  # Non-numeric column — skip min check
+                        except Exception as exc:
+                            log.warning(
+                                "constraint_min_check_skipped",
+                                column=col_name,
+                                error=str(exc),
+                                note="Column is non-numeric or comparison failed — skipping min check",
+                            )
 
                     # Check max constraint
                     max_val = constraint.max
@@ -586,22 +597,24 @@ class CTGAN(ConditionalGenerativeModel):
                                     f"{col_name}: got {observed:.4g} (max={max_val})"
                                 )
                                 valid_mask &= ~bad
-                        except Exception:
-                            pass  # Non-numeric column — skip max check
+                        except Exception as exc:
+                            log.warning(
+                                "constraint_max_check_skipped",
+                                column=col_name,
+                                error=str(exc),
+                                note="Column is non-numeric or comparison failed — skipping max check",
+                            )
 
                 if violations:
                     summary = "; ".join(violations)
-                    log.warning(
-                        "constraint_violations_detected",
-                        violation_count=len(violations),
-                        violations=summary,
-                        valid_rows=int(valid_mask.sum()),
-                        total_rows=len(result_df),
-                        action="returning valid rows only",
+                    # ROADMAP success criterion 4 and REQUIREMENTS.md QUAL-04 require
+                    # violations to "raise with the column name and observed value".
+                    # Use sample(enforce_constraints=False) (the default) if you want
+                    # the previous warn-and-return behavior.
+                    raise ConstraintViolationError(
+                        f"ConstraintViolationError: {len(violations)} violation(s) found — "
+                        f"{summary}"
                     )
-                    # Per CONTEXT.md decision: return valid rows, warn about violations.
-                    # Caller decides whether the violation rate is acceptable.
-                    result_df = result_df[valid_mask].reset_index(drop=True)
 
         return result_df
         
@@ -663,7 +676,12 @@ class CTGAN(ConditionalGenerativeModel):
             try:
                 from syntho_hive import __version__
                 current_version = __version__
-            except Exception:
+            except Exception as exc:
+                log.warning(
+                    "version_lookup_failed",
+                    error=str(exc),
+                    note="Could not determine SynthoHive version — using 'unknown'",
+                )
                 current_version = "unknown"
 
             meta = {
@@ -733,7 +751,12 @@ class CTGAN(ConditionalGenerativeModel):
                 try:
                     from syntho_hive import __version__
                     current_version = __version__
-                except Exception:
+                except Exception as exc:
+                    log.warning(
+                        "version_lookup_failed",
+                        error=str(exc),
+                        note="Could not determine SynthoHive version — using 'unknown'",
+                    )
                     current_version = "unknown"
                 saved_version = meta.get("synthohive_version", "unknown")
                 if saved_version != current_version:
