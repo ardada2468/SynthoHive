@@ -9,9 +9,9 @@ See: .planning/PROJECT.md (updated 2026-02-22 after v1.0 milestone)
 
 ## Current Position
 
-Phase: 02-relational-correctness — Plan 01 complete
-Status: Executing v1.1 Relational Correctness. Plan 02-01 (SchemaValidationError + validate_schema) complete.
-Last activity: 2026-02-23 - Completed 02-01: SchemaValidationError exception hierarchy and collect-all FK validation
+Phase: 02-relational-correctness — Plan 02 complete
+Status: Executing v1.1 Relational Correctness. Plan 02-02 (CTGAN context fix + orchestrator memory safety + Spark pins) complete.
+Last activity: 2026-02-23 - Completed 02-02: CTGAN stale context fix (REL-01), StagedOrchestrator write-and-release (REL-04), pyproject.toml Spark 4.x pins (CONN-02)
 
 Progress: [████░░░░░░] v1.0 shipped · v1.1 plan 01/N complete
 
@@ -27,7 +27,7 @@ Progress: [████░░░░░░] v1.0 shipped · v1.1 plan 01/N comple
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-core-reliability | 5/5 | 23 min | 4.6 min |
-| 02-relational-correctness | 1/N | 3 min | 3 min |
+| 02-relational-correctness | 2/N | 7 min | 3.5 min |
 
 ## Accumulated Context
 
@@ -41,6 +41,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - validate_schema(real_data=None) stays backward compatible; no-arg callers get original structural checks
 - linkage_method defaults to 'empirical' per-table; 'negbinom' available for statistical cardinality fit
 - _dtypes_compatible returns True for pandas extension types to avoid false positives
+- [Phase 02-relational-correctness]: legacy_context_conditioning defaults to False; old behavior requires explicit True for backwards compatibility
+- [Phase 02-relational-correctness]: StagedOrchestrator accepts optional io= for unit testing without live Spark; on_write_failure defaults to raise
+- [Phase 02-relational-correctness]: pyproject.toml Spark pins capped at <5.0.0 to prevent delta-spark major version incompatibility
 
 ### Pending Todos
 
@@ -62,5 +65,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed 02-01-PLAN.md (SchemaValidationError + validate_schema collect-all + linkage_method)
+Stopped at: Completed 02-02-PLAN.md (CTGAN generator context fix, StagedOrchestrator memory safety, Spark pins)
 Resume file: None
