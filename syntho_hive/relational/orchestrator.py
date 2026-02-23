@@ -176,13 +176,13 @@ class StagedOrchestrator:
                 counts = linkage.sample_counts(parent_df)
 
                 # Construct Context from Driver
-                parent_ids_repeated = np.repeat(parent_df[driver_parent_pk].values, counts)
+                parent_ids_repeated = np.repeat(parent_df[driver_parent_pk].to_numpy(), counts)
                 
                 context_cols = config.parent_context_cols
                 if context_cols:
                     context_repeated_vals = {}
                     for col in context_cols:
-                        context_repeated_vals[col] = np.repeat(parent_df[col].values, counts)
+                        context_repeated_vals[col] = np.repeat(parent_df[col].to_numpy(), counts)
                     context_df = pd.DataFrame(context_repeated_vals)
                 else:
                     context_df = None
@@ -208,7 +208,7 @@ class StagedOrchestrator:
                          else:
                              p_df = generated_tables[p_table]
                              
-                         valid_pks = p_df[p_pk].values
+                         valid_pks = p_df[p_pk].to_numpy()
                          
                          # Randomly sample valid PKs for this column
                          generated_pdf[fk_col] = np.random.choice(valid_pks, size=total_child_rows)

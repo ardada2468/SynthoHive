@@ -52,7 +52,7 @@ class LinkageModel:
             how="left"
         ).fillna(0)
         
-        X = count_df["child_count"].values.reshape(-1, 1)
+        X = count_df["child_count"].to_numpy(dtype=float).reshape(-1, 1)
         self.max_children = int(X.max())
         
         if self.method == "gmm":
