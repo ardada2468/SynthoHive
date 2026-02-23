@@ -2,6 +2,7 @@ from .interface.config import Metadata, PrivacyConfig
 from syntho_hive.exceptions import (
     SynthoHiveError,
     SchemaError,
+    SchemaValidationError,
     TrainingError,
     SerializationError,
     ConstraintViolationError,
