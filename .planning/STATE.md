@@ -9,11 +9,11 @@ See: .planning/PROJECT.md (updated 2026-02-22 after v1.0 milestone)
 
 ## Current Position
 
-Phase: 02-relational-correctness — Plan 04 complete (all 4 plans complete)
-Status: Phase 02 complete. Plan 02-04 (TEST-02 FK chain integrity suite, REL-05 and TEST-02 fulfilled) complete.
-Last activity: 2026-02-23 - Completed 02-04: TestFKChainIntegrity — zero-orphan FK chain tests, schema validation tests, cardinality accuracy test
+Phase: 02-relational-correctness — Plan 05 complete (all 5 plans complete)
+Status: Phase 02 complete. Plan 02-05 (gap closure: SchemaValidationError test fix, REL-03 and TEST-02 fulfilled) complete.
+Last activity: 2026-02-23 - Completed 02-05: Fix SchemaValidationError assertions in test_interface.py — 2 previously-failing tests now pass
 
-Progress: [████████░░] v1.0 shipped · v1.1 phase 02 complete (4/4 plans)
+Progress: [████████░░] v1.0 shipped · v1.1 phase 02 complete (5/5 plans)
 
 ## Performance Metrics
 
@@ -27,7 +27,7 @@ Progress: [████████░░] v1.0 shipped · v1.1 phase 02 complet
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-core-reliability | 5/5 | 23 min | 4.6 min |
-| 02-relational-correctness | 4/4 | 19 min | 4.75 min |
+| 02-relational-correctness | 5/5 | 21 min | 4.2 min |
 
 ## Accumulated Context
 
@@ -48,6 +48,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 02-relational-correctness]: NegBinom falls back to empirical with structlog WARNING when variance <= mean; silent except/fallback block removed from linkage.py
 - [Phase 02-relational-correctness]: test_relational.py is the canonical location for relational tests (inside package, not top-level tests/)
 - [Phase 02-relational-correctness]: Zero-orphan check uses inner join row count == child table row count to catch exact counts (not set inclusion)
+- [Phase 02-relational-correctness]: No new decisions — gap-closure fix only; test assertions updated to match SchemaValidationError hierarchy introduced in Plan 01
 
 ### Pending Todos
 
@@ -69,5 +70,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed 02-04-PLAN.md (TEST-02 FK chain integrity suite, REL-05 and TEST-02 fulfilled, phase 02 complete)
+Stopped at: Completed 02-05-PLAN.md (gap closure: SchemaValidationError test fix, REL-03 and TEST-02 fulfilled, phase 02 complete)
 Resume file: None
