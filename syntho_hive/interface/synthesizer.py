@@ -57,6 +57,13 @@ class Synthesizer:
                 unchanged.
             embedding_threshold: Cardinality threshold for switching to embeddings.
         """
+        if not (isinstance(model, type) and issubclass(model, ConditionalGenerativeModel)):
+            raise TypeError(
+                f"model_cls must be a subclass of ConditionalGenerativeModel, "
+                f"got {model!r}. Implement fit(), sample(), save(), load() "
+                f"and subclass ConditionalGenerativeModel."
+            )
+
         self.metadata = metadata
         self.privacy = privacy_config
         self.spark = spark_session
@@ -95,14 +102,19 @@ class Synthesizer:
             TrainingError: If training fails for any reason.
         """
         try:
+            if validate:
+                if isinstance(data, dict) and data and isinstance(next(iter(data.values())), pd.DataFrame):
+                    # User passed actual DataFrames — data-level FK type checks are possible
+                    self.metadata.validate_schema(real_data=data)
+                else:
+                    # String (DB name) or dict of path strings — structural checks only
+                    self.metadata.validate_schema()
+
             if not self.orchestrator:
                 raise ValueError("SparkSession required for fit()")
 
             if sample_size <= 0:
                 raise ValueError("sample_size must be positive")
-
-            if validate:
-                self.metadata.validate_schema()
 
             print(f"Fitting on data source with {sampling_strategy} (target: {sample_size} rows)...")
             print(f"Training Config: epochs={epochs}, batch_size={batch_size}")
