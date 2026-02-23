@@ -3,6 +3,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 from syntho_hive.interface.synthesizer import Synthesizer
 from syntho_hive.interface.config import Metadata, PrivacyConfig, TableConfig
+from syntho_hive.exceptions import SchemaValidationError
 
 # Mock SparkSession
 class MockSparkSession:
@@ -31,11 +32,11 @@ def test_metadata_validation(metadata):
     
     # Invalid parent table
     metadata.add_table("items", "item_id", fk={"order_id": "invalid_table.order_id"})
-    with pytest.raises(ValueError, match="references non-existent parent table"):
+    with pytest.raises(SchemaValidationError, match="references non-existent parent table"):
         metadata.validate_schema()
 
 def test_metadata_invalid_fk_format(metadata):
-    with pytest.raises(ValueError, match="Invalid FK reference"):
+    with pytest.raises(SchemaValidationError, match="Invalid FK reference"):
         metadata.add_table("logs", "log_id", fk={"user_id": "users_user_id"}) # Missing dot
         metadata.validate_schema()
 
