@@ -80,7 +80,8 @@ class CTGAN(ConditionalGenerativeModel):
         epochs: int = 300,
         device: str = "cpu",
         embedding_threshold: int = 50,
-        discriminator_steps: int = 5
+        discriminator_steps: int = 5,
+        legacy_context_conditioning: bool = False,
     ):
         """Create a CTGAN instance configured for tabular synthesis.
 
@@ -94,6 +95,9 @@ class CTGAN(ConditionalGenerativeModel):
             device: Torch device string, e.g. ``"cpu"`` or ``"cuda"``.
             embedding_threshold: Cardinality threshold for switching to embeddings.
             discriminator_steps: Number of discriminator steps per generator step.
+            legacy_context_conditioning: If True, reuses discriminator batch context
+                in generator step (legacy behavior). Default False applies correct
+                independent resample, which prevents FK cardinality drift.
         """
         self.metadata = metadata
         self.embedding_dim = embedding_dim
@@ -106,6 +110,7 @@ class CTGAN(ConditionalGenerativeModel):
         self.discriminator_steps = discriminator_steps
         # Prioritize init arg, fallback to metadata if available, else default (already 50)
         self.embedding_threshold = embedding_threshold
+        self.legacy_context_conditioning = legacy_context_conditioning
         
         self.generator = None
         self.discriminator = None
@@ -399,11 +404,15 @@ class CTGAN(ConditionalGenerativeModel):
                 # --- Train Generator ---
                 # Train generator once after n_critic discriminator steps
                 noise = torch.randn(self.batch_size, self.embedding_dim, device=self.device)
-                if real_context_batch is not None:
-                    # Re-sample context for generator training?? 
-                    # Ideally yes, but reusing batch is fine for conditional stability
-                    # We'll stick to reusing the last seen batch for simplicity/stability
-                    gen_input = torch.cat([noise, real_context_batch], dim=1)
+                if context_data is not None:
+                    if self.legacy_context_conditioning:
+                        # Backwards-compatible: reuse last discriminator batch context
+                        gen_context_batch = real_context_batch
+                    else:
+                        # Correct: independently sample fresh context for generator step
+                        gen_ctx_idx = np.random.randint(0, len(context_data), self.batch_size)
+                        gen_context_batch = context_data[gen_ctx_idx]
+                    gen_input = torch.cat([noise, gen_context_batch], dim=1)
                 else:
                     gen_input = noise
                     
@@ -427,12 +436,12 @@ class CTGAN(ConditionalGenerativeModel):
                         fake_parts.append(val)
                 
                 fake_data_batch = torch.cat(fake_parts, dim=1)
-                
-                if real_context_batch is not None:
-                    fake_input = torch.cat([fake_data_batch, real_context_batch], dim=1)
+
+                if context_data is not None:
+                    fake_input = torch.cat([fake_data_batch, gen_context_batch], dim=1)
                 else:
                     fake_input = fake_data_batch
-                    
+
                 d_fake = self.discriminator(fake_input)
                 loss_G = -torch.mean(d_fake)
                 
@@ -689,6 +698,7 @@ class CTGAN(ConditionalGenerativeModel):
                 "embedding_dim": self.embedding_dim,
                 "generator_dim": list(self.generator_dim),
                 "discriminator_dim": list(self.discriminator_dim),
+                "legacy_context_conditioning": self.legacy_context_conditioning,
                 "saved_at": datetime.now(timezone.utc).isoformat(),
             }
             with open(p / "metadata.json", "w") as f:
@@ -774,6 +784,8 @@ class CTGAN(ConditionalGenerativeModel):
                     self.generator_dim = tuple(meta["generator_dim"])
                 if "discriminator_dim" in meta:
                     self.discriminator_dim = tuple(meta["discriminator_dim"])
+                # Default False for forward compatibility with old checkpoints that lack this key
+                self.legacy_context_conditioning = meta.get("legacy_context_conditioning", False)
 
             # Load sklearn objects first — transformer must be in place before _build_model()
             self.transformer = joblib.load(p / "transformer.joblib")
