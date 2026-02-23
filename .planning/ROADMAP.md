@@ -66,11 +66,12 @@ Plans:
   1. `StagedOrchestrator` has no hardcoded CTGAN import in its orchestration logic — the model class is injected via `model_cls` parameter
   2. `Synthesizer(model=CustomModel)` with any class implementing the `ConditionalGenerativeModel` ABC (`fit`, `sample`, `save`, `load`) routes correctly through the full multi-table pipeline
   3. The `Synthesizer` public API documents the `model` parameter with the list of supported model classes; existing callers omitting `model` get CTGAN by default with no behavior change
-**Plans**: 2 plans
+**Plans**: 3 plans
 
 Plans:
 - [ ] 03-01-PLAN.md — Add model_cls DI parameter to StagedOrchestrator; replace both CTGAN() call sites with self.model_cls(); update Dict type annotation; add issubclass guard; document constructor convention in ABC
 - [ ] 03-02-PLAN.md — Replace backend: str with model: Type[ConditionalGenerativeModel] = CTGAN in Synthesizer; forward model_cls to StagedOrchestrator; write StubModel integration test proving MODEL-03 ABC contract end-to-end
+- [ ] 03-03-PLAN.md — Gap closure: add importmode = "importlib" to pyproject.toml so MODEL-03 tests pass under default pytest invocation
 
 ### Phase 4: Validation and Quality Gates
 **Goal**: Engineers see training progress in real-time, models checkpoint on statistical quality not generator loss, and `sample()` can enforce a minimum quality threshold automatically
@@ -110,6 +111,6 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 1. Core Reliability | v1.0 | 5/5 | ✅ Complete | 2026-02-22 |
 | 2. Relational Correctness | 4/5 | In Progress | - | - |
-| 3. Model Pluggability | 1/2 | In Progress|  | - |
+| 3. Model Pluggability | 2/3 | In Progress|  | - |
 | 4. Validation and Quality Gates | v1.2 | 0/3 | Not started | - |
 | 5. SQL Connectors | v1.2 | 0/3 | Not started | - |
