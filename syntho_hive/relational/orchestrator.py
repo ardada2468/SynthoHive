@@ -1,5 +1,5 @@
 import shutil
-from typing import Dict, Any, List, Union, Tuple, Optional, Literal
+from typing import Dict, Any, List, Union, Tuple, Optional, Literal, Type
 try:
     from pyspark.sql import SparkSession
     from pyspark.sql.functions import pandas_udf, PandasUDFType
@@ -13,6 +13,7 @@ import pandas as pd
 from syntho_hive.interface.config import Metadata
 from syntho_hive.relational.graph import SchemaGraph
 from syntho_hive.core.models.ctgan import CTGAN
+from syntho_hive.core.models.base import ConditionalGenerativeModel
 from syntho_hive.relational.linkage import LinkageModel
 from syntho_hive.connectors.spark_io import SparkIO
 
@@ -57,6 +58,7 @@ class StagedOrchestrator:
         spark: Optional[SparkSession] = None,
         io: Optional[Any] = None,
         on_write_failure: Literal['raise', 'cleanup', 'retry'] = 'raise',
+        model_cls: Type[ConditionalGenerativeModel] = CTGAN,
     ):
         """Initialize orchestrator dependencies.
 
@@ -71,7 +73,17 @@ class StagedOrchestrator:
                 - ``'raise'`` (default): re-raise the exception immediately.
                 - ``'cleanup'``: remove all previously written paths before raising.
                 - ``'retry'``: attempt one additional write before raising.
+            model_cls: Generative model class to instantiate per table. Must be a class
+                (not an instance) implementing ``ConditionalGenerativeModel``. The class
+                constructor must accept ``(metadata, batch_size, epochs, **kwargs)``.
+                Defaults to CTGAN.
         """
+        if not issubclass(model_cls, ConditionalGenerativeModel):
+            raise TypeError(
+                f"model_cls must be a subclass of ConditionalGenerativeModel, "
+                f"got {model_cls!r}. Implement fit(), sample(), save(), load() "
+                f"and subclass ConditionalGenerativeModel."
+            )
         self.metadata = metadata
         self.spark = spark
         if io is not None:
@@ -79,8 +91,9 @@ class StagedOrchestrator:
         else:
             self.io = SparkIO(spark)
         self.on_write_failure = on_write_failure
+        self.model_cls = model_cls
         self.graph = SchemaGraph(metadata)
-        self.models: Dict[str, CTGAN] = {}
+        self.models: Dict[str, ConditionalGenerativeModel] = {}
         self.linkage_models: Dict[str, LinkageModel] = {}
 
     def fit_all(self, real_data_paths: Dict[str, str], epochs: int = 300, batch_size: int = 500, **model_kwargs: Union[int, str, Tuple[int, int]]):
@@ -90,7 +103,7 @@ class StagedOrchestrator:
             real_data_paths: Mapping ``{table_name: 'db.table' or '/path'}``.
             epochs: Number of training epochs for CTGAN.
             batch_size: Training batch size.
-            **model_kwargs: Extra parameters forwarded to CTGAN constructor.
+            **model_kwargs: Extra parameters forwarded to the model constructor.
         """
         # Topo sort to train parents first? Or independent?
         # Linkage model needs both parent and child data.
@@ -114,7 +127,7 @@ class StagedOrchestrator:
             config = self.metadata.get_table(table_name)
             if not config.has_dependencies:
                 # Root Table
-                model = CTGAN(
+                model = self.model_cls(
                     self.metadata,
                     batch_size=batch_size,
                     epochs=epochs,
@@ -166,7 +179,7 @@ class StagedOrchestrator:
                 else:
                     context_df = None
 
-                model = CTGAN(
+                model = self.model_cls(
                     self.metadata,
                     batch_size=batch_size,
                     epochs=epochs,
