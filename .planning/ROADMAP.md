@@ -49,12 +49,13 @@ Archive: `.planning/milestones/v1.0-ROADMAP.md`
   3. FK type mismatches between parent PK and child FK (e.g., int vs. string) are raised at `validate_schema()` time before training begins
   4. Multi-table generation with `output_path_base` set keeps peak memory bounded to at most two DataFrames simultaneously — no accumulation of all tables in RAM
   5. PySpark 4.0+ and delta-spark 4.0+ version pins in `pyproject.toml` match the installed venv without conflict
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 02-01: Fix stale context conditioning in CTGAN generator training loop (ctgan.py:359-362); replace GMM with empirical/NegBinom distribution in LinkageModel
-- [ ] 02-02: Add FK type mismatch detection in `validate_schema()`; implement memory-safe generation (release DataFrames after disk write)
-- [ ] 02-03: Update pyproject.toml PySpark/delta-spark pins to match venv; write TEST-02 (3-table FK join zero-orphan test)
+- [ ] 02-01-PLAN.md — Add SchemaValidationError to exception hierarchy; extend validate_schema() with collect-all FK type/column checks; add linkage_method to TableConfig
+- [ ] 02-02-PLAN.md — Fix stale context conditioning in CTGAN generator training loop; memory-safe DataFrame release in orchestrator; update Spark version pins
+- [ ] 02-03-PLAN.md — Replace GaussianMixture in LinkageModel with empirical/NegBinom cardinality distribution
+- [ ] 02-04-PLAN.md — Write TEST-02: 3-table and 4-table FK chain zero-orphan tests, schema validation error tests, cardinality accuracy test
 
 ### Phase 3: Model Pluggability
 **Goal**: `StagedOrchestrator` accepts any class implementing `ConditionalGenerativeModel` via dependency injection — CTGAN is the default but is no longer hardcoded, and the pattern is validated by a working second model
@@ -107,7 +108,7 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1. Core Reliability | v1.0 | 5/5 | ✅ Complete | 2026-02-22 |
-| 2. Relational Correctness | v1.1 | 0/3 | Not started | - |
+| 2. Relational Correctness | v1.1 | 0/4 | Not started | - |
 | 3. Model Pluggability | v1.1 | 0/2 | Not started | - |
 | 4. Validation and Quality Gates | v1.2 | 0/3 | Not started | - |
 | 5. SQL Connectors | v1.2 | 0/3 | Not started | - |
