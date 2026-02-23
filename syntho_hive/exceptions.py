@@ -21,6 +21,15 @@ class SchemaError(SynthoHiveError):
     pass
 
 
+class SchemaValidationError(SchemaError):
+    """
+    Raised by validate_schema() when FK type mismatches, missing FK columns,
+    or invalid FK references are detected. Collects all errors before raising
+    so callers see the complete problem list in a single exception.
+    """
+    pass
+
+
 class TrainingError(SynthoHiveError):
     """
     Raised for NaN loss, training divergence, GPU OOM, or any other failure
