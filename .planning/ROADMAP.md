@@ -87,7 +87,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 06-01-PLAN.md — Pass `real_data` to `validate_schema()` in `Synthesizer.fit()`; add issubclass guard in `Synthesizer.__init__()` before Spark check
+- [ ] 06-01-PLAN.md — Add issubclass guard in Synthesizer.__init__() (TD-04) + pass real_data to validate_schema() in fit() (TD-01) + add 2 regression tests covering both fixes
 
 ### Phase 7: Test Suite Alignment
 **Goal**: All tests in `test_interface.py` pass with zero pre-existing failures
