@@ -11,7 +11,7 @@ See: .planning/PROJECT.md (updated 2026-02-22 after v1.0 milestone)
 
 Phase: 02-relational-correctness — Plan 05 complete (all 5 plans complete)
 Status: Phase 02 complete. Plan 02-05 (gap closure: SchemaValidationError test fix, REL-03 and TEST-02 fulfilled) complete.
-Last activity: 2026-02-23 - Completed 02-05: Fix SchemaValidationError assertions in test_interface.py — 2 previously-failing tests now pass
+Last activity: 2026-02-23 - Completed quick task 2: Close 2 wiring gaps: add SchemaValidationError to __init__.py and wire validate_schema into Synthesizer.fit
 
 Progress: [████████░░] v1.0 shipped · v1.1 phase 02 complete (5/5 plans)
 
