@@ -12,7 +12,7 @@ SynthoHive has a sound architecture with five specific, fixable bugs blocking pr
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Core Reliability** - Error handling, full model serialization, deterministic output, and security hardening (gap closure in progress)
+- [x] **Phase 1: Core Reliability** - Error handling, full model serialization, deterministic output, and security hardening (gap closure in progress) (completed 2026-02-23)
 - [ ] **Phase 2: Relational Correctness** - Fix FK context conditioning, cardinality distribution, memory safety, and schema validation
 - [ ] **Phase 3: Model Pluggability** - Decouple CTGAN from orchestrator; expose pluggable model strategy via ConditionalGenerativeModel ABC
 - [ ] **Phase 4: Validation and Quality Gates** - Wire statistical validation into sample(), emit training metrics, checkpoint on quality not generator loss
@@ -109,7 +109,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core Reliability | 4/5 | Gap closure in progress | - |
+| 1. Core Reliability | 5/5 | Complete   | 2026-02-23 |
 | 2. Relational Correctness | 0/3 | Not started | - |
 | 3. Model Pluggability | 0/2 | Not started | - |
 | 4. Validation and Quality Gates | 0/3 | Not started | - |

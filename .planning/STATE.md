@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 ## Current Position
 
 Phase: 1 of 5 (Core Reliability)
-Plan: 4 of 4 in current phase (COMPLETE)
-Status: Phase 1 complete — all 4 plans executed
-Last activity: 2026-02-22 — Completed 01-04 (SQL injection patch + TEST-01/03/05 regression suite)
+Plan: 5 of 5 in current phase (COMPLETE)
+Status: Phase 1 complete — all 5 plans executed (includes gap-closure plan 01-05)
+Last activity: 2026-02-22 — Completed 01-05 (QUAL-04 ConstraintViolationError raise + CORE-04 silent except elimination)
 
-Progress: [████████░░] 20%
+Progress: [████████░░] 22%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 4.5 min
-- Total execution time: 0.3 hours
+- Total plans completed: 5
+- Average duration: 4.6 min
+- Total execution time: 0.38 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-core-reliability | 4/4 | 18 min | 4.5 min |
+| 01-core-reliability | 5/5 | 23 min | 4.6 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (5 min), 01-02 (5 min), 01-03 (4 min), 01-04 (4 min)
+- Last 5 plans: 01-01 (5 min), 01-02 (5 min), 01-03 (4 min), 01-04 (4 min), 01-05 (5 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -58,9 +58,11 @@ Recent decisions affecting current work:
 - [01-03]: Auto-generate seed in fit() when None, log at INFO so any run can be reproduced without pre-planning
 - [01-03]: Per-column seed derived via hash to prevent correlated BayesianGMM fitting across columns
 - [01-03]: enforce_constraints=False default preserves backward compatibility; inverse_transform() already clips values
-- [01-03]: Constraint violations return partial data (valid rows) with WARNING log — caller decides if violation rate is acceptable
+- [01-03]: Constraint violations originally returned partial data with WARNING log (superseded by 01-05)
 - [Phase 01-04]: Allowlist approach for SQL identifier validation — any character not in [a-zA-Z0-9_] rejected before Spark is touched
 - [Phase 01-04]: Validate both target_db and all table name keys in save_to_hive() — both are interpolated into spark.sql() strings
+- [Phase 01-core-reliability]: ConstraintViolationError raised (not warn+return) when enforce_constraints=True — satisfies QUAL-04 and ROADMAP success criterion 4
+- [Phase 01-core-reliability]: enforce_constraints=False (default) preserved for backward compatibility — callers use this to opt out of raise behavior
 
 ### Pending Todos
 
@@ -79,5 +81,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 01-04-PLAN.md — SQL injection patch and TEST-01/03/05 regression suite complete. Phase 1 all 4 plans done.
+Stopped at: Completed 01-05-PLAN.md — QUAL-04 ConstraintViolationError raise + CORE-04 silent except elimination. Phase 1 all 5 plans done (32 tests pass).
 Resume file: None
