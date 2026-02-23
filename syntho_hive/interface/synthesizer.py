@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Any, Union, Tuple
+from typing import Dict, Optional, Any, Union, Tuple, Type
 import re
 import pandas as pd
 import structlog
@@ -11,6 +11,8 @@ from syntho_hive.exceptions import (
     TrainingError,
     SerializationError,
 )
+from syntho_hive.core.models.base import ConditionalGenerativeModel
+from syntho_hive.core.models.ctgan import CTGAN
 
 # Allowlist regex for Hive/SQL identifier validation.
 # Only letters, digits, and underscores are permitted — everything else is rejected
@@ -32,7 +34,7 @@ class Synthesizer:
         metadata: Metadata,
         privacy_config: PrivacyConfig,
         spark_session: Optional[SparkSession] = None,
-        backend: str = "CTGAN",
+        model: Type[ConditionalGenerativeModel] = CTGAN,
         embedding_threshold: int = 50
     ):
         """Instantiate the synthesizer façade.
@@ -41,18 +43,29 @@ class Synthesizer:
             metadata: Dataset schema and relational configuration.
             privacy_config: Privacy guardrail configuration.
             spark_session: Optional SparkSession required for orchestration.
-            backend: Synthesis backend identifier (currently CTGAN).
+            model: Generative model class to use for synthesis. Must be a class
+                (not an instance) that implements ``ConditionalGenerativeModel``.
+                The class constructor must accept ``(metadata, batch_size, epochs,
+                **kwargs)`` and instances must implement ``fit()``, ``sample()``,
+                ``save()``, and ``load()``.
+
+                Supported classes:
+                - ``syntho_hive.core.models.ctgan.CTGAN`` (default)
+                - Any custom class implementing ``ConditionalGenerativeModel``
+
+                Existing callers that omit this parameter receive CTGAN behavior
+                unchanged.
             embedding_threshold: Cardinality threshold for switching to embeddings.
         """
         self.metadata = metadata
         self.privacy = privacy_config
         self.spark = spark_session
-        self.backend = backend
+        self.model_cls = model
         self.embedding_threshold = embedding_threshold
 
         # Initialize internal components
         if self.spark:
-            self.orchestrator = StagedOrchestrator(metadata, self.spark)
+            self.orchestrator = StagedOrchestrator(metadata, self.spark, model_cls=self.model_cls)
         else:
             self.orchestrator = None # Mode without Spark (maybe local pandas only in future)
 
@@ -132,7 +145,7 @@ class Synthesizer:
             if not self.orchestrator:
                 raise ValueError("SparkSession required for sample()")
 
-            print(f"Generating data with {self.backend} backend...")
+            print(f"Generating data with {self.model_cls.__name__} backend...")
 
             # If output_path is explicitly None, we return DataFrames
             if output_path is None:
