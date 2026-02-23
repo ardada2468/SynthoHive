@@ -140,7 +140,8 @@ class StagedOrchestrator:
 
                 # 2. Train Linkage Model on Driver Parent
                 print(f"Training Linkage for {table_name} driven by {driver_parent_table}")
-                linkage = LinkageModel()
+                linkage_method = self.metadata.tables[table_name].linkage_method
+                linkage = LinkageModel(method=linkage_method)
                 linkage.fit(parent_df, target_pdf, fk_col=driver_fk, pk_col=driver_parent_pk)
                 self.linkage_models[table_name] = linkage
 
