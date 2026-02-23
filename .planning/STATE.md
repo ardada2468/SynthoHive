@@ -9,11 +9,11 @@ See: .planning/PROJECT.md (updated 2026-02-22 after v1.0 milestone)
 
 ## Current Position
 
-Phase: v1.0 complete — next milestone planning
-Status: Milestone v1.0 archived. Ready for `/gsd:new-milestone` to define v1.1 requirements and roadmap.
-Last activity: 2026-02-23 - Completed quick task 1: Fix ArrowStringArray reshape NotImplementedError on Python 3.11
+Phase: 02-relational-correctness — Plan 01 complete
+Status: Executing v1.1 Relational Correctness. Plan 02-01 (SchemaValidationError + validate_schema) complete.
+Last activity: 2026-02-23 - Completed 02-01: SchemaValidationError exception hierarchy and collect-all FK validation
 
-Progress: [██░░░░░░░░] v1.0 shipped · v1.1 not started
+Progress: [████░░░░░░] v1.0 shipped · v1.1 plan 01/N complete
 
 ## Performance Metrics
 
@@ -27,12 +27,20 @@ Progress: [██░░░░░░░░] v1.0 shipped · v1.1 not started
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-core-reliability | 5/5 | 23 min | 4.6 min |
+| 02-relational-correctness | 1/N | 3 min | 3 min |
 
 ## Accumulated Context
 
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
+
+**02-01 decisions:**
+- SchemaValidationError subclasses SchemaError for backward compat with existing except SchemaError handlers
+- validate_schema() uses collect-all pattern (not fail-fast) — engineers see all schema problems at once
+- validate_schema(real_data=None) stays backward compatible; no-arg callers get original structural checks
+- linkage_method defaults to 'empirical' per-table; 'negbinom' available for statistical cardinality fit
+- _dtypes_compatible returns True for pandas extension types to avoid false positives
 
 ### Pending Todos
 
@@ -54,5 +62,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed quick task 1: Fix ArrowStringArray reshape NotImplementedError on Python 3.11
+Stopped at: Completed 02-01-PLAN.md (SchemaValidationError + validate_schema collect-all + linkage_method)
 Resume file: None

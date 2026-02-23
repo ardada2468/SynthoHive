@@ -108,7 +108,7 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1. Core Reliability | v1.0 | 5/5 | ✅ Complete | 2026-02-22 |
-| 2. Relational Correctness | v1.1 | 0/4 | Not started | - |
+| 2. Relational Correctness | 1/4 | In Progress|  | - |
 | 3. Model Pluggability | v1.1 | 0/2 | Not started | - |
 | 4. Validation and Quality Gates | v1.2 | 0/3 | Not started | - |
 | 5. SQL Connectors | v1.2 | 0/3 | Not started | - |
