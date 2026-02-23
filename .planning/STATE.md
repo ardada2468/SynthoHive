@@ -9,11 +9,11 @@ See: .planning/PROJECT.md (updated 2026-02-22 after v1.0 milestone)
 
 ## Current Position
 
-Phase: 03-model-pluggability — Plan 03 complete (3/3 plans)
-Status: Phase 03 complete. Plan 03-03 (gap closure: pytest importmode fix) complete. MODEL-03 fully satisfied.
-Last activity: 2026-02-23 - Completed plan 03-03: pytest import resolution via addopts --import-mode=importlib
+Phase: 06-synthesizer-validation-hardening — Plan 01 complete (1/1 plans)
+Status: Phase 06 plan 01 complete. TD-04 issubclass guard and TD-01 real_data passthrough wired in Synthesizer facade. REL-03 and MODEL-02 E2E flows fixed.
+Last activity: 2026-02-23 - Completed plan 06-01: TD-04 and TD-01 synthesizer wiring gaps closed with regression tests
 
-Progress: [██████████] v1.0 shipped · v1.1 phase 02 complete · phase 03 complete (MODEL-01, MODEL-02, MODEL-03 all verified)
+Progress: [██████████] v1.0 shipped · v1.1 phase 02 complete · phase 03 complete (MODEL-01, MODEL-02, MODEL-03 all verified) · phase 06 plan 01 complete (REL-03, MODEL-02 E2E fixed)
 
 ## Performance Metrics
 
@@ -29,6 +29,7 @@ Progress: [██████████] v1.0 shipped · v1.1 phase 02 complet
 | 01-core-reliability | 5/5 | 23 min | 4.6 min |
 | 02-relational-correctness | 5/5 | 21 min | 4.2 min |
 | 03-model-pluggability | 3/3 | 7 min | 2.3 min |
+| 06-synthesizer-validation-hardening | 1/1 | 2 min | 2 min |
 
 ## Accumulated Context
 
@@ -66,6 +67,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - addopts = "--import-mode=importlib" (not importmode = "importlib") — pytest 9.0.2 does not recognize importmode as a valid ini_options key; addopts is the correct approach
 - importlib mode activates editable install finder, ensuring source tree is loaded instead of stale site-packages copy shadowing Phase 03 changes
 
+**06-01 decisions:**
+- issubclass guard added in Synthesizer.__init__() before self.metadata — fires unconditionally regardless of spark_session presence; isinstance(model,type) added before issubclass() to safely handle non-class inputs
+- TD-01: validate block moved before orchestrator check in fit(); real_data=data passed only when data is dict of DataFrames — preserves backward compat for string/path-dict callers
+
 ### Pending Todos
 
 None.
@@ -87,5 +92,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed plan 03-03 (pytest importmode gap closure; MODEL-03 fully satisfied under default pytest invocation)
+Stopped at: Completed plan 06-01 (TD-04 issubclass guard + TD-01 real_data passthrough; REL-03 and MODEL-02 E2E flows fixed)
 Resume file: None
