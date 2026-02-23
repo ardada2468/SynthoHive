@@ -48,7 +48,22 @@ class GenerativeModel(ABC):
         pass  # pragma: no cover
 
 class ConditionalGenerativeModel(GenerativeModel):
-    """Contract for models that condition on parent context during training/sampling."""
+    """Contract for models that condition on parent context during training/sampling.
+
+    Constructor convention:
+        Custom model classes passed as ``model_cls`` to ``StagedOrchestrator``
+        must accept the following constructor signature::
+
+            def __init__(self, metadata, batch_size=500, epochs=300, **kwargs):
+                ...
+
+        The ``metadata`` positional argument and ``batch_size``/``epochs`` keyword
+        arguments are forwarded by the orchestrator during ``fit_all()``. Additional
+        keyword arguments are forwarded from ``fit_all(**model_kwargs)``.
+
+        Python ABCs cannot enforce constructor signatures; this convention is
+        documented here so custom implementations know what is expected.
+    """
 
     @abstractmethod
     def fit(self, data: pd.DataFrame, context: Optional[pd.DataFrame] = None, **kwargs: Any) -> None:
