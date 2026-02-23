@@ -30,7 +30,7 @@ Archive: `.planning/milestones/v1.0-ROADMAP.md`
 ### 🚧 v1.1 Relational Correctness (Phases 2-3)
 
 - [ ] **Phase 2: Relational Correctness** - Fix FK context conditioning, cardinality distribution, memory safety, and schema validation
-- [ ] **Phase 3: Model Pluggability** - Decouple CTGAN from orchestrator; expose pluggable model strategy via ConditionalGenerativeModel ABC
+- [x] **Phase 3: Model Pluggability** - Decouple CTGAN from orchestrator; expose pluggable model strategy via ConditionalGenerativeModel ABC (completed 2026-02-23)
 
 ### 📋 v1.2 Quality & Connectors (Phases 4-5)
 
@@ -111,6 +111,6 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 1. Core Reliability | v1.0 | 5/5 | ✅ Complete | 2026-02-22 |
 | 2. Relational Correctness | 4/5 | In Progress | - | - |
-| 3. Model Pluggability | 2/3 | In Progress|  | - |
+| 3. Model Pluggability | 3/3 | Complete   | 2026-02-23 | - |
 | 4. Validation and Quality Gates | v1.2 | 0/3 | Not started | - |
 | 5. SQL Connectors | v1.2 | 0/3 | Not started | - |

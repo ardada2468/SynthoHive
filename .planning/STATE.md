@@ -9,11 +9,11 @@ See: .planning/PROJECT.md (updated 2026-02-22 after v1.0 milestone)
 
 ## Current Position
 
-Phase: 03-model-pluggability — Plan 02 complete (2/2 plans)
-Status: Phase 03 complete. Plan 03-02 (MODEL-02: Synthesizer model= API + MODEL-03: StubModel integration test) complete.
-Last activity: 2026-02-23 - Completed plan 03-02: Synthesizer model parameter + StubModel end-to-end test
+Phase: 03-model-pluggability — Plan 03 complete (3/3 plans)
+Status: Phase 03 complete. Plan 03-03 (gap closure: pytest importmode fix) complete. MODEL-03 fully satisfied.
+Last activity: 2026-02-23 - Completed plan 03-03: pytest import resolution via addopts --import-mode=importlib
 
-Progress: [█████████░] v1.0 shipped · v1.1 phase 02 complete · phase 03 complete (MODEL-01, MODEL-02, MODEL-03)
+Progress: [██████████] v1.0 shipped · v1.1 phase 02 complete · phase 03 complete (MODEL-01, MODEL-02, MODEL-03 all verified)
 
 ## Performance Metrics
 
@@ -28,7 +28,7 @@ Progress: [█████████░] v1.0 shipped · v1.1 phase 02 complet
 |-------|-------|-------|----------|
 | 01-core-reliability | 5/5 | 23 min | 4.6 min |
 | 02-relational-correctness | 5/5 | 21 min | 4.2 min |
-| 03-model-pluggability | 2/2 | 5 min | 2.5 min |
+| 03-model-pluggability | 3/3 | 7 min | 2.3 min |
 
 ## Accumulated Context
 
@@ -62,6 +62,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - sample() uses self.model_cls.__name__ — progress prints accurate for any plugged-in model
 - StubModel constructor matches ABC convention (metadata, batch_size, epochs, **kwargs) — validates docstring from Plan 01 is actionable
 
+**03-03 decisions:**
+- addopts = "--import-mode=importlib" (not importmode = "importlib") — pytest 9.0.2 does not recognize importmode as a valid ini_options key; addopts is the correct approach
+- importlib mode activates editable install finder, ensuring source tree is loaded instead of stale site-packages copy shadowing Phase 03 changes
+
 ### Pending Todos
 
 None.
@@ -83,5 +87,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed plan 03-02 (Synthesizer model= API; StubModel integration test proving MODEL-03 end-to-end contract)
+Stopped at: Completed plan 03-03 (pytest importmode gap closure; MODEL-03 fully satisfied under default pytest invocation)
 Resume file: None
