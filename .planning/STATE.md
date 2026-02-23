@@ -66,9 +66,10 @@ None.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 1 | Fix ArrowStringArray reshape NotImplementedError on Python 3.11 | 2026-02-23 | 217e67b | [1-fix-arrowstringarray-reshape-notimplemen](./quick/1-fix-arrowstringarray-reshape-notimplemen/) |
+| 2 | Close two wiring gaps: export SchemaValidationError + wire validate_schema in fit() | 2026-02-22 | 7a699f5 | [2-close-2-wiring-gaps-add-schemavalidation](./quick/2-close-2-wiring-gaps-add-schemavalidation/) |
 
 ## Session Continuity
 
-Last session: 2026-02-23
-Stopped at: Completed 02-05-PLAN.md (gap closure: SchemaValidationError test fix, REL-03 and TEST-02 fulfilled, phase 02 complete)
+Last session: 2026-02-22
+Stopped at: Completed quick task 2 (SchemaValidationError export + validate_schema wiring in fit())
 Resume file: None
