@@ -66,11 +66,11 @@ Plans:
   1. `StagedOrchestrator` has no hardcoded CTGAN import in its orchestration logic — the model class is injected via `model_cls` parameter
   2. `Synthesizer(model=CustomModel)` with any class implementing the `ConditionalGenerativeModel` ABC (`fit`, `sample`, `save`, `load`) routes correctly through the full multi-table pipeline
   3. The `Synthesizer` public API documents the `model` parameter with the list of supported model classes; existing callers omitting `model` get CTGAN by default with no behavior change
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: Remove hardcoded CTGAN from `StagedOrchestrator`; add `model_cls` parameter defaulting to CTGAN; verify `ConditionalGenerativeModel` ABC covers fit/sample/save/load contract
-- [ ] 03-02: Expose `model` parameter on `Synthesizer`; document supported classes; add integration test with a minimal stub model to verify the ABC contract end-to-end
+- [ ] 03-01-PLAN.md — Add model_cls DI parameter to StagedOrchestrator; replace both CTGAN() call sites with self.model_cls(); update Dict type annotation; add issubclass guard; document constructor convention in ABC
+- [ ] 03-02-PLAN.md — Replace backend: str with model: Type[ConditionalGenerativeModel] = CTGAN in Synthesizer; forward model_cls to StagedOrchestrator; write StubModel integration test proving MODEL-03 ABC contract end-to-end
 
 ### Phase 4: Validation and Quality Gates
 **Goal**: Engineers see training progress in real-time, models checkpoint on statistical quality not generator loss, and `sample()` can enforce a minimum quality threshold automatically
@@ -110,6 +110,6 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 1. Core Reliability | v1.0 | 5/5 | ✅ Complete | 2026-02-22 |
 | 2. Relational Correctness | 4/5 | In Progress | - | - |
-| 3. Model Pluggability | v1.1 | 0/2 | Not started | - |
+| 3. Model Pluggability | v1.1 | 0/2 | Planned | - |
 | 4. Validation and Quality Gates | v1.2 | 0/3 | Not started | - |
 | 5. SQL Connectors | v1.2 | 0/3 | Not started | - |
