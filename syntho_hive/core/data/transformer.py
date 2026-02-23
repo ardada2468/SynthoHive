@@ -122,7 +122,7 @@ class DataTransformer:
                     # Fill Nulls
                     col_data_filled = self._prepare_categorical(col_data)
                     
-                    values = col_data_filled.values.reshape(-1, 1)
+                    values = col_data_filled.to_numpy(dtype=str).reshape(-1, 1)
                     transformer.fit(values)
                     
                     dim = len(transformer.categories_[0])
@@ -170,7 +170,7 @@ class DataTransformer:
             else:
                 # Returns (N, n_categories)
                 col_data_filled = self._prepare_categorical(col_data)
-                values = col_data_filled.values.reshape(-1, 1)
+                values = col_data_filled.to_numpy(dtype=str).reshape(-1, 1)
                 transformed = transformer.transform(values)
             
             output_arrays.append(transformed)
@@ -320,10 +320,10 @@ class ClusterBasedNormalizer:
         if self.has_nulls:
             self.fill_value = data.mean()
             # Impute for training GMM
-            values = data.fillna(self.fill_value).values.reshape(-1, 1)
+            values = data.fillna(self.fill_value).to_numpy(dtype=float).reshape(-1, 1)
             self.output_dim = self.n_components + 1 + 1 # +1 for null indicator
         else:
-            values = data.values.reshape(-1, 1)
+            values = data.to_numpy(dtype=float).reshape(-1, 1)
             self.output_dim = self.n_components + 1
 
         self.model.fit(values)
@@ -339,15 +339,15 @@ class ClusterBasedNormalizer:
         Returns:
             Numpy array of shape ``(N, n_components + 1 [+1])`` with one-hot cluster, scaled value, [null_ind].
         """
-        values_raw = data.values.reshape(-1, 1)
+        values_raw = data.to_numpy(dtype=float).reshape(-1, 1)
         n_samples = len(values_raw)
-        
+
         if self.has_nulls:
             # 0. Create Null Indicator
-            null_indicator = pd.isnull(data).values.astype(float).reshape(-1, 1)
-            
+            null_indicator = pd.isnull(data).to_numpy(dtype=float).reshape(-1, 1)
+
             # 1. Impute for projection
-            values_clean = data.fillna(self.fill_value).values.reshape(-1, 1)
+            values_clean = data.fillna(self.fill_value).to_numpy(dtype=float).reshape(-1, 1)
         else:
             values_clean = values_raw
         
