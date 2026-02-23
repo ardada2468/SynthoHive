@@ -27,10 +27,12 @@ Archive: `.planning/milestones/v1.0-ROADMAP.md`
 
 </details>
 
-### 🚧 v1.1 Relational Correctness (Phases 2-3)
+### 🚧 v1.1 Relational Correctness (Phases 2-3, 6-7)
 
 - [ ] **Phase 2: Relational Correctness** - Fix FK context conditioning, cardinality distribution, memory safety, and schema validation
 - [x] **Phase 3: Model Pluggability** - Decouple CTGAN from orchestrator; expose pluggable model strategy via ConditionalGenerativeModel ABC (completed 2026-02-23)
+- [ ] **Phase 6: Synthesizer Validation Hardening** - Fix validate_schema real_data passthrough and add issubclass guard in Synthesizer.__init__ (v1.1 tech debt)
+- [ ] **Phase 7: Test Suite Alignment** - Fix 4 pre-existing test failures in test_interface.py (v1.1 tech debt)
 
 ### 📋 v1.2 Quality & Connectors (Phases 4-5)
 
@@ -73,6 +75,35 @@ Plans:
 - [ ] 03-02-PLAN.md — Replace backend: str with model: Type[ConditionalGenerativeModel] = CTGAN in Synthesizer; forward model_cls to StagedOrchestrator; write StubModel integration test proving MODEL-03 ABC contract end-to-end
 - [ ] 03-03-PLAN.md — Gap closure: add importmode = "importlib" to pyproject.toml so MODEL-03 tests pass under default pytest invocation
 
+### Phase 6: Synthesizer Validation Hardening
+**Goal**: The Synthesizer public façade enforces both structural and data-level FK validation at fit time, and invalid model class injection fails immediately at `__init__` regardless of Spark session presence
+**Milestone**: v1.1 Tech Debt
+**Depends on**: Phase 3
+**Requirements**: REL-03 (partial wiring — TD-01), MODEL-02 (partial wiring — TD-04)
+**Gap Closure**: Closes TD-01 and TD-04 from v1.1 audit; fixes 2 broken E2E flows
+**Success Criteria** (what must be TRUE):
+  1. `Synthesizer.fit(validate=True, data=dfs)` calls `validate_schema(real_data=dfs)` and raises `SchemaValidationError` when FK type mismatches exist
+  2. `Synthesizer(model=InvalidClass, spark_session=None)` raises `TypeError` at `__init__` time — not deferred to `fit()`
+**Plans**: 1 plan
+
+Plans:
+- [ ] 06-01-PLAN.md — Pass `real_data` to `validate_schema()` in `Synthesizer.fit()`; add issubclass guard in `Synthesizer.__init__()` before Spark check
+
+### Phase 7: Test Suite Alignment
+**Goal**: All tests in `test_interface.py` pass with zero pre-existing failures
+**Milestone**: v1.1 Tech Debt
+**Depends on**: Phase 6
+**Requirements**: TEST-01 (test suite health)
+**Gap Closure**: Closes TD-02 from v1.1 audit; fixes 4 pre-existing test failures
+**Success Criteria** (what must be TRUE):
+  1. `pytest.raises(TrainingError)` replaces `pytest.raises(ValueError)` in Spark-required flow tests
+  2. Call signature assertions in `test_interface.py` match current Synthesizer API
+  3. `pytest syntho_hive/tests/test_interface.py` exits with 0 failures
+**Plans**: 1 plan
+
+Plans:
+- [ ] 07-01-PLAN.md — Update test_interface.py: ValueError → TrainingError assertions; fix stale call signature checks
+
 ### Phase 4: Validation and Quality Gates
 **Goal**: Engineers see training progress in real-time, models checkpoint on statistical quality not generator loss, and `sample()` can enforce a minimum quality threshold automatically
 **Depends on**: Phase 3
@@ -110,7 +141,9 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1. Core Reliability | v1.0 | 5/5 | ✅ Complete | 2026-02-22 |
-| 2. Relational Correctness | 4/5 | In Progress | - | - |
-| 3. Model Pluggability | 3/3 | Complete   | 2026-02-23 | - |
+| 2. Relational Correctness | v1.1 | 5/5 | ✅ Complete | 2026-02-23 |
+| 3. Model Pluggability | v1.1 | 3/3 | ✅ Complete | 2026-02-23 |
+| 6. Synthesizer Validation Hardening | v1.1 TD | 0/1 | Not started | - |
+| 7. Test Suite Alignment | v1.1 TD | 0/1 | Not started | - |
 | 4. Validation and Quality Gates | v1.2 | 0/3 | Not started | - |
 | 5. SQL Connectors | v1.2 | 0/3 | Not started | - |
