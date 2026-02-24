@@ -289,8 +289,17 @@ class CTGAN(ConditionalGenerativeModel):
         if checkpoint_dir:
             os.makedirs(checkpoint_dir, exist_ok=True)
 
-        best_loss = float('inf')
         history = []
+
+        # Validation-metric checkpoint state (QUAL-03)
+        _validator = None
+        best_val_metric = float('inf')
+        best_epoch = -1
+        best_checkpoint_path = None
+
+        if checkpoint_dir:
+            from syntho_hive.validation.statistical import StatisticalValidator
+            _validator = StatisticalValidator()
         # 1. Fit and Transform Data
         self.transformer.fit(data, table_name=table_name, seed=seed)
         train_data = self.transformer.transform(data)
@@ -492,13 +501,66 @@ class CTGAN(ConditionalGenerativeModel):
                 "eta": f"{int(eta_seconds)}s",
             })
 
-            # Emit epoch_end event (always, independent of progress_bar flag)
+            # Prepare epoch_end log fields (val_metric added below on checkpoint epochs)
             epoch_log_fields = dict(
                 epoch=epoch,
                 g_loss=current_loss_g,
                 d_loss=current_loss_d,
                 eta_seconds=eta_seconds,
             )
+
+            # Checkpoint validation (every checkpoint_interval epochs, only when checkpoint_dir set)
+            _is_checkpoint_epoch = (
+                checkpoint_dir is not None
+                and (epoch + 1) % checkpoint_interval == 0
+            )
+
+            if _is_checkpoint_epoch:
+                # Generate a small validation sample from current generator state
+                self.generator.eval()
+                self.discriminator.eval()
+                with torch.no_grad():
+                    val_synth = self.sample(min(len(data), 500))
+                self.generator.train()
+                self.discriminator.train()
+
+                # Align columns: drop columns not present in synthetic output (FK/PK)
+                real_for_val = data[[c for c in data.columns if c in val_synth.columns]].copy()
+
+                results = _validator.compare_columns(real_for_val, val_synth)
+                stats = [
+                    v['statistic']
+                    for v in results.values()
+                    if isinstance(v, dict) and 'statistic' in v
+                ]
+
+                if stats:
+                    val_metric = sum(stats) / len(stats)
+                    # Include val_metric in epoch_end only on checkpoint epochs
+                    epoch_log_fields["val_metric"] = val_metric
+                else:
+                    log.warning(
+                        "checkpoint_validation_empty",
+                        epoch=epoch,
+                        note="compare_columns returned no valid stats — skipping checkpoint",
+                    )
+                    val_metric = float('inf')
+
+                if val_metric < best_val_metric:
+                    best_val_metric = val_metric
+                    best_epoch = epoch
+                    best_cp = os.path.join(checkpoint_dir, "best_checkpoint")
+                    self.save(best_cp, overwrite=True)
+                    best_checkpoint_path = best_cp
+                    log.info(
+                        "new_best_checkpoint",
+                        epoch=epoch,
+                        val_metric=val_metric,
+                        path=best_cp,
+                    )
+
+            # Emit epoch_end event (always, independent of progress_bar flag)
+            # val_metric included in epoch_log_fields only on checkpoint epochs
             log.info("epoch_end", **epoch_log_fields)
 
             if log_metrics:
@@ -508,32 +570,34 @@ class CTGAN(ConditionalGenerativeModel):
                     'loss_d': current_loss_d
                 })
 
-            if checkpoint_dir and current_loss_g < best_loss:
-                best_loss = current_loss_g
-                self.save(os.path.join(checkpoint_dir, "best_model.pt"))
+        # End of training: Save final checkpoint and metrics
+        if checkpoint_dir:
+            final_cp = os.path.join(checkpoint_dir, "final_checkpoint")
+            self.save(final_cp, overwrite=True)
+            # If no validation checkpoint was ever saved (no checkpoint epoch ran),
+            # fall back: treat final as best
+            if best_checkpoint_path is None:
+                best_checkpoint_path = final_cp
+                best_epoch = self.epochs - 1
+                best_val_metric = float('inf')
 
-        # Emit training_complete (checkpoint_path and best_epoch populated in Plan 02;
-        # emit with None values here to satisfy CORE-05 independently of QUAL-03)
+        # Emit training_complete with real validation-metric values (QUAL-03)
         log.info(
             "training_complete",
-            best_epoch=-1,
-            best_val_metric=None,
+            best_epoch=best_epoch,
+            best_val_metric=best_val_metric,
             total_epochs=self.epochs,
-            checkpoint_path=None,
+            checkpoint_path=str(best_checkpoint_path) if best_checkpoint_path else None,
         )
 
-        # End of training: Save metrics and last model
-        if checkpoint_dir:
-            self.save(os.path.join(checkpoint_dir, "last_model.pt"))
-            
-            if log_metrics and history:
-                metrics_path = os.path.join(checkpoint_dir, "training_metrics.csv")
-                keys = history[0].keys()
-                with open(metrics_path, 'w', newline='') as f:
-                    dict_writer = csv.DictWriter(f, fieldnames=keys)
-                    dict_writer.writeheader()
-                    dict_writer.writerows(history)
-                print(f"Training metrics saved to {metrics_path}")
+        if checkpoint_dir and log_metrics and history:
+            metrics_path = os.path.join(checkpoint_dir, "training_metrics.csv")
+            keys = history[0].keys()
+            with open(metrics_path, 'w', newline='') as f:
+                dict_writer = csv.DictWriter(f, fieldnames=keys)
+                dict_writer.writeheader()
+                dict_writer.writerows(history)
+            print(f"Training metrics saved to {metrics_path}")
 
     def sample(self, num_rows: int, context: Optional[pd.DataFrame] = None, seed: Optional[int] = None, enforce_constraints: bool = False, **kwargs: Any) -> pd.DataFrame:
         """Generate synthetic samples, optionally conditioned on parent context.
