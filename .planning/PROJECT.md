@@ -6,6 +6,17 @@ SynthoHive is a Python SDK for synthetic data generation targeting data engineer
 
 **v1.1 shipped:** Multi-table relational correctness is now proven end-to-end. Generated parent/child tables join with zero orphans. FK type mismatches are caught at schema validation time. The model architecture is pluggable via `ConditionalGenerativeModel` ABC. The full test suite (14/14) is clean.
 
+## Current Milestone: v1.2 Quality & Connectors
+
+**Goal:** Give data engineers visibility into training progress and generated data quality, and let them connect to SQL databases and read files without a Spark session.
+
+**Target features:**
+- Structured training progress events (epoch, loss, ETA) via structlog
+- `sample(quality_threshold=N)` enforcement with per-column TVD/KS metrics; `sample(return_metrics=True)` returns `(DataFrame, metrics_dict)`
+- Model checkpoints on best validation TVD/KS (not generator loss)
+- SQL connector for Postgres + MySQL via SQLAlchemy 2.0
+- Pandas-native CSV/Parquet connectors (no Spark required)
+
 ## Core Value
 
 A data engineer can give SynthoHive a real multi-table schema, train on it, generate synthetic data, and trust that code written against that data will work on the real thing — without babysitting the training process or manually validating the output.
@@ -50,9 +61,9 @@ A data engineer can give SynthoHive a real multi-table schema, train on it, gene
 
 - [ ] CORE-05: Training emits structured progress (epoch, loss, ETA)
 - [ ] QUAL-01: `sample(quality_threshold=N)` raises with failing column names and TVD scores
-- [ ] QUAL-02: Column-level quality metrics emitted after every `sample()` call
+- [ ] QUAL-02: Column-level TVD/KS metrics emitted via structlog after every `sample()`; `sample(return_metrics=True)` returns `(DataFrame, metrics_dict)`
 - [ ] QUAL-03: Model checkpoints on validation metric (TVD/KS), not generator loss
-- [ ] CONN-01: SQL connector reads from Postgres, MySQL, Snowflake, BigQuery via SQLAlchemy 2.0
+- [ ] CONN-01: SQL connector reads from Postgres and MySQL via SQLAlchemy 2.0 (Snowflake/BigQuery → v1.3)
 - [ ] CONN-03: CSV/Parquet connectors work without Spark session (Pandas-native path)
 - [ ] TEST-04: Connector test reads from Postgres via psycopg2 and produces correctly-typed DataFrame
 
@@ -119,4 +130,4 @@ A data engineer can give SynthoHive a real multi-table schema, train on it, gene
 | `call_args.args[0]` positional check replaces `assert_called_with(expected_paths)` in test_synthesizer_fit_call | `assert_called_with` requires exact positional+keyword match — brittle as kwargs evolve | ✓ Good — test decoupled from kwargs; call_args.kwargs pattern for keyword-arg assertions |
 
 ---
-*Last updated: 2026-02-23 after v1.1 milestone*
+*Last updated: 2026-02-23 after v1.2 milestone started*

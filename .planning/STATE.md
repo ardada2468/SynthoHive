@@ -5,13 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-23 after v1.1 milestone)
 
 **Core value:** A data engineer can train on any multi-table schema, generate synthetic data, and trust that code written against that data will work on the real thing — without babysitting training or manually validating output.
-**Current focus:** v1.1 archived — planning next milestone (v1.2 Quality & Connectors)
+**Current focus:** v1.2 Quality & Connectors
 
 ## Current Position
 
-Phase: 07-test-suite-alignment — Plan 01 complete (1/1 plans)
-Status: Phase 07 plan 01 complete. TD-02 closed — test_interface.py now runs 14/14 passing (0 failures). All 4 stale assertions corrected to match post-phase-06 exception boundary and call signatures.
-Last activity: 2026-02-23 - Completed plan 07-01: test suite aligned, TrainingError assertions and call_args checks fixed
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-23 — Milestone v1.2 started
 
 Progress: [██████████] v1.0 shipped · v1.1 phase 02 complete · phase 03 complete (MODEL-01, MODEL-02, MODEL-03 all verified) · phase 06 plan 01 complete (REL-03, MODEL-02 E2E fixed) · phase 07 plan 01 complete (TD-02 closed, test suite green)
 
