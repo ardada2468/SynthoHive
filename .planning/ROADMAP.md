@@ -93,7 +93,7 @@ Archive: `.planning/milestones/v1.1-ROADMAP.md`
   4. A subsequent cold `load()` + `sample()` uses the best-quality checkpoint, producing output with statistical quality at least as good as the best epoch seen during training
 **Plans**: TBD
 
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] 08-01-PLAN.md — Add tqdm + structlog events to CTGAN.fit(); thread progress_bar and checkpoint_interval through Synthesizer and StagedOrchestrator
@@ -152,7 +152,7 @@ Plans:
 | 3. Model Pluggability | v1.1 | 3/3 | Complete | 2026-02-23 |
 | 6. Synthesizer Validation Hardening | v1.1 | 1/1 | Complete | 2026-02-23 |
 | 7. Test Suite Alignment | v1.1 | 1/1 | Complete | 2026-02-23 |
-| 8. Training Observability | v1.2 | 0/2 | Planned | - |
+| 8. Training Observability | 1/2 | In Progress|  | - |
 | 9. Sample Quality | v1.2 | 0/2 | Not started | - |
 | 10. SQL Connectors | v1.2 | 0/2 | Not started | - |
 | 11. Pandas-Native File I/O | v1.2 | 0/1 | Not started | - |

@@ -10,7 +10,7 @@ Requirements for v1.2 release. Each maps to exactly one roadmap phase.
 
 ### Observability
 
-- [ ] **CORE-05**: Data engineer can observe training progress — epoch number, generator loss, discriminator loss, and ETA — emitted as structured log events during `fit()`
+- [x] **CORE-05**: Data engineer can observe training progress — epoch number, generator loss, discriminator loss, and ETA — emitted as structured log events during `fit()`
 
 ### Quality Enforcement
 
@@ -53,7 +53,7 @@ Which phases cover which requirements. Updated 2026-02-24 during v1.2 roadmap cr
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CORE-05 | Phase 8 | Pending |
+| CORE-05 | Phase 8 | Complete |
 | QUAL-03 | Phase 8 | Pending |
 | QUAL-01 | Phase 9 | Pending |
 | QUAL-02 | Phase 9 | Pending |
