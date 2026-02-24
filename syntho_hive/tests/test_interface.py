@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 from syntho_hive.interface.synthesizer import Synthesizer
 from syntho_hive.interface.config import Metadata, PrivacyConfig, TableConfig
-from syntho_hive.exceptions import SchemaValidationError
+from syntho_hive.exceptions import SchemaValidationError, TrainingError
 
 # Mock SparkSession
 class MockSparkSession:
@@ -46,12 +46,12 @@ def test_synthesizer_init_no_spark(metadata, privacy_config):
 
 def test_synthesizer_fit_requires_spark(metadata, privacy_config):
     syn = Synthesizer(metadata, privacy_config, spark_session=None)
-    with pytest.raises(ValueError, match="SparkSession required"):
+    with pytest.raises(TrainingError, match="SparkSession required"):
         syn.fit("test_db")
 
 def test_synthesizer_sample_requires_spark(metadata, privacy_config):
     syn = Synthesizer(metadata, privacy_config, spark_session=None)
-    with pytest.raises(ValueError, match="SparkSession required"):
+    with pytest.raises(TrainingError, match="SparkSession required"):
         syn.sample({"users": 100})
 
 def test_synthesizer_fit_call(mock_spark, metadata, privacy_config):
@@ -63,7 +63,7 @@ def test_synthesizer_fit_call(mock_spark, metadata, privacy_config):
         syn.orchestrator.fit_all.assert_called_once()
         # Check args passed to fit_all are correct
         expected_paths = {'users': 'test_db.users', 'orders': 'test_db.orders'}
-        syn.orchestrator.fit_all.assert_called_with(expected_paths)
+        assert syn.orchestrator.fit_all.call_args.args[0] == expected_paths
 
 def test_synthesizer_sample_call(mock_spark, metadata, privacy_config):
     with patch("syntho_hive.interface.synthesizer.StagedOrchestrator") as MockOrchestrator:
@@ -71,11 +71,10 @@ def test_synthesizer_sample_call(mock_spark, metadata, privacy_config):
         syn.sample({"users": 50})
         
         syn.orchestrator.generate.assert_called_once()
-        # Verify output path
-        args, _ = syn.orchestrator.generate.call_args
-        rows, output_base = args
-        assert rows == {"users": 50}
-        assert "/tmp/syntho_hive_output/delta" == output_base
+        # Verify routing: correct row counts passed, output_path_base=None (in-memory branch)
+        call = syn.orchestrator.generate.call_args
+        assert call.args[0] == {"users": 50}
+        assert call.kwargs.get("output_path_base") is None
 
 def test_save_to_hive(mock_spark, metadata, privacy_config):
     syn = Synthesizer(metadata, privacy_config, spark_session=mock_spark)
