@@ -96,13 +96,27 @@ class StagedOrchestrator:
         self.models: Dict[str, ConditionalGenerativeModel] = {}
         self.linkage_models: Dict[str, LinkageModel] = {}
 
-    def fit_all(self, real_data_paths: Dict[str, str], epochs: int = 300, batch_size: int = 500, **model_kwargs: Union[int, str, Tuple[int, int]]):
+    def fit_all(
+        self,
+        real_data_paths: Dict[str, str],
+        epochs: int = 300,
+        batch_size: int = 500,
+        progress_bar: bool = True,
+        checkpoint_interval: int = 10,
+        checkpoint_dir: Optional[str] = None,
+        **model_kwargs: Union[int, str, Tuple[int, int]],
+    ):
         """Fit CTGAN and linkage models for every table.
 
         Args:
             real_data_paths: Mapping ``{table_name: 'db.table' or '/path'}``.
             epochs: Number of training epochs for CTGAN.
             batch_size: Training batch size.
+            progress_bar: If True (default), display tqdm progress bar to stderr during training.
+                Structured log events always emit regardless of this flag.
+            checkpoint_interval: Save a validation checkpoint every N epochs. Default 10.
+            checkpoint_dir: Optional directory to save best_checkpoint/ and final_checkpoint/
+                during training.
             **model_kwargs: Extra parameters forwarded to the model constructor.
         """
         # Topo sort to train parents first? Or independent?
@@ -133,7 +147,13 @@ class StagedOrchestrator:
                     epochs=epochs,
                     **model_kwargs
                 )
-                model.fit(target_pdf, table_name=table_name)
+                model.fit(
+                    target_pdf,
+                    table_name=table_name,
+                    progress_bar=progress_bar,
+                    checkpoint_interval=checkpoint_interval,
+                    checkpoint_dir=checkpoint_dir,
+                )
                 self.models[table_name] = model
             else:
                 # Child Table
@@ -188,7 +208,14 @@ class StagedOrchestrator:
                 # Note: We exclude ALL FK columns from CTGAN modeling to avoid them being treated as continuous/categorical features
                 # The DataTransformer handles excluding PK/FK if they are marked in metadata.
                 # But we must ensure metadata knows about ALL FKs. (It does via config.fk)
-                model.fit(target_pdf, context=context_df, table_name=table_name)
+                model.fit(
+                    target_pdf,
+                    context=context_df,
+                    table_name=table_name,
+                    progress_bar=progress_bar,
+                    checkpoint_interval=checkpoint_interval,
+                    checkpoint_dir=checkpoint_dir,
+                )
                 self.models[table_name] = model
 
     def generate(self, num_rows_root: Dict[str, int], output_path_base: Optional[str] = None) -> Dict[str, pd.DataFrame]:

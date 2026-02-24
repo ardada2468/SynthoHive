@@ -84,6 +84,9 @@ class Synthesizer:
         validate: bool = False,
         epochs: int = 300,
         batch_size: int = 500,
+        progress_bar: bool = True,
+        checkpoint_interval: int = 10,
+        checkpoint_dir: Optional[str] = None,
         **model_kwargs: Union[int, str, Tuple[int, int]]
     ):
         """Fit the generative models on the real database.
@@ -95,6 +98,11 @@ class Synthesizer:
             validate: Whether to run validation after fitting.
             epochs: Number of training epochs for CTGAN.
             batch_size: Batch size for training.
+            progress_bar: If True (default), display tqdm progress bar to stderr during training.
+                Structured log events always emit regardless of this flag.
+            checkpoint_interval: Save a validation checkpoint every N epochs. Default 10.
+            checkpoint_dir: Optional directory to save best_checkpoint/ and final_checkpoint/
+                during training.
             **model_kwargs: Additional args forwarded to the underlying model (e.g., embedding_dim).
 
         Raises:
@@ -130,7 +138,15 @@ class Synthesizer:
                     f"got {type(data).__name__}."
                 )
 
-            self.orchestrator.fit_all(real_paths, epochs=epochs, batch_size=batch_size, **model_kwargs)
+            self.orchestrator.fit_all(
+                real_paths,
+                epochs=epochs,
+                batch_size=batch_size,
+                progress_bar=progress_bar,
+                checkpoint_interval=checkpoint_interval,
+                checkpoint_dir=checkpoint_dir,
+                **model_kwargs
+            )
         except SynthoHiveError:
             raise
         except Exception as exc:
