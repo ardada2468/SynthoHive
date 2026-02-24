@@ -23,3 +23,29 @@
 **Archive:** `.planning/milestones/v1.0-ROADMAP.md`, `.planning/milestones/v1.0-REQUIREMENTS.md`
 
 ---
+
+## v1.1 Relational Correctness (Shipped: 2026-02-24)
+
+**Phases completed:** 4 phases, 10 plans
+**Files changed:** 11 (+803 / -174 lines)
+**LOC (syntho_hive/):** 3,976 Python
+**Test suite:** 14/14 passing
+
+**Key accomplishments:**
+- Multi-table FK integrity proven end-to-end: empirical-histogram cardinality model eliminates FK cardinality drift; `TestFKChainIntegrity` suite confirms zero-orphan join guarantee across generated parent/child tables (REL-01, REL-02, REL-05)
+- Schema validation at definition time: `validate_schema(real_data=)` with collect-all FK type/column checks raises `SchemaValidationError` before training begins (REL-03, REL-04)
+- Pluggable model architecture: `ConditionalGenerativeModel` ABC; `Synthesizer(model=CustomClass)` API; `issubclass` guard at `__init__` time fires regardless of Spark session presence (MODEL-01, MODEL-02, MODEL-03)
+- Validation hardening: `fit(validate=True, data=DataFrames)` passes real DataFrames to `validate_schema()` enabling data-level FK type checks; issubclass guard moved from deferred orchestrator construction to Synthesizer init (TD-01, TD-04 closed)
+- Clean test suite: all 4 pre-existing failures fixed — `TrainingError` assertions aligned with exception boundaries, `call_args` checks aligned with current call signatures (14/14 passing, TD-02 closed)
+- PySpark 4.0+ / delta-spark 4.0+ version pins resolved; pytest `--import-mode=importlib` configured for stable test discovery (CONN-02, TEST-02)
+
+**Tech debt carried forward:**
+- REL-03 partial wiring: `validate_schema()` data-level checks require explicit `data=` argument — not enforced at API boundary; documented behavior
+- Production-scale FK chain test (10k+ rows) outstanding — zero-orphan guarantee unverified at realistic dataset sizes
+- Stale CTGAN-specific docstrings in `orchestrator.py` (lines 100, 104, 110, 124, 161, 188) — documentation-only, no functional impact
+
+**Git range:** `4048f9e` → `97e5814`
+**Archive:** `.planning/milestones/v1.1-ROADMAP.md`, `.planning/milestones/v1.1-MILESTONE-AUDIT.md`
+
+---
+

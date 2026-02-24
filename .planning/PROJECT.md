@@ -4,7 +4,7 @@
 
 SynthoHive is a Python SDK for synthetic data generation targeting data engineers. It trains on real multi-table datasets and generates statistically realistic fake data that preserves referential integrity — so pipelines, queries, and application code built against synthetic data work unchanged on production data.
 
-**v1.0 shipped:** The codebase now has a reliable CTGAN pipeline — typed exceptions, full model serialization, deterministic seeding, constraint enforcement, and SQL injection prevention. The core ML pipeline is trustworthy; multi-table relational correctness is next.
+**v1.1 shipped:** Multi-table relational correctness is now proven end-to-end. Generated parent/child tables join with zero orphans. FK type mismatches are caught at schema validation time. The model architecture is pluggable via `ConditionalGenerativeModel` ABC. The full test suite (14/14) is clean.
 
 ## Core Value
 
@@ -34,19 +34,20 @@ A data engineer can give SynthoHive a real multi-table schema, train on it, gene
 - ✓ TEST-01: E2E single-table fit → sample → validate test passes — v1.0
 - ✓ TEST-03: Serialization round-trip test (fit → save → load → sample) passes — v1.0
 - ✓ TEST-05: Seed regression test (bit-identical output with `check_exact=True`) passes — v1.0
+- ✓ REL-01: Child table generation uses freshly sampled parent context (not stale last-batch context) — v1.1
+- ✓ REL-02: FK cardinality uses empirical distribution or Negative Binomial (not Gaussian Mixture) — v1.1
+- ✓ REL-03: FK type mismatches raised at `validate_schema()` time, before training (full wiring via `fit(validate=True, data=...)`) — v1.1
+- ✓ REL-04: Multi-table generation releases DataFrames after disk write — no OOM accumulation — v1.1
+- ✓ REL-05: Generated parent/child tables join with zero orphans and zero missing parents — v1.1
+- ✓ CONN-02: PySpark 4.0+ and delta-spark 4.0+ pins in pyproject.toml match installed venv — v1.1
+- ✓ TEST-02: Multi-table E2E test: 3-table FK join validates zero orphans — v1.1
+- ✓ MODEL-01: `StagedOrchestrator` accepts `model_cls` parameter — no hardcoded CTGAN in orchestration — v1.1
+- ✓ MODEL-02: `Synthesizer` exposes `model` parameter with documented supported classes; `issubclass` guard fires regardless of Spark session — v1.1
+- ✓ MODEL-03: Any class implementing `ConditionalGenerativeModel` ABC routes correctly through pipeline — v1.1
+- ✓ TEST-SH: `test_interface.py` runs clean (14/14 passing); all 4 pre-existing failures from exception/call-sig mismatches resolved — v1.1
 
 ### Active
 
-- [ ] REL-01: Child table generation uses freshly sampled parent context (not stale last-batch context)
-- [ ] REL-02: FK cardinality uses empirical distribution or Negative Binomial (not Gaussian Mixture)
-- [ ] REL-03: FK type mismatches raised at `validate_schema()` time, before training
-- [ ] REL-04: Multi-table generation releases DataFrames after disk write — no OOM accumulation
-- [ ] REL-05: Generated parent/child tables join with zero orphans and zero missing parents
-- [ ] CONN-02: PySpark 4.0+ and delta-spark 4.0+ pins in pyproject.toml match installed venv
-- [ ] TEST-02: Multi-table E2E test: 3-table FK join validates zero orphans
-- [ ] MODEL-01: `StagedOrchestrator` accepts `model_cls` parameter — no hardcoded CTGAN in orchestration
-- [ ] MODEL-02: `Synthesizer` exposes `model` parameter with documented supported classes
-- [ ] MODEL-03: Any class implementing `ConditionalGenerativeModel` ABC routes correctly through pipeline
 - [ ] CORE-05: Training emits structured progress (epoch, loss, ETA)
 - [ ] QUAL-01: `sample(quality_threshold=N)` raises with failing column names and TVD scores
 - [ ] QUAL-02: Column-level quality metrics emitted after every `sample()` call
@@ -67,19 +68,25 @@ A data engineer can give SynthoHive a real multi-table schema, train on it, gene
 
 ## Context
 
-**v1.0 shipped 2026-02-22.** The core CTGAN single-table pipeline is now trustworthy:
-- Exception hierarchy: `SynthoHiveError` → 5 typed subclasses; zero bare excepts anywhere in `syntho_hive/`
-- Serialization: 7-file directory checkpoint; cold `load()` + `sample()` without retraining verified
+**v1.1 shipped 2026-02-23.** Multi-table relational correctness is proven end-to-end:
+- FK integrity: empirical-histogram cardinality model; zero-orphan join guarantee confirmed by `TestFKChainIntegrity` suite
+- Schema validation: `validate_schema(real_data=)` catches FK type mismatches at definition time; collect-all error reporting
+- Model pluggability: `ConditionalGenerativeModel` ABC; `Synthesizer(model=CustomClass)` API; `issubclass` guard at init time (fires regardless of Spark session)
+- Validation hardening: `fit(validate=True, data=...)` passes real DataFrames to `validate_schema()` for data-level FK checks (TD-01/TD-04 closed)
+- Test suite: 14/14 passing; `TrainingError` assertions aligned with production exception boundaries
+
+**v1.0 foundation (still current):**
+- Exception hierarchy: `SynthoHiveError` → 5 typed subclasses; zero bare excepts
+- Serialization: 7-file directory checkpoint; cold `load()` + `sample()` verified
 - Determinism: `fit(seed=42).sample(100, seed=7)` bit-identical across independent runs
-- Security: SQL injection prevented in `save_to_hive()` via `_SAFE_IDENTIFIER` allowlist regex
-- Test harness: 12 regression tests covering E2E training, serialization, seed, and constraint violation
+- Security: SQL injection prevented in `save_to_hive()` via `_SAFE_IDENTIFIER` allowlist
 
-**Stack:** Python 3.14, PyTorch 2.6+, PySpark 4.0+, delta-spark 4.0+, Pandas, scikit-learn, SciPy, Pydantic v2, joblib, structlog, Faker.
+**Stack:** Python 3.14, PyTorch 2.6+, PySpark 4.0+, delta-spark 4.0+, Pandas, scikit-learn, SciPy, Pydantic v2, joblib, structlog, Faker. **LOC:** ~3,976 Python.
 
-**Known issues / tech debt from v1.0:**
-- Stale `.venv` — `pip install -e .` required before Phase 2 (otherwise PYTHONPATH must be set)
-- No `tests/` regression test for `SchemaError` on invalid DB name (CONN-04 rejection path — implementation correct, coverage gap)
-- Pandas 2.x copy-on-write semantics may affect `transformer.py` `.values` mutations — audit before pinning `pandas>=2.0.0`
+**Known issues / tech debt from v1.1:**
+- REL-03 partial wiring: `Synthesizer.fit(validate=True)` without `data=` calls `validate_schema()` with `real_data=None` — data-level FK type mismatch detection requires explicit `data=` argument; documented but not enforced at API boundary
+- Human verification outstanding: production-scale FK chain test (10k+ rows) to confirm zero-orphan guarantee at realistic dataset size
+- Stale CTGAN-specific docstrings in `orchestrator.py` (lines 100, 104, 110, 124, 161, 188) — documentation-only debt, no functional impact
 
 ## Constraints
 
@@ -103,6 +110,13 @@ A data engineer can give SynthoHive a real multi-table schema, train on it, gene
 | Allowlist regex for SQL identifiers | Closed-by-default; denylist always risks missing new injection vectors | ✓ Good — SchemaError raised before any Spark operation |
 | `enforce_constraints=False` default | Preserves backward compatibility; violations were previously silently filtered | ✓ Good — callers opt into raise behavior |
 | TVAE architecture research before Phase 3 | Avoid repeating CTGAN embedding stub pattern | ⚠️ Revisit before Phase 3 starts |
+| Empirical histogram resampler as default cardinality model | Gaussian Mixture produced systematic FK cardinality drift; empirical histogram preserves true distribution | ✓ Good — zero-orphan join confirmed by TestFKChainIntegrity suite |
+| `legacy_context_conditioning` flag for backwards-compatible cardinality behavior | Allow callers to opt into old behavior during migration | ✓ Good — backward compatibility preserved |
+| `ConditionalGenerativeModel` ABC for pluggable model architecture | Enforce interface contract at definition time; issubclass guard catches misconfiguration early | ✓ Good — StubModel integration test passes; CTGAN remains default |
+| `issubclass` guard at `Synthesizer.__init__()` not deferred to `StagedOrchestrator` | Guard must fire even when `spark_session=None` (orchestrator construction is deferred) | ✓ Good — TD-04 closed; invalid model_cls caught immediately |
+| `fit(validate=True, data=DataFrames)` passes real DataFrames to `validate_schema(real_data=)` | Data-level FK type checks require actual column dtypes; metadata-only path cannot detect int vs str mismatches | ✓ Good — TD-01 closed; data-level detection now reachable through public façade |
+| `pytest.raises(TrainingError)` replaces `pytest.raises(ValueError)` in Spark-guard tests | `Synthesizer.fit()`/`sample()` wrap internal `ValueError` in `TrainingError` at the exception boundary | ✓ Good — 14/14 tests passing; test suite aligned with production behavior |
+| `call_args.args[0]` positional check replaces `assert_called_with(expected_paths)` in test_synthesizer_fit_call | `assert_called_with` requires exact positional+keyword match — brittle as kwargs evolve | ✓ Good — test decoupled from kwargs; call_args.kwargs pattern for keyword-arg assertions |
 
 ---
-*Last updated: 2026-02-22 after v1.0 milestone*
+*Last updated: 2026-02-23 after v1.1 milestone*

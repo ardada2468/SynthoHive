@@ -2,10 +2,10 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-22 after v1.0 milestone)
+See: .planning/PROJECT.md (updated 2026-02-23 after v1.1 milestone)
 
 **Core value:** A data engineer can train on any multi-table schema, generate synthetic data, and trust that code written against that data will work on the real thing — without babysitting training or manually validating output.
-**Current focus:** v1.0 archived — planning next milestone (v1.1 Relational Correctness)
+**Current focus:** v1.1 archived — planning next milestone (v1.2 Quality & Connectors)
 
 ## Current Position
 
