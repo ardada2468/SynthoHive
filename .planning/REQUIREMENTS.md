@@ -16,7 +16,7 @@ Requirements for v1.2 release. Each maps to exactly one roadmap phase.
 
 - [ ] **QUAL-01**: Data engineer can call `sample(quality_threshold=N)` and receive a `QualityError` (including failing column names and TVD scores) when any column's TVD exceeds the threshold
 - [ ] **QUAL-02**: Data engineer can call `sample()` and see column-level TVD and KS metrics in structured logs; `sample(return_metrics=True)` returns a `(DataFrame, metrics_dict)` tuple without breaking the default API
-- [ ] **QUAL-03**: Data engineer can trust that the saved checkpoint from `fit()` corresponds to the epoch with the best validation TVD/KS score — not generator loss
+- [x] **QUAL-03**: Data engineer can trust that the saved checkpoint from `fit()` corresponds to the epoch with the best validation TVD/KS score — not generator loss
 
 ### Connectors
 
@@ -54,7 +54,7 @@ Which phases cover which requirements. Updated 2026-02-24 during v1.2 roadmap cr
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | CORE-05 | Phase 8 | Complete |
-| QUAL-03 | Phase 8 | Pending |
+| QUAL-03 | Phase 8 | Complete |
 | QUAL-01 | Phase 9 | Pending |
 | QUAL-02 | Phase 9 | Pending |
 | CONN-01 | Phase 10 | Pending |

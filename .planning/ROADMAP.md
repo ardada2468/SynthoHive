@@ -75,7 +75,7 @@ Archive: `.planning/milestones/v1.1-ROADMAP.md`
 
 **Milestone Goal:** Give data engineers visibility into training progress and generated data quality, and let them connect to SQL databases and read files without a Spark session.
 
-- [ ] **Phase 8: Training Observability** - Wire structured progress and quality-driven checkpointing into the fit() loop (**2 plans**)
+- [x] **Phase 8: Training Observability** - Wire structured progress and quality-driven checkpointing into the fit() loop (**2 plans**) (completed 2026-02-24)
 - [ ] **Phase 9: Sample Quality** - Enforce per-column quality thresholds and expose TVD/KS metrics from sample()
 - [ ] **Phase 10: SQL Connectors** - Read from Postgres and MySQL via SQLAlchemy 2.0 with dtype-correct DataFrames; integration test
 - [ ] **Phase 11: Pandas-Native File I/O** - CSV and Parquet connectors work without a Spark session via Pandas I/O
@@ -93,7 +93,7 @@ Archive: `.planning/milestones/v1.1-ROADMAP.md`
   4. A subsequent cold `load()` + `sample()` uses the best-quality checkpoint, producing output with statistical quality at least as good as the best epoch seen during training
 **Plans**: TBD
 
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 08-01-PLAN.md — Add tqdm + structlog events to CTGAN.fit(); thread progress_bar and checkpoint_interval through Synthesizer and StagedOrchestrator
@@ -152,7 +152,7 @@ Plans:
 | 3. Model Pluggability | v1.1 | 3/3 | Complete | 2026-02-23 |
 | 6. Synthesizer Validation Hardening | v1.1 | 1/1 | Complete | 2026-02-23 |
 | 7. Test Suite Alignment | v1.1 | 1/1 | Complete | 2026-02-23 |
-| 8. Training Observability | 1/2 | In Progress|  | - |
+| 8. Training Observability | 2/2 | Complete   | 2026-02-24 | - |
 | 9. Sample Quality | v1.2 | 0/2 | Not started | - |
 | 10. SQL Connectors | v1.2 | 0/2 | Not started | - |
 | 11. Pandas-Native File I/O | v1.2 | 0/1 | Not started | - |
