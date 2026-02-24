@@ -9,11 +9,11 @@ See: .planning/PROJECT.md (updated 2026-02-22 after v1.0 milestone)
 
 ## Current Position
 
-Phase: 06-synthesizer-validation-hardening — Plan 01 complete (1/1 plans)
-Status: Phase 06 plan 01 complete. TD-04 issubclass guard and TD-01 real_data passthrough wired in Synthesizer facade. REL-03 and MODEL-02 E2E flows fixed.
-Last activity: 2026-02-23 - Completed plan 06-01: TD-04 and TD-01 synthesizer wiring gaps closed with regression tests
+Phase: 07-test-suite-alignment — Plan 01 complete (1/1 plans)
+Status: Phase 07 plan 01 complete. TD-02 closed — test_interface.py now runs 14/14 passing (0 failures). All 4 stale assertions corrected to match post-phase-06 exception boundary and call signatures.
+Last activity: 2026-02-23 - Completed plan 07-01: test suite aligned, TrainingError assertions and call_args checks fixed
 
-Progress: [██████████] v1.0 shipped · v1.1 phase 02 complete · phase 03 complete (MODEL-01, MODEL-02, MODEL-03 all verified) · phase 06 plan 01 complete (REL-03, MODEL-02 E2E fixed)
+Progress: [██████████] v1.0 shipped · v1.1 phase 02 complete · phase 03 complete (MODEL-01, MODEL-02, MODEL-03 all verified) · phase 06 plan 01 complete (REL-03, MODEL-02 E2E fixed) · phase 07 plan 01 complete (TD-02 closed, test suite green)
 
 ## Performance Metrics
 
@@ -30,6 +30,7 @@ Progress: [██████████] v1.0 shipped · v1.1 phase 02 complet
 | 02-relational-correctness | 5/5 | 21 min | 4.2 min |
 | 03-model-pluggability | 3/3 | 7 min | 2.3 min |
 | 06-synthesizer-validation-hardening | 1/1 | 2 min | 2 min |
+| 07-test-suite-alignment | 1/1 | 4 min | 4 min |
 
 ## Accumulated Context
 
@@ -70,6 +71,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 **06-01 decisions:**
 - issubclass guard added in Synthesizer.__init__() before self.metadata — fires unconditionally regardless of spark_session presence; isinstance(model,type) added before issubclass() to safely handle non-class inputs
 - TD-01: validate block moved before orchestrator check in fit(); real_data=data passed only when data is dict of DataFrames — preserves backward compat for string/path-dict callers
+- [Phase 07-test-suite-alignment]: Exception assertions updated to TrainingError (not ValueError) — tests now match actual Synthesizer boundary behavior where internal ValueError is wrapped
+- [Phase 07-test-suite-alignment]: assert_called_with() replaced by call_args.args[0] positional check — decouples test from evolving kwargs
 
 ### Pending Todos
 
@@ -92,5 +95,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed plan 06-01 (TD-04 issubclass guard + TD-01 real_data passthrough; REL-03 and MODEL-02 E2E flows fixed)
+Stopped at: Completed plan 07-01 (TD-02 closed — test_interface.py 14/14 passing, TrainingError assertions and call_args checks aligned)
 Resume file: None
