@@ -6,7 +6,10 @@ import pandas as pd
 import numpy as np
 import os
 import csv
+import sys
+import time
 import structlog
+from tqdm import trange
 from typing import Optional, List, Any, Tuple
 from .base import ConditionalGenerativeModel
 from .layers import ResidualLayer, Discriminator, EntityEmbeddingLayer
@@ -251,7 +254,7 @@ class CTGAN(ConditionalGenerativeModel):
         
         self.discriminator = Discriminator(disc_input_dim, self.discriminator_dim[0]).to(self.device)
         
-    def fit(self, data: pd.DataFrame, context: Optional[pd.DataFrame] = None, table_name: Optional[str] = None, checkpoint_dir: Optional[str] = None, log_metrics: bool = True, seed: Optional[int] = None, **kwargs: Any) -> None:
+    def fit(self, data: pd.DataFrame, context: Optional[pd.DataFrame] = None, table_name: Optional[str] = None, checkpoint_dir: Optional[str] = None, log_metrics: bool = True, seed: Optional[int] = None, progress_bar: bool = True, checkpoint_interval: int = 10, **kwargs: Any) -> None:
         """Train the CTGAN model on tabular data.
 
         Args:
@@ -262,6 +265,9 @@ class CTGAN(ConditionalGenerativeModel):
             log_metrics: Whether to save training metrics to a CSV file. Defaults to True.
             seed: Integer seed for deterministic training. When None, an integer is
                   auto-generated and logged so the run can be reproduced later.
+            progress_bar: If True (default), display a tqdm progress bar to stderr during
+                  training. Structured log events always emit regardless of this flag.
+            checkpoint_interval: Save a validation checkpoint every N epochs. Default 10.
             **kwargs: Extra training options (unused placeholder for compatibility).
         """
         import random as _random
@@ -317,8 +323,27 @@ class CTGAN(ConditionalGenerativeModel):
         
         # 4. Training Loop (WGAN-GP)
         steps_per_epoch = max(len(train_data) // self.batch_size, 1)
-        
-        for epoch in range(self.epochs):
+
+        # Emit training_start event
+        log.info(
+            "training_start",
+            total_epochs=self.epochs,
+            batch_size=self.batch_size,
+            embedding_dim=self.embedding_dim,
+            checkpoint_interval=checkpoint_interval,
+        )
+        _start_time = time.time()
+
+        # Replace bare for-loop with trange (disable=True suppresses bar; log events always fire)
+        pbar = trange(
+            self.epochs,
+            desc="Training",
+            file=sys.stderr,
+            leave=True,
+            disable=not progress_bar,
+        )
+
+        for epoch in pbar:
             for i in range(steps_per_epoch):
                 # --- Train Discriminator ---
                 for _ in range(self.discriminator_steps):
@@ -449,13 +474,33 @@ class CTGAN(ConditionalGenerativeModel):
                 loss_G.backward()
                 optimizer_G.step()
                     
-            if epoch % 10 == 0:
-                print(f"Epoch {epoch}: Loss D={loss_D.item():.4f}, Loss G={loss_G.item():.4f}")
-
             # --- Checkpointing & Logging ---
             current_loss_g = loss_G.item()
             current_loss_d = loss_D.item()
-            
+
+            # ETA calculation (linear extrapolation)
+            _elapsed = time.time() - _start_time
+            _epochs_done = epoch + 1
+            _elapsed_per_epoch = _elapsed / _epochs_done
+            _remaining_epochs = self.epochs - _epochs_done
+            eta_seconds = _elapsed_per_epoch * _remaining_epochs  # 0.0 on final epoch — correct
+
+            # Update tqdm postfix (visual only; fires regardless of disable state)
+            pbar.set_postfix({
+                "g_loss": f"{current_loss_g:.4f}",
+                "d_loss": f"{current_loss_d:.4f}",
+                "eta": f"{int(eta_seconds)}s",
+            })
+
+            # Emit epoch_end event (always, independent of progress_bar flag)
+            epoch_log_fields = dict(
+                epoch=epoch,
+                g_loss=current_loss_g,
+                d_loss=current_loss_d,
+                eta_seconds=eta_seconds,
+            )
+            log.info("epoch_end", **epoch_log_fields)
+
             if log_metrics:
                 history.append({
                     'epoch': epoch,
@@ -466,7 +511,17 @@ class CTGAN(ConditionalGenerativeModel):
             if checkpoint_dir and current_loss_g < best_loss:
                 best_loss = current_loss_g
                 self.save(os.path.join(checkpoint_dir, "best_model.pt"))
-        
+
+        # Emit training_complete (checkpoint_path and best_epoch populated in Plan 02;
+        # emit with None values here to satisfy CORE-05 independently of QUAL-03)
+        log.info(
+            "training_complete",
+            best_epoch=-1,
+            best_val_metric=None,
+            total_epochs=self.epochs,
+            checkpoint_path=None,
+        )
+
         # End of training: Save metrics and last model
         if checkpoint_dir:
             self.save(os.path.join(checkpoint_dir, "last_model.pt"))
