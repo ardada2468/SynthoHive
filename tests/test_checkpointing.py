@@ -12,20 +12,20 @@ def test_checkpointing():
     checkpoint_dir = "./test_checkpoints"
     if os.path.exists(checkpoint_dir):
         shutil.rmtree(checkpoint_dir)
-    
+
     # Dummy Data
     df = pd.DataFrame({
         "A": np.random.randn(100),
         "B": np.random.randint(0, 10, 100)
     })
-    
+
     # Valid Metadata
     meta = Metadata()
     meta.add_table("test_table", pk="id")
-    
+
     # Add ID column to df to match PK
     df["id"] = range(len(df))
-    
+
     print("Initializing CTGAN...")
     model = CTGAN(
         metadata=meta,
@@ -33,26 +33,30 @@ def test_checkpointing():
         epochs=5,
         device="cpu"
     )
-    
+
     print("Training with checkpointing...")
     # fit expect data as DataFrame
     model.fit(
-        df, 
+        df,
         table_name="test_table",
         checkpoint_dir=checkpoint_dir,
-        log_metrics=True
+        log_metrics=True,
+        checkpoint_interval=1,
+        progress_bar=False,
     )
-    
+
     # Verification
     print("Verifying artifacts...")
-    
+
     files = os.listdir(checkpoint_dir)
     print(f"Files in {checkpoint_dir}: {files}")
-    
-    assert "best_model.pt" in files, "best_model.pt hidden"
-    assert "last_model.pt" in files, "last_model.pt missing"
+
+    assert "best_checkpoint" in files, "best_checkpoint directory missing"
+    assert os.path.isdir(os.path.join(checkpoint_dir, "best_checkpoint")), "best_checkpoint must be a directory"
+    assert "final_checkpoint" in files, "final_checkpoint directory missing"
+    assert os.path.isdir(os.path.join(checkpoint_dir, "final_checkpoint")), "final_checkpoint must be a directory"
     assert "training_metrics.csv" in files, "training_metrics.csv missing"
-    
+
     # Check Metric Content
     metrics_df = pd.read_csv(os.path.join(checkpoint_dir, "training_metrics.csv"))
     print(f"Metrics head:\n{metrics_df.head()}")
@@ -60,9 +64,9 @@ def test_checkpointing():
     assert "epoch" in metrics_df.columns
     assert "loss_g" in metrics_df.columns
     assert "loss_d" in metrics_df.columns
-    
+
     print("Verification Successful!")
-    
+
     # Cleanup
     shutil.rmtree(checkpoint_dir)
 
