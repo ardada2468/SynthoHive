@@ -2,26 +2,26 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-23 after v1.1 milestone)
+See: .planning/PROJECT.md (updated 2026-02-23 after v1.2 milestone started)
 
 **Core value:** A data engineer can train on any multi-table schema, generate synthetic data, and trust that code written against that data will work on the real thing — without babysitting training or manually validating output.
-**Current focus:** v1.2 Quality & Connectors
+**Current focus:** v1.2 Quality & Connectors — Phase 8 Training Observability
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-02-23 — Milestone v1.2 started
+Phase: 8 of 11 (Training Observability) — v1.2 first phase
+Plan: 0 of 2 (not started)
+Status: Ready to plan
+Last activity: 2026-02-24 — v1.2 roadmap created (phases 8–11 defined)
 
-Progress: [██████████] v1.0 shipped · v1.1 phase 02 complete · phase 03 complete (MODEL-01, MODEL-02, MODEL-03 all verified) · phase 06 plan 01 complete (REL-03, MODEL-02 E2E fixed) · phase 07 plan 01 complete (TD-02 closed, test suite green)
+Progress: [██████████] v1.0 shipped · v1.1 shipped (phases 2, 3, 6, 7 complete, 14/14 tests passing) · v1.2 roadmap ready
 
 ## Performance Metrics
 
-**v1.0 Velocity:**
-- Total plans completed: 5
-- Average duration: 4.6 min
-- Total execution time: 0.38 hours (23 min)
+**Velocity:**
+- Total plans completed: 15
+- Average duration: 3.8 min
+- Total execution time: ~57 min
 
 **By Phase:**
 
@@ -39,62 +39,24 @@ Progress: [██████████] v1.0 shipped · v1.1 phase 02 complet
 
 Decisions are logged in PROJECT.md Key Decisions table.
 
-**02-01 decisions:**
-- SchemaValidationError subclasses SchemaError for backward compat with existing except SchemaError handlers
-- validate_schema() uses collect-all pattern (not fail-fast) — engineers see all schema problems at once
-- validate_schema(real_data=None) stays backward compatible; no-arg callers get original structural checks
-- linkage_method defaults to 'empirical' per-table; 'negbinom' available for statistical cardinality fit
-- _dtypes_compatible returns True for pandas extension types to avoid false positives
-- [Phase 02-relational-correctness]: legacy_context_conditioning defaults to False; old behavior requires explicit True for backwards compatibility
-- [Phase 02-relational-correctness]: StagedOrchestrator accepts optional io= for unit testing without live Spark; on_write_failure defaults to raise
-- [Phase 02-relational-correctness]: pyproject.toml Spark pins capped at <5.0.0 to prevent delta-spark major version incompatibility
-- [Phase 02-relational-correctness]: Empirical resampler (numpy.random.choice) is the default LinkageModel method — draws directly from observed child counts, guaranteed non-negative
-- [Phase 02-relational-correctness]: NegBinom falls back to empirical with structlog WARNING when variance <= mean; silent except/fallback block removed from linkage.py
-- [Phase 02-relational-correctness]: test_relational.py is the canonical location for relational tests (inside package, not top-level tests/)
-- [Phase 02-relational-correctness]: Zero-orphan check uses inner join row count == child table row count to catch exact counts (not set inclusion)
-- [Phase 02-relational-correctness]: No new decisions — gap-closure fix only; test assertions updated to match SchemaValidationError hierarchy introduced in Plan 01
-
-**03-01 decisions:**
-- model_cls defaults to CTGAN — existing callers that don't pass model_cls see identical behavior, no breaking change
-- issubclass() guard fires at __init__ time, not fit_all() — fail-fast pattern surfaces misconfiguration before any data is loaded
-- CTGAN import stays in orchestrator.py as the default value for model_cls; it is no longer used as a constructor call site
-
-**03-02 decisions:**
-- Type import added to synthesizer.py alongside ConditionalGenerativeModel and CTGAN imports — self.model_cls = model stored in __init__
-- StagedOrchestrator constructed with model_cls=self.model_cls — end-to-end injection confirmed
-- sample() uses self.model_cls.__name__ — progress prints accurate for any plugged-in model
-- StubModel constructor matches ABC convention (metadata, batch_size, epochs, **kwargs) — validates docstring from Plan 01 is actionable
-
-**03-03 decisions:**
-- addopts = "--import-mode=importlib" (not importmode = "importlib") — pytest 9.0.2 does not recognize importmode as a valid ini_options key; addopts is the correct approach
-- importlib mode activates editable install finder, ensuring source tree is loaded instead of stale site-packages copy shadowing Phase 03 changes
-
-**06-01 decisions:**
-- issubclass guard added in Synthesizer.__init__() before self.metadata — fires unconditionally regardless of spark_session presence; isinstance(model,type) added before issubclass() to safely handle non-class inputs
-- TD-01: validate block moved before orchestrator check in fit(); real_data=data passed only when data is dict of DataFrames — preserves backward compat for string/path-dict callers
-- [Phase 07-test-suite-alignment]: Exception assertions updated to TrainingError (not ValueError) — tests now match actual Synthesizer boundary behavior where internal ValueError is wrapped
-- [Phase 07-test-suite-alignment]: assert_called_with() replaced by call_args.args[0] positional check — decouples test from evolving kwargs
+Key decisions relevant to v1.2:
+- [Phase 07-test-suite-alignment]: TrainingError is the exception boundary for synthesizer public API — internal ValueError is wrapped at fit()/sample() boundary
+- [Phase 03-model-pluggability]: issubclass guard fires at Synthesizer.__init__() regardless of Spark session presence
+- [Phase 02-relational-correctness]: structlog is already wired for structured logging throughout syntho_hive/ — use it for CORE-05 progress events
+- [v1.2 scope]: Snowflake/BigQuery deferred to v1.3 — SQL connectors target Postgres + MySQL only
 
 ### Pending Todos
 
 None.
 
-### Blockers/Concerns (carry to v1.1)
+### Blockers/Concerns
 
-- [Phase 2 prereq]: `pip install -e .` required before Phase 2 — stale `.venv` produces test failures when PYTHONPATH is not set
-- [Phase 2]: Pandas 2.x copy-on-write semantics may affect `transformer.py` `.values` mutations — RESOLVED by quick task 1 (all .values replaced with .to_numpy())
-- [Phase 3]: TVAE architecture (encoder/decoder, KL-divergence, reparameterization) warrants `/gsd:research-phase` before implementation
-- [Phase 5]: SQLAlchemy dialect-specific behavior for Snowflake and BigQuery warrants `/gsd:research-phase` before implementation
-
-### Quick Tasks Completed
-
-| # | Description | Date | Commit | Directory |
-|---|-------------|------|--------|-----------|
-| 1 | Fix ArrowStringArray reshape NotImplementedError on Python 3.11 | 2026-02-23 | 217e67b | [1-fix-arrowstringarray-reshape-notimplemen](./quick/1-fix-arrowstringarray-reshape-notimplemen/) |
-| 2 | Close two wiring gaps: export SchemaValidationError + wire validate_schema in fit() | 2026-02-22 | 7a699f5 | [2-close-2-wiring-gaps-add-schemavalidation](./quick/2-close-2-wiring-gaps-add-schemavalidation/) |
+- [Phase 10 prereq]: Postgres integration test (TEST-04) requires a live Postgres instance — dev environment setup needed before Phase 10 plan execution
+- [v1.1 carry-forward]: REL-03 partial wiring: validate_schema() data-level checks require explicit data= argument — documented, not enforced at API boundary
+- [v1.1 carry-forward]: Production-scale FK chain test (10k+ rows) outstanding — zero-orphan guarantee unverified at realistic dataset sizes
 
 ## Session Continuity
 
-Last session: 2026-02-23
-Stopped at: Completed plan 07-01 (TD-02 closed — test_interface.py 14/14 passing, TrainingError assertions and call_args checks aligned)
+Last session: 2026-02-24
+Stopped at: v1.2 roadmap created — phases 8, 9, 10, 11 defined; ready to plan Phase 8
 Resume file: None

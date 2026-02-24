@@ -49,23 +49,23 @@ Deferred to v1.3 or later.
 
 ## Traceability
 
-Which phases cover which requirements. Populated during roadmap creation.
+Which phases cover which requirements. Updated 2026-02-24 during v1.2 roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CORE-05 | TBD | Pending |
-| QUAL-01 | TBD | Pending |
-| QUAL-02 | TBD | Pending |
-| QUAL-03 | TBD | Pending |
-| CONN-01 | TBD | Pending |
-| CONN-03 | TBD | Pending |
-| TEST-04 | TBD | Pending |
+| CORE-05 | Phase 8 | Pending |
+| QUAL-03 | Phase 8 | Pending |
+| QUAL-01 | Phase 9 | Pending |
+| QUAL-02 | Phase 9 | Pending |
+| CONN-01 | Phase 10 | Pending |
+| TEST-04 | Phase 10 | Pending |
+| CONN-03 | Phase 11 | Pending |
 
 **Coverage:**
 - v1.2 requirements: 7 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 7 ⚠️
+- Mapped to phases: 7 (100%)
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-02-23*
-*Last updated: 2026-02-23 after initial v1.2 definition*
+*Last updated: 2026-02-24 after v1.2 roadmap creation — all 7 requirements mapped to phases 8–11*
