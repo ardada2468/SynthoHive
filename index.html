@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.2">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -492,10 +492,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#at-a-glance" class="md-nav__link">
+  <a href="#quick-install" class="md-nav__link">
     <span class="md-ellipsis">
       
-        At a glance
+        Quick install
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-docs-locally" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build docs locally
       
     </span>
   </a>
@@ -1506,21 +1517,27 @@
 
 
 <h1 id="synthohive-documentation">SynthoHive Documentation<a class="headerlink" href="#synthohive-documentation" title="Permanent link">&para;</a></h1>
-<p>SynthoHive is a synthetic data engine that preserves relational integrity while offering privacy safeguards and validation tooling. These docs cover core concepts, guided workflows, demos, and API reference.</p>
+<p>SynthoHive is a production-grade synthetic data engine that generates high-fidelity, privacy-preserving synthetic data for complex relational databases. It maintains referential integrity across multi-table schemas, preserves statistical correlations, and provides automated PII handling.</p>
 <h2 id="what-youll-find">What you'll find<a class="headerlink" href="#what-youll-find" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Quick start for installing and running demos.</li>
-<li>Concept pages for architecture and data flow.</li>
-<li>Guides for fitting, sampling, privacy, and validation.</li>
-<li>Demo walk-throughs mirroring the <code>examples/demos</code> folder.</li>
-<li>API reference generated from in-code docstrings via <code>mkdocstrings</code>.</li>
+<li><a href="getting-started/"><strong>Getting Started</strong></a>: Install SynthoHive and run your first synthesis in minutes.</li>
+<li><strong>Concepts</strong>: Understand the <a href="architecture/">architecture</a> and <a href="data-flow/">data flow</a> behind the engine.</li>
+<li><strong>Guides</strong>: Step-by-step instructions for <a href="guides/fitting/">fitting models</a>, <a href="guides/relational/">relational generation</a>, <a href="guides/embeddings/">embeddings</a>, <a href="guides/sampling/">sampling</a>, <a href="guides/privacy/">privacy</a>, and <a href="guides/validation/">validation</a>.</li>
+<li><a href="demos/overview/"><strong>Demos</strong></a>: Runnable walk-throughs mirroring the <code>examples/demos</code> folder.</li>
+<li><strong>API Reference</strong>: Auto-generated documentation for the <a href="api/interface/">interface</a>, <a href="api/core/">core models</a>, <a href="api/privacy/">privacy</a>, <a href="api/relational/">relational</a>, <a href="api/validation/">validation</a>, and <a href="api/connectors/">connectors</a> modules.</li>
+<li><a href="reference/config-examples/"><strong>Config Examples</strong></a>: Copy-paste configurations for common scenarios.</li>
+<li><a href="reference/troubleshooting/"><strong>Troubleshooting</strong></a>: Solutions for common issues.</li>
 </ul>
-<h2 id="at-a-glance">At a glance<a class="headerlink" href="#at-a-glance" title="Permanent link">&para;</a></h2>
-<ol>
-<li>Install docs deps: <code>pip install .[docs]</code></li>
-<li>Preview docs locally: <code>mkdocs serve</code></li>
-<li>Build/deploy (GitHub Pages): <code>mkdocs gh-deploy --force</code></li>
-</ol>
+<h2 id="quick-install">Quick install<a class="headerlink" href="#quick-install" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>synthohive<span class="w"> </span>pyspark<span class="w"> </span>pandas<span class="w"> </span>pyarrow
+</code></pre></div>
+<h2 id="build-docs-locally">Build docs locally<a class="headerlink" href="#build-docs-locally" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>.<span class="o">[</span>docs<span class="o">]</span>
+mkdocs<span class="w"> </span>serve
+</code></pre></div>
+<p>Deploy to GitHub Pages:</p>
+<div class="highlight"><pre><span></span><code>mkdocs<span class="w"> </span>gh-deploy<span class="w"> </span>--force
+</code></pre></div>
 
 
 
@@ -1541,7 +1558,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 13, 2025 03:01:14 UTC">December 13, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 26, 2026 20:53:45 UTC">March 26, 2026</span>
   </span>
 
     

@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.2">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -1501,23 +1501,25 @@
 
 <h1 id="data-flow">Data Flow<a class="headerlink" href="#data-flow" title="Permanent link">&para;</a></h1>
 <pre class="mermaid"><code>flowchart TD
-    A["Real tables"] --&gt; B["DataTransformer fit/transform"]
-    B --&gt; C["CTGAN training"]
+    A["Real tables"] --&gt; P["PIISanitizer (pre-training)"]
+    P --&gt; B["DataTransformer fit/transform"]
     A --&gt; D["LinkageModel (child counts)"]
-    C --&gt; E["Generator"]
-    D --&gt; E
-    E --&gt; F["Inverse transform"]
-    F --&gt; G["Privacy sanitizer (optional)"]
+    B --&gt; C["CTGAN training"]
+    D --&gt; E["StagedOrchestrator"]
+    C --&gt; E
+    E --&gt; F["Generator (topological order)"]
+    F --&gt; G["Inverse transform"]
     G --&gt; H["Validation report"]</code></pre>
 <h2 id="steps">Steps<a class="headerlink" href="#steps" title="Permanent link">&para;</a></h2>
 <ol>
+<li><strong>Privacy (Pre-Training)</strong>: <code>PIISanitizer</code> detects and masks/fakes PII columns <strong>before</strong> any model training occurs. This ensures no raw sensitive data enters the generative model.</li>
 <li><strong>Transform</strong>: <code>DataTransformer.fit/transform</code> profiles each column (continuous via VGM, categorical via OHE or embeddings) and excludes PK/FK where configured.</li>
-<li><strong>Train</strong>: <code>CTGAN.fit</code> learns distributions; conditional context from parent tables can be merged before fitting.</li>
-<li><strong>Linkage</strong>: <code>LinkageModel.fit</code> learns child-row cardinalities from FK counts.</li>
-<li><strong>Sample</strong>: <code>CTGAN.sample</code> generates rows; linkage drives child counts; FKs are assigned to maintain integrity.</li>
-<li><strong>Inverse</strong>: transformer rebuilds the original schema; constraints (clip/round) are applied.</li>
-<li><strong>Privacy</strong>: <code>PIISanitizer</code> masks/hashes/fakes PII; <code>ContextualFaker</code> injects locale-aware values.</li>
-<li><strong>Validate</strong>: <code>ValidationReport</code> compares distributions (KS/TVD), correlations, and provides previews.</li>
+<li><strong>Linkage</strong>: <code>LinkageModel.fit</code> learns child-row cardinalities from FK counts in the real data.</li>
+<li><strong>Train</strong>: <code>CTGAN.fit</code> learns distributions; conditional context from parent tables is merged before fitting child models.</li>
+<li><strong>Orchestrate</strong>: <code>StagedOrchestrator</code> uses <code>SchemaGraph</code> to determine topological order (parents before children) and coordinates the multi-table generation pipeline.</li>
+<li><strong>Sample</strong>: <code>CTGAN.sample</code> generates rows per table. Linkage models drive child counts. FKs are assigned to maintain referential integrity. Secondary FKs are randomly sampled from already-generated parent tables.</li>
+<li><strong>Inverse</strong>: <code>DataTransformer.inverse_transform</code> rebuilds the original schema; constraints (clip/round) are applied.</li>
+<li><strong>Validate</strong>: <code>ValidationReport</code> compares distributions (KS/TVD), correlations (Frobenius norm), and provides data previews in HTML or JSON format.</li>
 </ol>
 
 
@@ -1539,7 +1541,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 14, 2025 21:15:55 UTC">December 14, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 26, 2026 20:53:45 UTC">March 26, 2026</span>
   </span>
 
     

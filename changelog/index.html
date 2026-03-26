@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.2">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -1405,6 +1405,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -1421,6 +1439,131 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#130" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3.0
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.3.0">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#123" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.3
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.2.3">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#122" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.2
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.2.2">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fixed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#added_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1447,17 +1590,36 @@
 
 
 <h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">&para;</a></h1>
+<h2 id="130">1.3.0<a class="headerlink" href="#130" title="Permanent link">&para;</a></h2>
+<h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
-<li>1.2.3</li>
-<li>Fix <code>TypeError</code> in <code>DataTransformer</code> when applying numeric constraints (min, max, dtype) to categorical/string columns.</li>
-<li>
-<p>Added robust type coercion to ensure constraints are applied correctly to transformed data.</p>
-</li>
-<li>
-<p>1.2.2</p>
-</li>
-<li>Fix CTGAN embedding cardinality to avoid IndexError when using high-cardinality categorical columns.</li>
+<li>Pluggable model architecture: <code>Synthesizer</code> and <code>StagedOrchestrator</code> accept a <code>model_cls</code> parameter for custom <code>ConditionalGenerativeModel</code> implementations.</li>
+<li><code>enforce_constraints</code> parameter on <code>CTGAN.sample()</code> to raise <code>ConstraintViolationError</code> when generated data violates min/max constraints.</li>
+<li>Training observability: structured logging events (<code>training_start</code>, <code>epoch_end</code>, <code>training_complete</code>) with metrics.</li>
+<li>Validation-metric checkpointing: best model saved based on validation metric computed at configurable intervals.</li>
+<li><code>SchemaValidationError</code> with comprehensive FK validation (type mismatches, missing columns, invalid references).</li>
+<li>Typed exception hierarchy: <code>SynthoHiveError</code>, <code>SchemaError</code>, <code>TrainingError</code>, <code>SerializationError</code>, <code>ConstraintViolationError</code>.</li>
+<li>SQL injection protection in <code>save_to_hive()</code> via identifier allowlist.</li>
+</ul>
+<h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Version bump from 1.2.3 to 1.3.0.</li>
+<li><code>LinkageModel</code> default method changed from GaussianMixture to empirical histogram resampler (with optional NegBinom fit).</li>
+</ul>
+<h2 id="123">1.2.3<a class="headerlink" href="#123" title="Permanent link">&para;</a></h2>
+<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>TypeError</code> in <code>DataTransformer</code> when applying numeric constraints (min, max, dtype) to categorical/string columns.</li>
+<li>Added robust type coercion to ensure constraints are applied correctly to transformed data.</li>
+</ul>
+<h2 id="122">1.2.2<a class="headerlink" href="#122" title="Permanent link">&para;</a></h2>
+<h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>CTGAN embedding cardinality to avoid <code>IndexError</code> when using high-cardinality categorical columns.</li>
 <li>Databricks example returns in-memory DataFrames and cleans timestamps/nulls for safer Arrow/pandas conversion.</li>
+</ul>
+<h3 id="added_1">Added<a class="headerlink" href="#added_1" title="Permanent link">&para;</a></h3>
+<ul>
 <li>Initial MkDocs site scaffold with guides, demos, and API reference.</li>
 </ul>
 
@@ -1480,7 +1642,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 13, 2025 07:11:32 UTC">December 13, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 26, 2026 20:53:45 UTC">March 26, 2026</span>
   </span>
 
     

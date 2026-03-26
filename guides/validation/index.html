@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.2">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -901,13 +901,41 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-html-report" class="md-nav__link">
+  <a href="#output-formats" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The HTML Report
+        Output Formats
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Output Formats">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#html-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HTML Report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#json-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JSON Report
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -916,6 +944,45 @@
     <span class="md-ellipsis">
       
         Usage
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#html-report_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HTML Report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#json-report_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JSON Report
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
       
     </span>
   </a>
@@ -1587,27 +1654,43 @@
 <h3 id="3-correlation-distance">3. Correlation Distance<a class="headerlink" href="#3-correlation-distance" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Target</strong>: Column Pairs</li>
-<li><strong>Measure</strong>: We compute correlation matrices (Pearson for continuous, Theil's U for categorical) for both Real and Synthetic datasets. The score is the L2 norm of the difference matrix.</li>
+<li><strong>Measure</strong>: We compute correlation matrices (Pearson for continuous columns) for both Real and Synthetic datasets. The score is the Frobenius norm (L2 norm) of the difference matrix.</li>
 <li><strong>Goal</strong>: Measures how well the model captured relationships <em>between</em> columns (e.g., Age vs. Income).</li>
 </ul>
-<h2 id="the-html-report">The HTML Report<a class="headerlink" href="#the-html-report" title="Permanent link">&para;</a></h2>
+<h2 id="output-formats">Output Formats<a class="headerlink" href="#output-formats" title="Permanent link">&para;</a></h2>
+<h3 id="html-report">HTML Report<a class="headerlink" href="#html-report" title="Permanent link">&para;</a></h3>
 <p>The <code>ValidationReport.generate()</code> method produces a self-contained HTML file containing:</p>
 <ol>
-<li><strong>Summary Score</strong>: Aggregate utility score (0-100%).</li>
-<li><strong>Column Distributions</strong>: Overlay plots (Histogram/KDE) for every column.</li>
-<li><strong>Correlation Heatmaps</strong>: Side-by-side comparison of Real vs. Synthetic associations.</li>
+<li><strong>Column Validation Metrics</strong>: KS test and TVD results per column with pass/fail indicators.</li>
+<li><strong>Correlation Distance</strong>: Frobenius norm comparing real vs. synthetic correlation matrices.</li>
+<li><strong>Detailed Statistics</strong>: Side-by-side descriptive statistics (mean, std, min, max for numeric; unique count, top value for categorical).</li>
 <li><strong>Row Previews</strong>: Snippets of raw data to verify formatting.</li>
 </ol>
+<h3 id="json-report">JSON Report<a class="headerlink" href="#json-report" title="Permanent link">&para;</a></h3>
+<p>When the output path ends with <code>.json</code>, the report generates a structured JSON file containing all computed metrics, suitable for programmatic consumption or CI/CD pipelines.</p>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
+<h3 id="html-report_1">HTML Report<a class="headerlink" href="#html-report_1" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">syntho_hive.validation.report_generator</span><span class="w"> </span><span class="kn">import</span> <span class="n">ValidationReport</span>
 
 <span class="n">report</span> <span class="o">=</span> <span class="n">ValidationReport</span><span class="p">()</span>
 <span class="n">report</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span>
-    <span class="n">real_data</span><span class="o">=</span><span class="n">real_dfs</span><span class="p">,</span>      <span class="c1"># Dict[str, pd.DataFrame]</span>
-    <span class="n">synth_data</span><span class="o">=</span><span class="n">synth_dfs</span><span class="p">,</span>    <span class="c1"># Dict[str, pd.DataFrame]</span>
+    <span class="n">real_data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;users&quot;</span><span class="p">:</span> <span class="n">real_df</span><span class="p">},</span>      <span class="c1"># Dict[str, pd.DataFrame]</span>
+    <span class="n">synth_data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;users&quot;</span><span class="p">:</span> <span class="n">synth_df</span><span class="p">},</span>    <span class="c1"># Dict[str, pd.DataFrame]</span>
     <span class="n">output_path</span><span class="o">=</span><span class="s2">&quot;report.html&quot;</span>
 <span class="p">)</span>
 </code></pre></div>
+<h3 id="json-report_1">JSON Report<a class="headerlink" href="#json-report_1" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">report</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span>
+    <span class="n">real_data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;users&quot;</span><span class="p">:</span> <span class="n">real_df</span><span class="p">},</span>
+    <span class="n">synth_data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;users&quot;</span><span class="p">:</span> <span class="n">synth_df</span><span class="p">},</span>
+    <span class="n">output_path</span><span class="o">=</span><span class="s2">&quot;metrics.json&quot;</span>
+<span class="p">)</span>
+</code></pre></div>
+<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../../demos/03_validation_report/"><strong>Demo 03</strong></a>: Full runnable example generating both HTML and JSON reports.</li>
+<li><a href="../fitting/"><strong>Fitting Guide</strong></a>: Tune training parameters to improve validation scores.</li>
+</ul>
 
 
 
@@ -1628,7 +1711,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 14, 2025 21:15:55 UTC">December 14, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 26, 2026 20:53:45 UTC">March 26, 2026</span>
   </span>
 
     

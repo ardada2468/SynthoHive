@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.2">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -1672,7 +1672,7 @@
 <p>SynthoHive uses a <strong>Hybrid Relational Approach</strong>. Instead of trying to train one massive model for the entire database (which is often computationally infeasible), it breaks the problem down:</p>
 <ol>
 <li><strong>Linkage Models</strong>: Learn <em>how many</em> child records typically exist for a given parent record. For example, "How many <code>Orders</code> does a typical <code>User</code> have?"</li>
-<li><strong>Generative Models (CTGAN)</strong>: Learn the content of each table individually. To preserve relational integrity dev-to-dev (e.g., ensuring an Order's <code>city</code> matches the User's <code>region</code>), child models are <strong>conditioned</strong> on context from their parent tables.</li>
+<li><strong>Generative Models (CTGAN)</strong>: Learn the content of each table individually. To preserve relational integrity end-to-end (e.g., ensuring an Order's <code>city</code> matches the User's <code>region</code>), child models are <strong>conditioned</strong> on context from their parent tables.</li>
 </ol>
 <h3 id="the-role-of-metadata">The Role of Metadata<a class="headerlink" href="#the-role-of-metadata" title="Permanent link">&para;</a></h3>
 <p>Your <code>Metadata</code> object is the blueprint for this process. It tells the synthesizer:
@@ -1683,7 +1683,7 @@
 <p>When you call <code>synthesizer.fit()</code>, the following steps occur for each table in your metadata:</p>
 <h3 id="1-data-ingestion">1. Data Ingestion<a class="headerlink" href="#1-data-ingestion" title="Permanent link">&para;</a></h3>
 <p>The system reads your real data using Spark.
-*   <strong>Note</strong>: Currently, the system converts Spark DataFrames to <strong>Pandas</strong> for checking into the CTGAN backend. This means the working set for a single table must fit in memory.</p>
+*   <strong>Note</strong>: Currently, the system converts Spark DataFrames to <strong>Pandas</strong> for feeding into the CTGAN backend. This means the working set for a single table must fit in memory.</p>
 <h3 id="2-preprocessing-transformation">2. Preprocessing &amp; Transformation<a class="headerlink" href="#2-preprocessing-transformation" title="Permanent link">&para;</a></h3>
 <p>Each column is analyzed and transformed:
 *   <strong>Continuous Columns</strong>: Modeled using <strong>Variational Gaussian Mixture Models (VGM)</strong> to handle multi-modal distributions (e.g., a salary distribution with peaks at $40k and $120k).
@@ -1703,7 +1703,7 @@
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
 <p>You can tune the fitting process via the <code>fit()</code> arguments and global config.</p>
 <div class="highlight"><pre><span></span><code><span class="n">synth</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
-    <span class="n">data</span><span class="o">=</span><span class="s2">&quot;metrics_db&quot;</span><span class="p">,</span>
+    <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;users&quot;</span><span class="p">:</span> <span class="s2">&quot;data/users.parquet&quot;</span><span class="p">,</span> <span class="s2">&quot;orders&quot;</span><span class="p">:</span> <span class="s2">&quot;data/orders.parquet&quot;</span><span class="p">},</span>
     <span class="n">epochs</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
     <span class="n">batch_size</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
     <span class="n">embedding_threshold</span><span class="o">=</span><span class="mi">50</span>
@@ -1803,7 +1803,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 14, 2025 21:29:37 UTC">December 14, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 26, 2026 20:53:45 UTC">March 26, 2026</span>
   </span>
 
     
