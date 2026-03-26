@@ -4,7 +4,7 @@ title: Embeddings & High Cardinality
 
 # Feature Embeddings
 
-SynthoHive provides specialized handling for **High Cardinality** categorical columns (e.g., Use ID, Zip Code, Product ID) using **Entity Embeddings**. This avoids the computational explosion of One-Hot Encoding and allows the model to learn semantic relationships between categories.
+SynthoHive provides specialized handling for **High Cardinality** categorical columns (e.g., User ID, Zip Code, Product ID) using **Entity Embeddings**. This avoids the computational explosion of One-Hot Encoding and allows the model to learn semantic relationships between categories.
 
 ## When to use Embeddings vs One-Hot?
 
@@ -48,7 +48,7 @@ synth.fit(
 )
 ```
 
-Lowering this value forces more columns to use embeddings, which saves memory but might reduce precision for small categorical sets. increasing it uses One-Hot for more columns, which is more precise but memory-intensive.
+Lowering this value forces more columns to use embeddings, which saves memory but might reduce precision for small categorical sets. Increasing it uses One-Hot for more columns, which is more precise but memory-intensive.
 
 ## Use Cases
 

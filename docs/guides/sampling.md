@@ -60,7 +60,7 @@ output = synth.sample(
 
 Arguments:
 -   `num_rows` (Dict[str, int]): Map of root table names to desired row counts.
--   `output_format` (str): Format for writing files. Default is `"delta"`.
+-   `output_format` (str): Format for writing files. Default is `"delta"`. Other supported formats include `"parquet"` and `"csv"`.
 -   `output_path` (Optional[str]):
     -   If provided (str): Writes files to disk at this path. Returns a dictionary of table paths.
     -   If `None`: Returns a dictionary of **Pandas DataFrames** in memory.

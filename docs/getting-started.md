@@ -54,7 +54,7 @@ raw_data = pd.DataFrame({
 
 input_path = f"{data_dir}/users_input.parquet"
 raw_data.to_parquet(input_path)
-print(f"✅ Dummy data created at {input_path}")
+print(f"Dummy data created at {input_path}")
 
 # --- 3. DEFINE METADATA ---
 # Tell SynthoHive about the schema.
@@ -76,7 +76,7 @@ synth = Synthesizer(
 
 # Fit the model
 # We point 'users' to the parquet file we just made.
-print("🚀 Training model...")
+print("Training model...")
 synth.fit(
     data={"users": input_path}, 
     epochs=10,        # Use 300+ for production quality
@@ -85,7 +85,7 @@ synth.fit(
 
 # --- 5. GENERATE DATA ---
 # Sample new synthetic records from the learned distribution.
-print("✨ Generating data...")
+print("Generating data...")
 output_base_path = f"{data_dir}/output"
 output_paths = synth.sample(
     num_rows={"users": 50},
@@ -96,14 +96,11 @@ output_paths = synth.sample(
 # --- 6. INSPECT RESULTS ---
 # output_paths is a dict mapping table name to the output directory
 synth_df = pd.read_parquet(output_paths["users"])
-print(f"\n📊 Generated {len(synth_df)} synthetic records:")
+print(f"\nGenerated {len(synth_df)} synthetic records:")
 print(synth_df.head())
 
 # Clean up
-try:
-    spark.stop()
-except:
-    pass
+spark.stop()
 ```
 
 ---
@@ -124,19 +121,19 @@ Use the `Metadata` object to define your schema.
 The `Synthesizer` class is the main entry point. It takes your metadata and privacy config and orchestrates the entire pipeline.
 - **`privacy_config`**: Used to define PII columns and anonymization strategies (e.g., masking emails).
 
-### 3. Missing Data
+### 4. Missing Data
 SynthoHive automatically handles missing values (`NaN`, `None`) in your dataset. 
 - **Continuous columns**: Missing values are modeled using a null indicator.
 - **Categorical columns**: Missing values are treated as a distinct category.
 No manual imputation is required before training.
 
-### 4. Training (CTGAN)
+### 5. Training (CTGAN)
 The `fit` method learns the statistical distribution of your real data.
-- **`data`**: A dictionary checking table names to their file paths (or Hive table names).
+- **`data`**: A dictionary mapping table names to their file paths (or Hive table names).
 - **`epochs`**: Low (10) for this demo, but should be higher (300-500) for high-fidelity results.
 - **`checkpoint_dir`**: (Optional) Directory to save the best model and training metrics.
 
-### 5. Generate (`sample`)
+### 6. Generate (`sample`)
 The `sample` method creates new data based on the trained model.
 - **`num_rows`**: How many records you want.
 - **`output_path`**: Where to save the data. If omitted (set to `None`), it returns the generated DataFrames directly in memory!

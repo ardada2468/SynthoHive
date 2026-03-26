@@ -4,7 +4,7 @@ title: Privacy & PII
 
 # Privacy Guardrails
 
-Synthetic data is only useful if it effectively masks sensitive information while retaining utility. SynthoHive applies privacy controls **before** any finding or training occurs, ensuring that no raw PII ever enters the generative models.
+Synthetic data is only useful if it effectively masks sensitive information while retaining utility. SynthoHive applies privacy controls **before** any fitting or training occurs, ensuring that no raw PII ever enters the generative models.
 
 ## The Sanitize workflow
 
@@ -22,10 +22,10 @@ flowchart LR
 It is important to distinguish when to use **Faker** versus **Embeddings**:
 
 *   **Faker (Sanitization)**: Used when you need to **hide** the original values and replace them with plausible dummies. This creates *new* values (names, emails) that never existed in your real dataset. Use this for PII.
-*   **Embeddings (Modeling)**: Used when you want the model to **learn associations** between high-cardinality categories (e.g., "ZipCode" correllated with "Income"). The generative model uses embeddings to capture these patterns but typically reproduces values from the *existing vocabulary* of the training data.
+*   **Embeddings (Modeling)**: Used when you want the model to **learn associations** between high-cardinality categories (e.g., "ZipCode" correlated with "Income"). The generative model uses embeddings to capture these patterns but typically reproduces values from the *existing vocabulary* of the training data.
 
-> [!TIP]
-> Use **Faker** for privacy (hiding identity). Use **Embeddings** for utility (preserving statistical relationships in categories like Brands, Cities, or Diagnosis Codes).
+!!! tip
+    Use **Faker** for privacy (hiding identity). Use **Embeddings** for utility (preserving statistical relationships in categories like Brands, Cities, or Diagnosis Codes).
 
 ## Detection Strategies
 
@@ -78,8 +78,7 @@ If no context is found, it falls back to a default `en_US` generator.
 You can customize rules via the `PrivacyConfig` object:
 
 ```python
-from syntho_hive.interface.config import PrivacyConfig
-from syntho_hive.privacy.sanitizer import PiiRule
+from syntho_hive.privacy.sanitizer import PIISanitizer, PrivacyConfig, PiiRule
 
 config = PrivacyConfig(rules=[
     PiiRule(name="custom_code", patterns=[r"^[A-Z]{2}-\d{4}$"], action="mask"),

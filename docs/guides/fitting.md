@@ -11,7 +11,7 @@ The `fit` process is the core of SynthoHive's generative engine. It takes your r
 SynthoHive uses a **Hybrid Relational Approach**. Instead of trying to train one massive model for the entire database (which is often computationally infeasible), it breaks the problem down:
 
 1.  **Linkage Models**: Learn *how many* child records typically exist for a given parent record. For example, "How many `Orders` does a typical `User` have?"
-2.  **Generative Models (CTGAN)**: Learn the content of each table individually. To preserve relational integrity dev-to-dev (e.g., ensuring an Order's `city` matches the User's `region`), child models are **conditioned** on context from their parent tables.
+2.  **Generative Models (CTGAN)**: Learn the content of each table individually. To preserve relational integrity end-to-end (e.g., ensuring an Order's `city` matches the User's `region`), child models are **conditioned** on context from their parent tables.
 
 ### The Role of Metadata
 
@@ -26,7 +26,7 @@ When you call `synthesizer.fit()`, the following steps occur for each table in y
 
 ### 1. Data Ingestion
 The system reads your real data using Spark.
-*   **Note**: Currently, the system converts Spark DataFrames to **Pandas** for checking into the CTGAN backend. This means the working set for a single table must fit in memory.
+*   **Note**: Currently, the system converts Spark DataFrames to **Pandas** for feeding into the CTGAN backend. This means the working set for a single table must fit in memory.
 
 ### 2. Preprocessing & Transformation
 Each column is analyzed and transformed:
@@ -53,7 +53,7 @@ You can tune the fitting process via the `fit()` arguments and global config.
 
 ```python
 synth.fit(
-    data="metrics_db",
+    data={"users": "data/users.parquet", "orders": "data/orders.parquet"},
     epochs=300,
     batch_size=500,
     embedding_threshold=50

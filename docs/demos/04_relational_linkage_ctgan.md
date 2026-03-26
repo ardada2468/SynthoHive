@@ -19,8 +19,8 @@ python examples/demos/04_relational_linkage_ctgan/run.py
 - `outputs/orders.csv`
 
 ## Notes
-- Demonstrates `StagedOrchestrator`, `LinkageModel`, and conditional CTGAN.
-- Requires Spark/Delta for IO; ensure SparkSession is available.
+- Demonstrates `LinkageModel`, conditional CTGAN, and manual relational generation pipeline.
+- This demo runs **without Spark** -- it uses CTGAN and LinkageModel directly with pandas DataFrames.
 
 ## Source Code
 ```python
