@@ -829,10 +829,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-multi-parent-tables-secondary-fks" class="md-nav__link">
+  <a href="#3-cascaded-sampling" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Multi-Parent Tables (Secondary FKs)
+        3. Cascaded Sampling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-multi-parent-tables-secondary-fks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Multi-Parent Tables (Secondary FKs)
       
     </span>
   </a>
@@ -922,6 +933,17 @@
     <span class="md-ellipsis">
       
         Referential Integrity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Mode
       
     </span>
   </a>
@@ -1641,10 +1663,12 @@
 *   <strong>Step B: Expand Context</strong>: The Parent's "Context Columns" (e.g., <code>Region</code>) are repeated <code>k</code> times, where <code>k</code> is the predicted count.
 *   <strong>Step C: Conditional Sampling</strong>: The Child CTGAN model generates the specific details for these rows, <em>conditioned</em> on the repeated parent context.
 *   <strong>Step D: Assign FKs</strong>: The Parent's ID is assigned to the foreign key column (<code>user_id</code>).</p>
-<h3 id="3-multi-parent-tables-secondary-fks">3. Multi-Parent Tables (Secondary FKs)<a class="headerlink" href="#3-multi-parent-tables-secondary-fks" title="Permanent link">&para;</a></h3>
+<h3 id="3-cascaded-sampling">3. Cascaded Sampling<a class="headerlink" href="#3-cascaded-sampling" title="Permanent link">&para;</a></h3>
+<p>As of v1.4.0, <code>RelationalSampler</code> cascades sampling through the full table hierarchy, not just one level deep. This ensures correct proportional sampling across multi-level parent-child chains (e.g., Users -&gt; Orders -&gt; OrderItems).</p>
+<h3 id="4-multi-parent-tables-secondary-fks">4. Multi-Parent Tables (Secondary FKs)<a class="headerlink" href="#4-multi-parent-tables-secondary-fks" title="Permanent link">&para;</a></h3>
 <p>If a table has multiple parents (e.g., <code>OrderItems</code> has <code>order_id</code> AND <code>product_id</code>):
 1.  One parent is chosen as the <strong>Driver</strong> (usually the first FK alphabetically or by configuration). This driver controls the <em>volume</em> (how many items per order).
-2.  The other parent (<code>product_id</code>) is assigned via <strong>Random Sampling</strong>.
+2.  The other parent (<code>product_id</code>) is assigned via <strong>Random Sampling</strong> using semi-joins to avoid ambiguous column references.
     *   The system creates the rows based on the Order driver.
     *   For the <code>product_id</code> column, it randomly picks valid IDs from the already-generated <code>Products</code> table.
     *   <em>Note</em>: This random assignment preserves the validity of the FK (it points to a real Product), but does not currently enforce strict joint distributions between two parents.</p>
@@ -1695,8 +1719,10 @@
 <h3 id="referential-integrity">Referential Integrity<a class="headerlink" href="#referential-integrity" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Primary Keys</strong>: Guaranteed unique for the generated batch.</li>
-<li><strong>Foreign Keys</strong>: Guaranteed valid (always point to an existing parent in the current batch).</li>
+<li><strong>Foreign Keys</strong>: Guaranteed valid (always point to an existing parent in the current batch). Integer-to-float FK dtype compatibility is handled automatically.</li>
 </ul>
+<h3 id="output-mode">Output Mode<a class="headerlink" href="#output-mode" title="Permanent link">&para;</a></h3>
+<p>As of v1.4.0, the default <code>write_pandas</code> mode is <code>"overwrite"</code> (previously <code>"append"</code>). This prevents accidental data corruption when re-running generation to the same output path.</p>
 <div class="admonition warning">
 <p class="admonition-title">Partitioning</p>
 <p>Generation is not currently distributed across Spark workers. It runs on the driver logic. Future versions will support distributed generation for massive scale.</p>
@@ -1721,7 +1747,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 26, 2026 20:53:45 UTC">March 26, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 27, 2026 18:16:03 UTC">March 27, 2026</span>
   </span>
 
     

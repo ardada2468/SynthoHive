@@ -1456,6 +1456,128 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#140-2026-03-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [1.4.0] - 2026-03-27
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[1.4.0] - 2026-03-27">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Fixed">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#core-models-ctgan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Models (CTGAN)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-transformer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Transformer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#relational-orchestration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Relational Orchestration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#privacy-sanitization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Privacy &amp; Sanitization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interface-connectors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interface &amp; Connectors
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exceptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exceptions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#130" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1507,7 +1629,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#fixed" class="md-nav__link">
+  <a href="#fixed_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1535,7 +1657,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#fixed_1" class="md-nav__link">
+  <a href="#fixed_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -1590,6 +1712,83 @@
 
 
 <h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">&para;</a></h1>
+<h2 id="140-2026-03-27">[1.4.0] - 2026-03-27<a class="headerlink" href="#140-2026-03-27" title="Permanent link">&para;</a></h2>
+<h3 id="security">Security<a class="headerlink" href="#security" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Fixed unsalted SHA-256 hashing in PII sanitizer - now uses HMAC-SHA256 with per-instance random salt to prevent rainbow table attacks</li>
+<li>Fixed SQL injection vulnerability in <code>save_to_hive()</code> - path values are now validated</li>
+<li>Added security warning for <code>torch.load(weights_only=False)</code> usage</li>
+<li>Fixed <code>Synthesizer.load()</code> to type-check deserialized objects</li>
+</ul>
+<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
+<h4 id="core-models-ctgan">Core Models (CTGAN)<a class="headerlink" href="#core-models-ctgan" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>CRITICAL</strong>: Embedding layers are now included in the generator optimizer - previously they were never updated during training</li>
+<li><strong>CRITICAL</strong>: Checkpoint validation no longer crashes when model uses context conditioning</li>
+<li>Fixed optimizer zero_grad ordering to follow standard PyTorch pattern (zero_grad -&gt; forward -&gt; backward -&gt; step)</li>
+<li><code>sample()</code> now restores generator training mode after evaluation</li>
+<li>Discriminator now uses both dimensions from <code>discriminator_dim</code> tuple</li>
+<li>Added gradient clipping (max_norm=1.0) to both generator and discriminator optimizers</li>
+<li>Replaced <code>assert</code> statements with proper <code>ValueError</code> raises</li>
+<li>Added input validation for <code>num_rows</code> in <code>sample()</code></li>
+</ul>
+<h4 id="data-transformer">Data Transformer<a class="headerlink" href="#data-transformer" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>CRITICAL</strong>: <code>fit()</code> now properly resets internal state on re-fit, preventing stale data corruption</li>
+<li><strong>CRITICAL</strong>: Per-column seeds now use deterministic SHA-256 hash instead of Python's non-deterministic <code>hash()</code></li>
+<li><strong>CRITICAL</strong>: All-null numeric columns no longer crash BayesianGMM - handled gracefully with constant representation</li>
+<li>Empty DataFrames now raise clear <code>ValueError</code> instead of cryptic sklearn errors</li>
+<li>BayesianGMM <code>n_components</code> is now clamped to available sample count</li>
+<li>Unknown categories during transform are handled gracefully instead of crashing</li>
+<li>Added epsilon to VGM normalization to prevent division by zero</li>
+<li>Removed dead <code>"number"</code> dtype reference in constraint checking</li>
+</ul>
+<h4 id="relational-orchestration">Relational Orchestration<a class="headerlink" href="#relational-orchestration" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>CRITICAL</strong>: Self-referencing foreign keys (e.g., <code>manager_id -&gt; employees.id</code>) no longer raise false cycle errors</li>
+<li>Zero child rows now create empty DataFrames instead of silently skipping (preventing downstream crashes)</li>
+<li><code>write_pandas</code> default mode changed from <code>"append"</code> to <code>"overwrite"</code> to prevent data corruption</li>
+<li>Added validation that <code>parent_context_cols</code> exist in parent table</li>
+<li>PK assignment now uses actual DataFrame length instead of requested row count</li>
+<li><code>validate_schema()</code> is now called at the start of <code>fit_all()</code></li>
+<li>NegBinom linkage model handles edge cases (zero variance, underdispersion) with Poisson/constant fallbacks</li>
+<li><code>get_table()</code> return values are now null-checked with clear error messages</li>
+<li>Replaced all <code>print()</code> calls with structured <code>log.info()</code> logging</li>
+</ul>
+<h4 id="privacy-sanitization">Privacy &amp; Sanitization<a class="headerlink" href="#privacy-sanitization" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Fixed all default PII regex patterns to be anchored (preventing false positives on substrings)</li>
+<li>Added PII detection for names, addresses, and dates of birth</li>
+<li>Added column name alias matching (e.g., "mobile", "cell", "tel" all match "phone")</li>
+<li><code>_mask_value</code> custom fallback now correctly applies per-value instead of per-Series</li>
+<li>Null values are now preserved through masking and hashing operations</li>
+<li>PII detection now uses random sampling instead of biased <code>head(100)</code></li>
+<li>Added input validation for <code>pii_map</code> column names</li>
+</ul>
+<h4 id="interface-connectors">Interface &amp; Connectors<a class="headerlink" href="#interface-connectors" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>fit()</code> now warns when <code>sampling_strategy</code> parameter is passed but not yet implemented</li>
+<li><code>Synthesizer</code> serialization now excludes SparkSession (via <code>__getstate__</code>/<code>__setstate__</code>)</li>
+<li>Fixed incorrect error message in <code>generate_validation_report</code> (said "synthetic" when reading "real" data)</li>
+<li>Integer-to-float FK dtype compatibility is now handled correctly</li>
+<li><code>PrivacyConfig.epsilon</code> now validates positive values</li>
+<li><code>Metadata.add_table()</code> now raises <code>SchemaError</code> instead of generic <code>ValueError</code></li>
+<li><code>RelationalSampler</code> now cascades sampling through full hierarchy (not just one level)</li>
+<li>Fixed ambiguous column references in relational sampling joins (using semi-join)</li>
+</ul>
+<h4 id="exceptions">Exceptions<a class="headerlink" href="#exceptions" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Added <code>GenerationError</code> exception class for synthesis failures</li>
+<li>Added <code>PrivacyError</code> exception class for sanitization failures</li>
+</ul>
+<h3 id="tests">Tests<a class="headerlink" href="#tests" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Fixed <code>AssertionError</code> typo in seed regression test</li>
+<li>Replaced <code>sys.exit(0)</code> with <code>pytest.skip()</code> in retail test</li>
+<li>Fixed tautological null handling assertions</li>
+<li>Added deterministic seeds to validation and observability tests</li>
+<li>Migrated hardcoded file paths to pytest <code>tmp_path</code> fixtures</li>
+</ul>
 <h2 id="130">1.3.0<a class="headerlink" href="#130" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
@@ -1607,13 +1806,13 @@
 <li><code>LinkageModel</code> default method changed from GaussianMixture to empirical histogram resampler (with optional NegBinom fit).</li>
 </ul>
 <h2 id="123">1.2.3<a class="headerlink" href="#123" title="Permanent link">&para;</a></h2>
-<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>TypeError</code> in <code>DataTransformer</code> when applying numeric constraints (min, max, dtype) to categorical/string columns.</li>
 <li>Added robust type coercion to ensure constraints are applied correctly to transformed data.</li>
 </ul>
 <h2 id="122">1.2.2<a class="headerlink" href="#122" title="Permanent link">&para;</a></h2>
-<h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_2">Fixed<a class="headerlink" href="#fixed_2" title="Permanent link">&para;</a></h3>
 <ul>
 <li>CTGAN embedding cardinality to avoid <code>IndexError</code> when using high-cardinality categorical columns.</li>
 <li>Databricks example returns in-memory DataFrames and cleans timestamps/nulls for safer Arrow/pandas conversion.</li>
@@ -1642,7 +1841,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 26, 2026 20:53:45 UTC">March 26, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 27, 2026 18:16:03 UTC">March 27, 2026</span>
   </span>
 
     

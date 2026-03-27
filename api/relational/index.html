@@ -1658,10 +1658,7 @@
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>syntho_hive/relational/orchestrator.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 52</span>
-<span class="normal"> 53</span>
-<span class="normal"> 54</span>
-<span class="normal"> 55</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 55</span>
 <span class="normal"> 56</span>
 <span class="normal"> 57</span>
 <span class="normal"> 58</span>
@@ -1942,7 +1939,49 @@
 <span class="normal">333</span>
 <span class="normal">334</span>
 <span class="normal">335</span>
-<span class="normal">336</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">StagedOrchestrator</span><span class="p">:</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span>
+<span class="normal">351</span>
+<span class="normal">352</span>
+<span class="normal">353</span>
+<span class="normal">354</span>
+<span class="normal">355</span>
+<span class="normal">356</span>
+<span class="normal">357</span>
+<span class="normal">358</span>
+<span class="normal">359</span>
+<span class="normal">360</span>
+<span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span>
+<span class="normal">366</span>
+<span class="normal">367</span>
+<span class="normal">368</span>
+<span class="normal">369</span>
+<span class="normal">370</span>
+<span class="normal">371</span>
+<span class="normal">372</span>
+<span class="normal">373</span>
+<span class="normal">374</span>
+<span class="normal">375</span>
+<span class="normal">376</span>
+<span class="normal">377</span>
+<span class="normal">378</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">StagedOrchestrator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Manage staged relational synthesis across parent/child tables.&quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -1950,7 +1989,7 @@
         <span class="n">metadata</span><span class="p">:</span> <span class="n">Metadata</span><span class="p">,</span>
         <span class="n">spark</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SparkSession</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">io</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">on_write_failure</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;raise&#39;</span><span class="p">,</span> <span class="s1">&#39;cleanup&#39;</span><span class="p">,</span> <span class="s1">&#39;retry&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;raise&#39;</span><span class="p">,</span>
+        <span class="n">on_write_failure</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;raise&quot;</span><span class="p">,</span> <span class="s2">&quot;cleanup&quot;</span><span class="p">,</span> <span class="s2">&quot;retry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;raise&quot;</span><span class="p">,</span>
         <span class="n">model_cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">ConditionalGenerativeModel</span><span class="p">]</span> <span class="o">=</span> <span class="n">CTGAN</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize orchestrator dependencies.</span>
@@ -2019,11 +2058,13 @@
         <span class="c1"># Training order doesn&#39;t strictly matter as long as we have data,</span>
         <span class="c1"># but generation order matters.</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">validate_schema</span><span class="p">()</span>
+
         <span class="k">for</span> <span class="n">table_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">tables</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fitting model for table: </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;fitting_model&quot;</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="n">table_name</span><span class="p">)</span>
             <span class="n">data_path</span> <span class="o">=</span> <span class="n">real_data_paths</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">data_path</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: No data path provided for </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">, skipping.&quot;</span><span class="p">)</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;no_data_path&quot;</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="n">table_name</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;skipping&quot;</span><span class="p">)</span>
                 <span class="k">continue</span>
 
             <span class="c1"># Read data</span>
@@ -2032,13 +2073,12 @@
             <span class="n">target_pdf</span> <span class="o">=</span> <span class="n">target_df</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
 
             <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">SchemaError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Table &#39;</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&#39; not found in metadata&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">has_dependencies</span><span class="p">:</span>
                 <span class="c1"># Root Table</span>
                 <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_cls</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span>
-                    <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
-                    <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span>
-                    <span class="o">**</span><span class="n">model_kwargs</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span> <span class="o">**</span><span class="n">model_kwargs</span>
                 <span class="p">)</span>
                 <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
                     <span class="n">target_pdf</span><span class="p">,</span>
@@ -2065,15 +2105,27 @@
                 <span class="n">parent_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_dataset</span><span class="p">(</span><span class="n">parent_path</span><span class="p">)</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
 
                 <span class="c1"># 2. Train Linkage Model on Driver Parent</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Training Linkage for </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2"> driven by </span><span class="si">{</span><span class="n">driver_parent_table</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="s2">&quot;training_linkage&quot;</span><span class="p">,</span>
+                    <span class="n">table</span><span class="o">=</span><span class="n">table_name</span><span class="p">,</span>
+                    <span class="n">driver_parent</span><span class="o">=</span><span class="n">driver_parent_table</span><span class="p">,</span>
+                <span class="p">)</span>
                 <span class="n">linkage_method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">tables</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span><span class="o">.</span><span class="n">linkage_method</span>
                 <span class="n">linkage</span> <span class="o">=</span> <span class="n">LinkageModel</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">linkage_method</span><span class="p">)</span>
-                <span class="n">linkage</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">parent_df</span><span class="p">,</span> <span class="n">target_pdf</span><span class="p">,</span> <span class="n">fk_col</span><span class="o">=</span><span class="n">driver_fk</span><span class="p">,</span> <span class="n">pk_col</span><span class="o">=</span><span class="n">driver_parent_pk</span><span class="p">)</span>
+                <span class="n">linkage</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+                    <span class="n">parent_df</span><span class="p">,</span> <span class="n">target_pdf</span><span class="p">,</span> <span class="n">fk_col</span><span class="o">=</span><span class="n">driver_fk</span><span class="p">,</span> <span class="n">pk_col</span><span class="o">=</span><span class="n">driver_parent_pk</span>
+                <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">linkage_models</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">linkage</span>
 
                 <span class="c1"># 3. Train Conditional CTGAN (Conditioning on Driver Parent Context)</span>
                 <span class="n">context_cols</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">parent_context_cols</span>
                 <span class="k">if</span> <span class="n">context_cols</span><span class="p">:</span>
+                    <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">context_cols</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">parent_df</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="n">SchemaError</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;parent_context_cols </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2"> not found in parent table &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">driver_parent_table</span><span class="si">}</span><span class="s2">&#39; columns: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">parent_df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">)</span>
                     <span class="c1"># Prepare parent data for merge</span>
                     <span class="n">right_side</span> <span class="o">=</span> <span class="n">parent_df</span><span class="p">[[</span><span class="n">driver_parent_pk</span><span class="p">]</span> <span class="o">+</span> <span class="n">context_cols</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
@@ -2084,7 +2136,7 @@
                         <span class="n">right_side</span><span class="p">,</span>
                         <span class="n">left_on</span><span class="o">=</span><span class="n">driver_fk</span><span class="p">,</span>
                         <span class="n">right_on</span><span class="o">=</span><span class="n">driver_parent_pk</span><span class="p">,</span>
-                        <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span>
+                        <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
                     <span class="p">)</span>
 
                     <span class="n">context_df</span> <span class="o">=</span> <span class="n">joined</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">rename_map</span><span class="o">.</span><span class="n">values</span><span class="p">())]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -2093,10 +2145,7 @@
                     <span class="n">context_df</span> <span class="o">=</span> <span class="kc">None</span>
 
                 <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_cls</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span>
-                    <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
-                    <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span>
-                    <span class="o">**</span><span class="n">model_kwargs</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span> <span class="o">**</span><span class="n">model_kwargs</span>
                 <span class="p">)</span>
                 <span class="c1"># Note: We exclude ALL FK columns from CTGAN modeling to avoid them being treated as continuous/categorical features</span>
                 <span class="c1"># The DataTransformer handles excluding PK/FK if they are marked in metadata.</span>
@@ -2111,7 +2160,9 @@
                 <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_rows_root</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">output_path_base</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">num_rows_root</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">output_path_base</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute the multi-stage generation pipeline.</span>
 
 <span class="sd">        Args:</span>
@@ -2136,20 +2187,23 @@
 
         <span class="k">for</span> <span class="n">table_name</span> <span class="ow">in</span> <span class="n">generation_order</span><span class="p">:</span>
             <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">SchemaError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Table &#39;</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&#39; not found in metadata&quot;</span><span class="p">)</span>
             <span class="n">is_root</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">fk</span>
 
             <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span>
 
             <span class="n">generated_pdf</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">train_pdf</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># used for schema fallback on zero-row children</span>
 
             <span class="k">if</span> <span class="n">is_root</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generating root table: </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;generating_root_table&quot;</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="n">table_name</span><span class="p">)</span>
                 <span class="n">n_rows</span> <span class="o">=</span> <span class="n">num_rows_root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">table_name</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
                 <span class="n">generated_pdf</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">n_rows</span><span class="p">)</span>
-                <span class="c1"># Assign PKs</span>
-                <span class="n">generated_pdf</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">pk</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_rows</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="c1"># Assign PKs — use actual DataFrame length in case model returns different count</span>
+                <span class="n">generated_pdf</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">pk</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">generated_pdf</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generating child table: </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;generating_child_table&quot;</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="n">table_name</span><span class="p">)</span>
 
                 <span class="c1"># 1. Handle Driver Parent (Cardinality &amp; Context)</span>
                 <span class="n">pk_map</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">fk</span>
@@ -2171,13 +2225,17 @@
                 <span class="n">counts</span> <span class="o">=</span> <span class="n">linkage</span><span class="o">.</span><span class="n">sample_counts</span><span class="p">(</span><span class="n">parent_df</span><span class="p">)</span>
 
                 <span class="c1"># Construct Context from Driver</span>
-                <span class="n">parent_ids_repeated</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">parent_df</span><span class="p">[</span><span class="n">driver_parent_pk</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">counts</span><span class="p">)</span>
+                <span class="n">parent_ids_repeated</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span>
+                    <span class="n">parent_df</span><span class="p">[</span><span class="n">driver_parent_pk</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">counts</span>
+                <span class="p">)</span>
 
                 <span class="n">context_cols</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">parent_context_cols</span>
                 <span class="k">if</span> <span class="n">context_cols</span><span class="p">:</span>
                     <span class="n">context_repeated_vals</span> <span class="o">=</span> <span class="p">{}</span>
                     <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">context_cols</span><span class="p">:</span>
-                        <span class="n">context_repeated_vals</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">parent_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">counts</span><span class="p">)</span>
+                        <span class="n">context_repeated_vals</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span>
+                            <span class="n">parent_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">counts</span>
+                        <span class="p">)</span>
                     <span class="n">context_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">context_repeated_vals</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">context_df</span> <span class="o">=</span> <span class="kc">None</span>
@@ -2206,10 +2264,28 @@
                         <span class="n">valid_pks</span> <span class="o">=</span> <span class="n">p_df</span><span class="p">[</span><span class="n">p_pk</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
 
                         <span class="c1"># Randomly sample valid PKs for this column</span>
-                        <span class="n">generated_pdf</span><span class="p">[</span><span class="n">fk_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">valid_pks</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">total_child_rows</span><span class="p">)</span>
+                        <span class="n">generated_pdf</span><span class="p">[</span><span class="n">fk_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
+                            <span class="n">valid_pks</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">total_child_rows</span>
+                        <span class="p">)</span>
 
                     <span class="c1"># Assign PKs</span>
-                    <span class="n">generated_pdf</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">pk</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">total_child_rows</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="n">generated_pdf</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">pk</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">generated_pdf</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Zero child rows: create empty DataFrame with correct schema</span>
+                    <span class="c1"># so downstream grandchild tables don&#39;t crash with KeyError</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                        <span class="s2">&quot;zero_child_rows&quot;</span><span class="p">,</span>
+                        <span class="n">table</span><span class="o">=</span><span class="n">table_name</span><span class="p">,</span>
+                        <span class="n">driver_parent</span><span class="o">=</span><span class="n">driver_parent_table</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="n">train_columns</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="nb">list</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                        <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+                        <span class="k">else</span> <span class="p">[]</span>
+                    <span class="p">)</span>
+                    <span class="n">generated_pdf</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+                        <span class="n">columns</span><span class="o">=</span><span class="n">train_columns</span> <span class="k">if</span> <span class="n">train_columns</span> <span class="k">else</span> <span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">pk</span><span class="p">]</span>
+                    <span class="p">)</span>
 
             <span class="k">if</span> <span class="n">generated_pdf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">output_path_base</span><span class="p">:</span>
@@ -2221,7 +2297,9 @@
                         <span class="n">policy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">on_write_failure</span><span class="p">,</span>
                         <span class="n">written_paths</span><span class="o">=</span><span class="n">written_paths</span><span class="p">,</span>
                     <span class="p">)</span>
-                    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;table_released_from_memory&quot;</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="n">table_name</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">output_path</span><span class="p">)</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                        <span class="s2">&quot;table_released_from_memory&quot;</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="n">table_name</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">output_path</span>
+                    <span class="p">)</span>
                     <span class="c1"># Do NOT store in generated_tables — child tables read from disk via output_path_base</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">generated_tables</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">generated_pdf</span>
@@ -2390,10 +2468,7 @@ during training.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>syntho_hive/relational/orchestrator.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 99</span>
-<span class="normal">100</span>
-<span class="normal">101</span>
-<span class="normal">102</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">102</span>
 <span class="normal">103</span>
 <span class="normal">104</span>
 <span class="normal">105</span>
@@ -2510,7 +2585,20 @@ during training.</p>
 <span class="normal">216</span>
 <span class="normal">217</span>
 <span class="normal">218</span>
-<span class="normal">219</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">fit_all</span><span class="p">(</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">fit_all</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">real_data_paths</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
     <span class="n">epochs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">300</span><span class="p">,</span>
@@ -2540,11 +2628,13 @@ during training.</p>
     <span class="c1"># Training order doesn&#39;t strictly matter as long as we have data,</span>
     <span class="c1"># but generation order matters.</span>
 
+    <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">validate_schema</span><span class="p">()</span>
+
     <span class="k">for</span> <span class="n">table_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">tables</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fitting model for table: </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;fitting_model&quot;</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="n">table_name</span><span class="p">)</span>
         <span class="n">data_path</span> <span class="o">=</span> <span class="n">real_data_paths</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">data_path</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: No data path provided for </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">, skipping.&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;no_data_path&quot;</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="n">table_name</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;skipping&quot;</span><span class="p">)</span>
             <span class="k">continue</span>
 
         <span class="c1"># Read data</span>
@@ -2553,13 +2643,12 @@ during training.</p>
         <span class="n">target_pdf</span> <span class="o">=</span> <span class="n">target_df</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
 
         <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SchemaError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Table &#39;</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&#39; not found in metadata&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">has_dependencies</span><span class="p">:</span>
             <span class="c1"># Root Table</span>
             <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_cls</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span>
-                <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
-                <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span>
-                <span class="o">**</span><span class="n">model_kwargs</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span> <span class="o">**</span><span class="n">model_kwargs</span>
             <span class="p">)</span>
             <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
                 <span class="n">target_pdf</span><span class="p">,</span>
@@ -2586,15 +2675,27 @@ during training.</p>
             <span class="n">parent_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_dataset</span><span class="p">(</span><span class="n">parent_path</span><span class="p">)</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
 
             <span class="c1"># 2. Train Linkage Model on Driver Parent</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Training Linkage for </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2"> driven by </span><span class="si">{</span><span class="n">driver_parent_table</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;training_linkage&quot;</span><span class="p">,</span>
+                <span class="n">table</span><span class="o">=</span><span class="n">table_name</span><span class="p">,</span>
+                <span class="n">driver_parent</span><span class="o">=</span><span class="n">driver_parent_table</span><span class="p">,</span>
+            <span class="p">)</span>
             <span class="n">linkage_method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">tables</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span><span class="o">.</span><span class="n">linkage_method</span>
             <span class="n">linkage</span> <span class="o">=</span> <span class="n">LinkageModel</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">linkage_method</span><span class="p">)</span>
-            <span class="n">linkage</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">parent_df</span><span class="p">,</span> <span class="n">target_pdf</span><span class="p">,</span> <span class="n">fk_col</span><span class="o">=</span><span class="n">driver_fk</span><span class="p">,</span> <span class="n">pk_col</span><span class="o">=</span><span class="n">driver_parent_pk</span><span class="p">)</span>
+            <span class="n">linkage</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+                <span class="n">parent_df</span><span class="p">,</span> <span class="n">target_pdf</span><span class="p">,</span> <span class="n">fk_col</span><span class="o">=</span><span class="n">driver_fk</span><span class="p">,</span> <span class="n">pk_col</span><span class="o">=</span><span class="n">driver_parent_pk</span>
+            <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">linkage_models</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">linkage</span>
 
             <span class="c1"># 3. Train Conditional CTGAN (Conditioning on Driver Parent Context)</span>
             <span class="n">context_cols</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">parent_context_cols</span>
             <span class="k">if</span> <span class="n">context_cols</span><span class="p">:</span>
+                <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">context_cols</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">parent_df</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">SchemaError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;parent_context_cols </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2"> not found in parent table &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">driver_parent_table</span><span class="si">}</span><span class="s2">&#39; columns: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">parent_df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
                 <span class="c1"># Prepare parent data for merge</span>
                 <span class="n">right_side</span> <span class="o">=</span> <span class="n">parent_df</span><span class="p">[[</span><span class="n">driver_parent_pk</span><span class="p">]</span> <span class="o">+</span> <span class="n">context_cols</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
@@ -2605,7 +2706,7 @@ during training.</p>
                     <span class="n">right_side</span><span class="p">,</span>
                     <span class="n">left_on</span><span class="o">=</span><span class="n">driver_fk</span><span class="p">,</span>
                     <span class="n">right_on</span><span class="o">=</span><span class="n">driver_parent_pk</span><span class="p">,</span>
-                    <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span>
+                    <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
                 <span class="p">)</span>
 
                 <span class="n">context_df</span> <span class="o">=</span> <span class="n">joined</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">rename_map</span><span class="o">.</span><span class="n">values</span><span class="p">())]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -2614,10 +2715,7 @@ during training.</p>
                 <span class="n">context_df</span> <span class="o">=</span> <span class="kc">None</span>
 
             <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_cls</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span>
-                <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
-                <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span>
-                <span class="o">**</span><span class="n">model_kwargs</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span> <span class="o">**</span><span class="n">model_kwargs</span>
             <span class="p">)</span>
             <span class="c1"># Note: We exclude ALL FK columns from CTGAN modeling to avoid them being treated as continuous/categorical features</span>
             <span class="c1"># The DataTransformer handles excluding PK/FK if they are marked in metadata.</span>
@@ -2759,20 +2857,7 @@ are accumulated in memory (original behavior).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>syntho_hive/relational/orchestrator.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">221</span>
-<span class="normal">222</span>
-<span class="normal">223</span>
-<span class="normal">224</span>
-<span class="normal">225</span>
-<span class="normal">226</span>
-<span class="normal">227</span>
-<span class="normal">228</span>
-<span class="normal">229</span>
-<span class="normal">230</span>
-<span class="normal">231</span>
-<span class="normal">232</span>
-<span class="normal">233</span>
-<span class="normal">234</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">234</span>
 <span class="normal">235</span>
 <span class="normal">236</span>
 <span class="normal">237</span>
@@ -2874,7 +2959,51 @@ are accumulated in memory (original behavior).</p>
 <span class="normal">333</span>
 <span class="normal">334</span>
 <span class="normal">335</span>
-<span class="normal">336</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_rows_root</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">output_path_base</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span>
+<span class="normal">351</span>
+<span class="normal">352</span>
+<span class="normal">353</span>
+<span class="normal">354</span>
+<span class="normal">355</span>
+<span class="normal">356</span>
+<span class="normal">357</span>
+<span class="normal">358</span>
+<span class="normal">359</span>
+<span class="normal">360</span>
+<span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span>
+<span class="normal">366</span>
+<span class="normal">367</span>
+<span class="normal">368</span>
+<span class="normal">369</span>
+<span class="normal">370</span>
+<span class="normal">371</span>
+<span class="normal">372</span>
+<span class="normal">373</span>
+<span class="normal">374</span>
+<span class="normal">375</span>
+<span class="normal">376</span>
+<span class="normal">377</span>
+<span class="normal">378</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">generate</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span> <span class="n">num_rows_root</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">output_path_base</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Execute the multi-stage generation pipeline.</span>
 
 <span class="sd">    Args:</span>
@@ -2899,20 +3028,23 @@ are accumulated in memory (original behavior).</p>
 
     <span class="k">for</span> <span class="n">table_name</span> <span class="ow">in</span> <span class="n">generation_order</span><span class="p">:</span>
         <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SchemaError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Table &#39;</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&#39; not found in metadata&quot;</span><span class="p">)</span>
         <span class="n">is_root</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">fk</span>
 
         <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span>
 
         <span class="n">generated_pdf</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">train_pdf</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># used for schema fallback on zero-row children</span>
 
         <span class="k">if</span> <span class="n">is_root</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generating root table: </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;generating_root_table&quot;</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="n">table_name</span><span class="p">)</span>
             <span class="n">n_rows</span> <span class="o">=</span> <span class="n">num_rows_root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">table_name</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
             <span class="n">generated_pdf</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">n_rows</span><span class="p">)</span>
-            <span class="c1"># Assign PKs</span>
-            <span class="n">generated_pdf</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">pk</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_rows</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># Assign PKs — use actual DataFrame length in case model returns different count</span>
+            <span class="n">generated_pdf</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">pk</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">generated_pdf</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generating child table: </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;generating_child_table&quot;</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="n">table_name</span><span class="p">)</span>
 
             <span class="c1"># 1. Handle Driver Parent (Cardinality &amp; Context)</span>
             <span class="n">pk_map</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">fk</span>
@@ -2934,13 +3066,17 @@ are accumulated in memory (original behavior).</p>
             <span class="n">counts</span> <span class="o">=</span> <span class="n">linkage</span><span class="o">.</span><span class="n">sample_counts</span><span class="p">(</span><span class="n">parent_df</span><span class="p">)</span>
 
             <span class="c1"># Construct Context from Driver</span>
-            <span class="n">parent_ids_repeated</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">parent_df</span><span class="p">[</span><span class="n">driver_parent_pk</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">counts</span><span class="p">)</span>
+            <span class="n">parent_ids_repeated</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span>
+                <span class="n">parent_df</span><span class="p">[</span><span class="n">driver_parent_pk</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">counts</span>
+            <span class="p">)</span>
 
             <span class="n">context_cols</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">parent_context_cols</span>
             <span class="k">if</span> <span class="n">context_cols</span><span class="p">:</span>
                 <span class="n">context_repeated_vals</span> <span class="o">=</span> <span class="p">{}</span>
                 <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">context_cols</span><span class="p">:</span>
-                    <span class="n">context_repeated_vals</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">parent_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">counts</span><span class="p">)</span>
+                    <span class="n">context_repeated_vals</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span>
+                        <span class="n">parent_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">counts</span>
+                    <span class="p">)</span>
                 <span class="n">context_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">context_repeated_vals</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">context_df</span> <span class="o">=</span> <span class="kc">None</span>
@@ -2969,10 +3105,28 @@ are accumulated in memory (original behavior).</p>
                     <span class="n">valid_pks</span> <span class="o">=</span> <span class="n">p_df</span><span class="p">[</span><span class="n">p_pk</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
 
                     <span class="c1"># Randomly sample valid PKs for this column</span>
-                    <span class="n">generated_pdf</span><span class="p">[</span><span class="n">fk_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">valid_pks</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">total_child_rows</span><span class="p">)</span>
+                    <span class="n">generated_pdf</span><span class="p">[</span><span class="n">fk_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
+                        <span class="n">valid_pks</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">total_child_rows</span>
+                    <span class="p">)</span>
 
                 <span class="c1"># Assign PKs</span>
-                <span class="n">generated_pdf</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">pk</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">total_child_rows</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">generated_pdf</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">pk</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">generated_pdf</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Zero child rows: create empty DataFrame with correct schema</span>
+                <span class="c1"># so downstream grandchild tables don&#39;t crash with KeyError</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="s2">&quot;zero_child_rows&quot;</span><span class="p">,</span>
+                    <span class="n">table</span><span class="o">=</span><span class="n">table_name</span><span class="p">,</span>
+                    <span class="n">driver_parent</span><span class="o">=</span><span class="n">driver_parent_table</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">train_columns</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="nb">list</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                    <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+                    <span class="k">else</span> <span class="p">[]</span>
+                <span class="p">)</span>
+                <span class="n">generated_pdf</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+                    <span class="n">columns</span><span class="o">=</span><span class="n">train_columns</span> <span class="k">if</span> <span class="n">train_columns</span> <span class="k">else</span> <span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">pk</span><span class="p">]</span>
+                <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">generated_pdf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">output_path_base</span><span class="p">:</span>
@@ -2984,7 +3138,9 @@ are accumulated in memory (original behavior).</p>
                     <span class="n">policy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">on_write_failure</span><span class="p">,</span>
                     <span class="n">written_paths</span><span class="o">=</span><span class="n">written_paths</span><span class="p">,</span>
                 <span class="p">)</span>
-                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;table_released_from_memory&quot;</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="n">table_name</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">output_path</span><span class="p">)</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s2">&quot;table_released_from_memory&quot;</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="n">table_name</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">output_path</span>
+                <span class="p">)</span>
                 <span class="c1"># Do NOT store in generated_tables — child tables read from disk via output_path_base</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">generated_tables</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">generated_pdf</span>
@@ -3033,85 +3189,125 @@ with an empirical histogram resampler (default) or optional NegBinom fit.</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>syntho_hive/relational/linkage.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span>
-<span class="normal">74</span>
-<span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span>
-<span class="normal">78</span>
-<span class="normal">79</span>
-<span class="normal">80</span>
-<span class="normal">81</span>
-<span class="normal">82</span>
-<span class="normal">83</span>
-<span class="normal">84</span>
-<span class="normal">85</span>
-<span class="normal">86</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">LinkageModel</span><span class="p">:</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">  8</span>
+<span class="normal">  9</span>
+<span class="normal"> 10</span>
+<span class="normal"> 11</span>
+<span class="normal"> 12</span>
+<span class="normal"> 13</span>
+<span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">LinkageModel</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Model cardinality relationships between parent and child tables.</span>
 
 <span class="sd">    Replaces the former GaussianMixture approach (which produced negative counts)</span>
@@ -3131,8 +3327,16 @@ with an empirical histogram resampler (default) or optional NegBinom fit.</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">_nbinom_n</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_nbinom_p</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_children</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># set during fit for negbinom edge cases</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">child_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">fk_col</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pk_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;id&quot;</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">parent_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">child_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">fk_col</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">pk_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;id&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Fit the distribution of child counts per parent.</span>
 
 <span class="sd">        Counts children per parent, including parents with zero children.</span>
@@ -3146,8 +3350,7 @@ with an empirical histogram resampler (default) or optional NegBinom fit.</p>
         <span class="n">counts</span> <span class="o">=</span> <span class="n">child_df</span><span class="p">[</span><span class="n">fk_col</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
         <span class="n">parent_ids</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">parent_df</span><span class="p">[</span><span class="n">pk_col</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">(),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="n">pk_col</span><span class="p">])</span>
         <span class="n">count_df</span> <span class="o">=</span> <span class="n">parent_ids</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
-            <span class="n">counts</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="s2">&quot;child_count&quot;</span><span class="p">),</span>
-            <span class="n">left_on</span><span class="o">=</span><span class="n">pk_col</span><span class="p">,</span> <span class="n">right_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span>
+            <span class="n">counts</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="s2">&quot;child_count&quot;</span><span class="p">),</span> <span class="n">left_on</span><span class="o">=</span><span class="n">pk_col</span><span class="p">,</span> <span class="n">right_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span>
         <span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">X</span> <span class="o">=</span> <span class="n">count_df</span><span class="p">[</span><span class="s2">&quot;child_count&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_children</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
@@ -3156,15 +3359,39 @@ with an empirical histogram resampler (default) or optional NegBinom fit.</p>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;negbinom&quot;</span><span class="p">:</span>
             <span class="n">mu</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
             <span class="n">var</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">var</span><span class="p">())</span>
-            <span class="k">if</span> <span class="n">var</span> <span class="o">&gt;</span> <span class="n">mu</span> <span class="ow">and</span> <span class="n">mu</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">var</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># All parents have the same child count — constant distribution</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span> <span class="o">=</span> <span class="s2">&quot;constant&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">mu</span><span class="p">))}</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="s2">&quot;negbinom_constant_fallback&quot;</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="s2">&quot;zero variance — all parents have the same child count&quot;</span><span class="p">,</span>
+                    <span class="n">fk_col</span><span class="o">=</span><span class="n">fk_col</span><span class="p">,</span>
+                    <span class="n">value</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">mu</span><span class="p">)),</span>
+                <span class="p">)</span>
+                <span class="k">return</span>
+            <span class="k">if</span> <span class="n">var</span> <span class="o">&lt;=</span> <span class="n">mu</span><span class="p">:</span>
+                <span class="c1"># Underdispersed or Poisson-like — NegBinom is ill-defined</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span> <span class="o">=</span> <span class="s2">&quot;poisson&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;mu&quot;</span><span class="p">:</span> <span class="n">mu</span><span class="p">}</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="s2">&quot;negbinom_poisson_fallback&quot;</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="s2">&quot;variance &lt;= mean — NegBinom ill-defined, using Poisson&quot;</span><span class="p">,</span>
+                    <span class="n">fk_col</span><span class="o">=</span><span class="n">fk_col</span><span class="p">,</span>
+                    <span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span>
+                    <span class="n">var</span><span class="o">=</span><span class="n">var</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">return</span>
+            <span class="k">if</span> <span class="n">mu</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">p</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">/</span> <span class="n">var</span>
                 <span class="n">n</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">*</span> <span class="n">p</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">p</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_nbinom_n</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+                <span class="n">n</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mf">1e6</span><span class="p">),</span> <span class="mf">0.1</span><span class="p">)</span>  <span class="c1"># bound n to avoid numerical explosion</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_nbinom_n</span> <span class="o">=</span> <span class="n">n</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_nbinom_p</span> <span class="o">=</span> <span class="n">p</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                     <span class="s2">&quot;negbinom_fallback_to_empirical&quot;</span><span class="p">,</span>
-                    <span class="n">reason</span><span class="o">=</span><span class="s2">&quot;variance &lt;= mean or mean is zero — NegBinom ill-defined for this data&quot;</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="s2">&quot;mean is zero — NegBinom ill-defined for this data&quot;</span><span class="p">,</span>
                     <span class="n">fk_col</span><span class="o">=</span><span class="n">fk_col</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="s2">&quot;empirical&quot;</span>  <span class="c1"># runtime fallback</span>
@@ -3184,8 +3411,17 @@ with an empirical histogram resampler (default) or optional NegBinom fit.</p>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_observed_counts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;LinkageModel.sample_counts() called before fit()&quot;</span><span class="p">)</span>
         <span class="n">n_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">parent_context</span><span class="p">)</span>
+
+        <span class="c1"># Handle special distribution types from negbinom edge cases</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span> <span class="o">==</span> <span class="s2">&quot;constant&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span> <span class="o">==</span> <span class="s2">&quot;poisson&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;mu&quot;</span><span class="p">],</span> <span class="n">size</span><span class="o">=</span><span class="n">n_samples</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;negbinom&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nbinom_n</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">stats</span>
+
             <span class="n">counts</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">nbinom</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nbinom_n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nbinom_p</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n_samples</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
         <span class="c1"># Default: empirical — draw from observed distribution</span>
@@ -3304,9 +3540,7 @@ with an empirical histogram resampler (default) or optional NegBinom fit.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>syntho_hive/relational/linkage.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">31</span>
 <span class="normal">32</span>
 <span class="normal">33</span>
 <span class="normal">34</span>
@@ -3339,7 +3573,44 @@ with an empirical histogram resampler (default) or optional NegBinom fit.</p>
 <span class="normal">61</span>
 <span class="normal">62</span>
 <span class="normal">63</span>
-<span class="normal">64</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">child_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">fk_col</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pk_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;id&quot;</span><span class="p">):</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span>
+<span class="normal">94</span>
+<span class="normal">95</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">parent_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">child_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">fk_col</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">pk_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;id&quot;</span><span class="p">,</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Fit the distribution of child counts per parent.</span>
 
 <span class="sd">    Counts children per parent, including parents with zero children.</span>
@@ -3353,8 +3624,7 @@ with an empirical histogram resampler (default) or optional NegBinom fit.</p>
     <span class="n">counts</span> <span class="o">=</span> <span class="n">child_df</span><span class="p">[</span><span class="n">fk_col</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
     <span class="n">parent_ids</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">parent_df</span><span class="p">[</span><span class="n">pk_col</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">(),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="n">pk_col</span><span class="p">])</span>
     <span class="n">count_df</span> <span class="o">=</span> <span class="n">parent_ids</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
-        <span class="n">counts</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="s2">&quot;child_count&quot;</span><span class="p">),</span>
-        <span class="n">left_on</span><span class="o">=</span><span class="n">pk_col</span><span class="p">,</span> <span class="n">right_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span>
+        <span class="n">counts</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="s2">&quot;child_count&quot;</span><span class="p">),</span> <span class="n">left_on</span><span class="o">=</span><span class="n">pk_col</span><span class="p">,</span> <span class="n">right_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span>
     <span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">X</span> <span class="o">=</span> <span class="n">count_df</span><span class="p">[</span><span class="s2">&quot;child_count&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">max_children</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
@@ -3363,15 +3633,39 @@ with an empirical histogram resampler (default) or optional NegBinom fit.</p>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;negbinom&quot;</span><span class="p">:</span>
         <span class="n">mu</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
         <span class="n">var</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">var</span><span class="p">())</span>
-        <span class="k">if</span> <span class="n">var</span> <span class="o">&gt;</span> <span class="n">mu</span> <span class="ow">and</span> <span class="n">mu</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">var</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># All parents have the same child count — constant distribution</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span> <span class="o">=</span> <span class="s2">&quot;constant&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">mu</span><span class="p">))}</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;negbinom_constant_fallback&quot;</span><span class="p">,</span>
+                <span class="n">reason</span><span class="o">=</span><span class="s2">&quot;zero variance — all parents have the same child count&quot;</span><span class="p">,</span>
+                <span class="n">fk_col</span><span class="o">=</span><span class="n">fk_col</span><span class="p">,</span>
+                <span class="n">value</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">mu</span><span class="p">)),</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">var</span> <span class="o">&lt;=</span> <span class="n">mu</span><span class="p">:</span>
+            <span class="c1"># Underdispersed or Poisson-like — NegBinom is ill-defined</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span> <span class="o">=</span> <span class="s2">&quot;poisson&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;mu&quot;</span><span class="p">:</span> <span class="n">mu</span><span class="p">}</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;negbinom_poisson_fallback&quot;</span><span class="p">,</span>
+                <span class="n">reason</span><span class="o">=</span><span class="s2">&quot;variance &lt;= mean — NegBinom ill-defined, using Poisson&quot;</span><span class="p">,</span>
+                <span class="n">fk_col</span><span class="o">=</span><span class="n">fk_col</span><span class="p">,</span>
+                <span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span>
+                <span class="n">var</span><span class="o">=</span><span class="n">var</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">mu</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">p</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">/</span> <span class="n">var</span>
             <span class="n">n</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">*</span> <span class="n">p</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">p</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_nbinom_n</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mf">1e6</span><span class="p">),</span> <span class="mf">0.1</span><span class="p">)</span>  <span class="c1"># bound n to avoid numerical explosion</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nbinom_n</span> <span class="o">=</span> <span class="n">n</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_nbinom_p</span> <span class="o">=</span> <span class="n">p</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                 <span class="s2">&quot;negbinom_fallback_to_empirical&quot;</span><span class="p">,</span>
-                <span class="n">reason</span><span class="o">=</span><span class="s2">&quot;variance &lt;= mean or mean is zero — NegBinom ill-defined for this data&quot;</span><span class="p">,</span>
+                <span class="n">reason</span><span class="o">=</span><span class="s2">&quot;mean is zero — NegBinom ill-defined for this data&quot;</span><span class="p">,</span>
                 <span class="n">fk_col</span><span class="o">=</span><span class="n">fk_col</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="s2">&quot;empirical&quot;</span>  <span class="c1"># runtime fallback</span>
@@ -3476,27 +3770,36 @@ with an empirical histogram resampler (default) or optional NegBinom fit.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>syntho_hive/relational/linkage.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span>
-<span class="normal">74</span>
-<span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span>
-<span class="normal">78</span>
-<span class="normal">79</span>
-<span class="normal">80</span>
-<span class="normal">81</span>
-<span class="normal">82</span>
-<span class="normal">83</span>
-<span class="normal">84</span>
-<span class="normal">85</span>
-<span class="normal">86</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">sample_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_context</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">sample_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_context</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Sample child counts for a set of parents.</span>
 
 <span class="sd">    Args:</span>
@@ -3511,8 +3814,17 @@ with an empirical histogram resampler (default) or optional NegBinom fit.</p>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_observed_counts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;LinkageModel.sample_counts() called before fit()&quot;</span><span class="p">)</span>
     <span class="n">n_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">parent_context</span><span class="p">)</span>
+
+    <span class="c1"># Handle special distribution types from negbinom edge cases</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span> <span class="o">==</span> <span class="s2">&quot;constant&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span> <span class="o">==</span> <span class="s2">&quot;poisson&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;mu&quot;</span><span class="p">],</span> <span class="n">size</span><span class="o">=</span><span class="n">n_samples</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;negbinom&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nbinom_n</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">stats</span>
+
         <span class="n">counts</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">nbinom</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nbinom_n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nbinom_p</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n_samples</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
     <span class="c1"># Default: empirical — draw from observed distribution</span>
@@ -3558,8 +3870,7 @@ with an empirical histogram resampler (default) or optional NegBinom fit.</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>syntho_hive/relational/graph.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 4</span>
-<span class="normal"> 5</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 5</span>
 <span class="normal"> 6</span>
 <span class="normal"> 7</span>
 <span class="normal"> 8</span>
@@ -3624,8 +3935,11 @@ with an empirical histogram resampler (default) or optional NegBinom fit.</p>
 <span class="normal">67</span>
 <span class="normal">68</span>
 <span class="normal">69</span>
-<span class="normal">70</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SchemaGraph</span><span class="p">:</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SchemaGraph</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;DAG representation of table dependencies derived from metadata.&quot;&quot;&quot;</span>
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Metadata</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a dependency graph from table metadata.</span>
 
@@ -3645,7 +3959,7 @@ with an empirical histogram resampler (default) or optional NegBinom fit.</p>
             <span class="k">for</span> <span class="n">ref_col</span><span class="p">,</span> <span class="n">ref_path</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">fk</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="n">parent_table</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">ref_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
                 <span class="c1"># Dependency: Parent -&gt; Child (we generate Parent first)</span>
-                <span class="k">if</span> <span class="n">parent_table</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">adj_list</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">parent_table</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">adj_list</span> <span class="ow">and</span> <span class="n">parent_table</span> <span class="o">!=</span> <span class="n">table_name</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">adj_list</span><span class="p">[</span><span class="n">parent_table</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_generation_order</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
@@ -3676,7 +3990,7 @@ with an empirical histogram resampler (default) or optional NegBinom fit.</p>
             <span class="c1"># Visit Parent, allow it to finish, add to stack? No.</span>
             <span class="c1"># If A -&gt; B (A is parent of B).</span>
             <span class="c1"># We want [A, B].</span>
-            <span class="c1"># Normal DFS topo sort on A -&gt; B puts B on stack, then A. Stack: [A, B] (LIFO) -&gt; Pop A, Pop B. </span>
+            <span class="c1"># Normal DFS topo sort on A -&gt; B puts B on stack, then A. Stack: [A, B] (LIFO) -&gt; Pop A, Pop B.</span>
             <span class="c1"># Yes, standard topological sort on (Parent -&gt; Child) edges returns [Parent, Child].</span>
 
             <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">adj_list</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="p">[]):</span>
@@ -3690,7 +4004,7 @@ with an empirical histogram resampler (default) or optional NegBinom fit.</p>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adj_list</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
             <span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">stack</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># Reverse stack to get topological order</span>
+        <span class="k">return</span> <span class="n">stack</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># Reverse stack to get topological order</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -3771,9 +4085,7 @@ with an empirical histogram resampler (default) or optional NegBinom fit.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>syntho_hive/relational/graph.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">30</span>
 <span class="normal">31</span>
 <span class="normal">32</span>
 <span class="normal">33</span>
@@ -3813,7 +4125,9 @@ with an empirical histogram resampler (default) or optional NegBinom fit.</p>
 <span class="normal">67</span>
 <span class="normal">68</span>
 <span class="normal">69</span>
-<span class="normal">70</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_generation_order</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_generation_order</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a topologically sorted list of tables.</span>
 
 <span class="sd">    Returns:</span>
@@ -3841,7 +4155,7 @@ with an empirical histogram resampler (default) or optional NegBinom fit.</p>
         <span class="c1"># Visit Parent, allow it to finish, add to stack? No.</span>
         <span class="c1"># If A -&gt; B (A is parent of B).</span>
         <span class="c1"># We want [A, B].</span>
-        <span class="c1"># Normal DFS topo sort on A -&gt; B puts B on stack, then A. Stack: [A, B] (LIFO) -&gt; Pop A, Pop B. </span>
+        <span class="c1"># Normal DFS topo sort on A -&gt; B puts B on stack, then A. Stack: [A, B] (LIFO) -&gt; Pop A, Pop B.</span>
         <span class="c1"># Yes, standard topological sort on (Parent -&gt; Child) edges returns [Parent, Child].</span>
 
         <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">adj_list</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="p">[]):</span>
@@ -3855,7 +4169,7 @@ with an empirical histogram resampler (default) or optional NegBinom fit.</p>
     <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adj_list</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
         <span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">stack</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># Reverse stack to get topological order</span>
+    <span class="k">return</span> <span class="n">stack</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># Reverse stack to get topological order</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>

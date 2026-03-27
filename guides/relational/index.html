@@ -1612,16 +1612,18 @@
 </ol>
 <h2 id="the-orchestration-flow">The Orchestration Flow<a class="headerlink" href="#the-orchestration-flow" title="Permanent link">&para;</a></h2>
 <ol>
-<li><strong>Schema Analysis</strong>: <code>SchemaGraph</code> constructs a Directed Acyclic Graph (DAG) of the schema from FK definitions.</li>
+<li><strong>Schema Validation</strong>: <code>validate_schema()</code> is called at the start of <code>fit_all()</code> to detect type mismatches, missing FK columns, and invalid references before training begins.</li>
+<li><strong>Schema Analysis</strong>: <code>SchemaGraph</code> constructs a Directed Acyclic Graph (DAG) of the schema from FK definitions. Self-referencing foreign keys (e.g., <code>manager_id -&gt; employees.id</code>) are correctly recognized and do not raise false cycle errors.</li>
 <li><strong>Topological Sort</strong>: <code>get_generation_order()</code> determines generation order (Parents -&gt; Children).</li>
 <li><strong>Root Generation</strong>: Generate independent root tables using standard CTGAN.</li>
 <li><strong>Child Loop</strong>:<ul>
 <li>Load synthetic parent data.</li>
 <li>Sample child counts for each parent row via <code>LinkageModel</code>.</li>
-<li>Repeat parent IDs and Context attributes.</li>
+<li>Repeat parent IDs and Context attributes (validated to exist in the parent table).</li>
 <li>Generate child rows conditioned on repeated context.</li>
 <li>Sample valid FKs for secondary parents.</li>
-<li>Assign sequential Primary Keys.</li>
+<li>Assign sequential Primary Keys based on actual generated row count.</li>
+<li>Zero child rows produce an empty DataFrame rather than being silently skipped.</li>
 </ul>
 </li>
 </ol>
@@ -1693,7 +1695,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 26, 2026 20:53:45 UTC">March 26, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 27, 2026 18:16:03 UTC">March 27, 2026</span>
   </span>
 
     

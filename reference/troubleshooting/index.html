@@ -1375,6 +1375,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -1391,6 +1409,58 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#general" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        General
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exception-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exception Types
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-issues-fixed-in-v140" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Issues Fixed in v1.4.0
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1452,13 +1522,67 @@
 
 
 <h1 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h1>
+<h2 id="general">General<a class="headerlink" href="#general" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Spark not found</strong>: Ensure <code>pyspark</code> is installed and <code>SPARK_HOME</code> is set. For local-only runs, some demos may be limited.</li>
 <li><strong>Delta support</strong>: Install <code>delta-spark</code> and use Spark 3.2+.</li>
 <li><strong>GPU vs CPU</strong>: CTGAN runs on CPU by default; set <code>device="cuda"</code> when available.</li>
 <li><strong>High-cardinality categoricals</strong>: Increase <code>embedding_threshold</code> to use embeddings instead of OHE.</li>
 <li><strong>Validation failures</strong>: Inspect KS/TVD results; large TVD often means categorical imbalance—check sampling strategy or increase training epochs.</li>
-<li><strong>Doc build errors</strong>: Run <code>pip install -e .[docs]</code>; ensure <code>mkdocs</code> and <code>mkdocstrings</code> are installed. </li>
+<li><strong>Doc build errors</strong>: Run <code>pip install -e .[docs]</code>; ensure <code>mkdocs</code> and <code>mkdocstrings</code> are installed.</li>
+</ul>
+<h2 id="exception-types">Exception Types<a class="headerlink" href="#exception-types" title="Permanent link">&para;</a></h2>
+<p>SynthoHive uses a typed exception hierarchy. Catch specific exceptions for targeted error handling:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Exception</th>
+<th style="text-align: left;">When raised</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>SynthoHiveError</code></td>
+<td style="text-align: left;">Base class for all SynthoHive errors.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>SchemaError</code></td>
+<td style="text-align: left;">Invalid metadata, missing FK definitions, invalid identifiers. Raised by <code>Metadata.add_table()</code> (previously raised <code>ValueError</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>SchemaValidationError</code></td>
+<td style="text-align: left;">FK type mismatches, missing FK columns, or invalid FK references detected during <code>validate_schema()</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>TrainingError</code></td>
+<td style="text-align: left;">NaN loss, training divergence, GPU OOM during <code>fit()</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>SerializationError</code></td>
+<td style="text-align: left;">Save/load failures, corrupt or incompatible checkpoints.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ConstraintViolationError</code></td>
+<td style="text-align: left;">Generated data violates numeric constraints when <code>enforce_constraints=True</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>GenerationError</code></td>
+<td style="text-align: left;">Synthesis failures during <code>sample()</code> or orchestration. <em>(New in v1.4.0)</em></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>PrivacyError</code></td>
+<td style="text-align: left;">PII sanitization failures (e.g., invalid <code>pii_map</code> columns). <em>(New in v1.4.0)</em></td>
+</tr>
+</tbody>
+</table>
+<h2 id="common-issues-fixed-in-v140">Common Issues Fixed in v1.4.0<a class="headerlink" href="#common-issues-fixed-in-v140" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Self-referencing FKs cause cycle error</strong>: Self-referencing foreign keys (e.g., <code>manager_id -&gt; employees.id</code>) are now handled correctly and no longer raise false cycle detection errors.</li>
+<li><strong>Re-fitting a DataTransformer produces corrupt output</strong>: <code>DataTransformer.fit()</code> now resets internal state on re-fit. If you experienced stale data after calling <code>fit()</code> multiple times on different datasets, upgrade to v1.4.0.</li>
+<li><strong>All-null numeric column crashes BayesianGMM</strong>: Columns that are entirely null are now represented as constants instead of crashing the GMM fitter.</li>
+<li><strong>PII detection false positives</strong>: Default regex patterns are now fully anchored. If you previously saw columns incorrectly flagged as PII, this should be resolved.</li>
+<li><strong><code>write_pandas</code> appends instead of overwriting</strong>: The default mode is now <code>"overwrite"</code>. If you relied on append behavior, pass <code>mode="append"</code> explicitly.</li>
+<li><strong><code>PrivacyConfig.epsilon</code> accepts zero or negative values</strong>: Epsilon is now validated to be a positive number. Update any configurations that used <code>epsilon=0</code>.</li>
 </ul>
 
 
@@ -1480,7 +1604,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 13, 2025 03:01:14 UTC">December 13, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 27, 2026 18:16:03 UTC">March 27, 2026</span>
   </span>
 
     

@@ -1595,68 +1595,98 @@
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>syntho_hive/connectors/spark_io.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SparkIO</span><span class="p">:</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SparkIO</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Utility for reading and writing datasets via Spark and Delta Lake.&quot;&quot;&quot;</span>
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spark</span><span class="p">:</span> <span class="n">SparkSession</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the IO helper.</span>
 
@@ -1665,7 +1695,12 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">spark</span> <span class="o">=</span> <span class="n">spark</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">read_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_or_table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">read_dataset</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">path_or_table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Read a dataset from a table name or filesystem path.</span>
 
 <span class="sd">        Args:</span>
@@ -1677,12 +1712,22 @@
 <span class="sd">            Spark DataFrame loaded from the specified source.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Simple heuristic</span>
-        <span class="k">if</span> <span class="s2">&quot;/&quot;</span> <span class="ow">in</span> <span class="n">path_or_table</span> <span class="ow">or</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span> <span class="ow">in</span> <span class="n">path_or_table</span> <span class="ow">or</span> <span class="n">path_or_table</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;file://&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="s2">&quot;/&quot;</span> <span class="ow">in</span> <span class="n">path_or_table</span>
+            <span class="ow">or</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span> <span class="ow">in</span> <span class="n">path_or_table</span>
+            <span class="ow">or</span> <span class="n">path_or_table</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;file://&quot;</span><span class="p">)</span>
+        <span class="p">):</span>
             <span class="k">if</span> <span class="nb">format</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">format</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path_or_table</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">path_or_table</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">):</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;csv&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;header&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;inferSchema&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;multiLine&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path_or_table</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">return</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;csv&quot;</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;header&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;inferSchema&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;multiLine&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path_or_table</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="p">)</span>
             <span class="k">elif</span> <span class="n">path_or_table</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.parquet&quot;</span><span class="p">):</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path_or_table</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -1690,7 +1735,14 @@
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path_or_table</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">path_or_table</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">write_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">target_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;overwrite&quot;</span><span class="p">,</span> <span class="n">partition_by</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;parquet&quot;</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_dataset</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">target_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;overwrite&quot;</span><span class="p">,</span>
+        <span class="n">partition_by</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;parquet&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Write a Spark DataFrame to storage.</span>
 
 <span class="sd">        Args:</span>
@@ -1705,13 +1757,19 @@
             <span class="n">writer</span> <span class="o">=</span> <span class="n">writer</span><span class="o">.</span><span class="n">partitionBy</span><span class="p">(</span><span class="n">partition_by</span><span class="p">)</span>
         <span class="n">writer</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">target_path</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">write_pandas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pdf</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">target_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;append&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;parquet&quot;</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_pandas</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">pdf</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">target_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;overwrite&quot;</span><span class="p">,</span>
+        <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;parquet&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Write a Pandas DataFrame using Spark-backed persistence.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            pdf: Pandas DataFrame to persist.</span>
 <span class="sd">            target_path: Output path for the written dataset.</span>
-<span class="sd">            mode: Save mode for Spark writer (default ``&quot;append&quot;``).</span>
+<span class="sd">            mode: Save mode for Spark writer (default ``&quot;overwrite&quot;``).</span>
 <span class="sd">            format: Storage format, defaults to ``&quot;parquet&quot;``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">sdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">pdf</span><span class="p">)</span>
@@ -1836,10 +1894,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>syntho_hive/connectors/spark_io.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">26</span>
 <span class="normal">27</span>
 <span class="normal">28</span>
 <span class="normal">29</span>
@@ -1859,7 +1914,30 @@
 <span class="normal">43</span>
 <span class="normal">44</span>
 <span class="normal">45</span>
-<span class="normal">46</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">read_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_or_table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">read_dataset</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">path_or_table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Read a dataset from a table name or filesystem path.</span>
 
 <span class="sd">    Args:</span>
@@ -1871,12 +1949,22 @@
 <span class="sd">        Spark DataFrame loaded from the specified source.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Simple heuristic</span>
-    <span class="k">if</span> <span class="s2">&quot;/&quot;</span> <span class="ow">in</span> <span class="n">path_or_table</span> <span class="ow">or</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span> <span class="ow">in</span> <span class="n">path_or_table</span> <span class="ow">or</span> <span class="n">path_or_table</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;file://&quot;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="s2">&quot;/&quot;</span> <span class="ow">in</span> <span class="n">path_or_table</span>
+        <span class="ow">or</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span> <span class="ow">in</span> <span class="n">path_or_table</span>
+        <span class="ow">or</span> <span class="n">path_or_table</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;file://&quot;</span><span class="p">)</span>
+    <span class="p">):</span>
         <span class="k">if</span> <span class="nb">format</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">format</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path_or_table</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">path_or_table</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;csv&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;header&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;inferSchema&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;multiLine&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path_or_table</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;csv&quot;</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;header&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;inferSchema&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;multiLine&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path_or_table</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="p">)</span>
         <span class="k">elif</span> <span class="n">path_or_table</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.parquet&quot;</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path_or_table</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -2002,20 +2090,34 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>syntho_hive/connectors/spark_io.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">write_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">target_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;overwrite&quot;</span><span class="p">,</span> <span class="n">partition_by</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;parquet&quot;</span><span class="p">):</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">write_dataset</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">target_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;overwrite&quot;</span><span class="p">,</span>
+    <span class="n">partition_by</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;parquet&quot;</span><span class="p">,</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Write a Spark DataFrame to storage.</span>
 
 <span class="sd">    Args:</span>
@@ -2043,7 +2145,7 @@
 
 
 <a href="#syntho_hive.connectors.spark_io.SparkIO.write_pandas" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">write_pandas</span><span class="p">(</span><span class="n">pdf</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">target_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;append&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;parquet&#39;</span><span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">write_pandas</span><span class="p">(</span><span class="n">pdf</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">target_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;overwrite&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;parquet&#39;</span><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2103,11 +2205,11 @@
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Save mode for Spark writer (default <code>"append"</code>).</p>
+                <p>Save mode for Spark writer (default <code>"overwrite"</code>).</p>
               </div>
             </td>
             <td>
-                  <code>&#39;append&#39;</code>
+                  <code>&#39;overwrite&#39;</code>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -2132,23 +2234,35 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>syntho_hive/connectors/spark_io.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">write_pandas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pdf</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">target_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;append&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;parquet&quot;</span><span class="p">):</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">write_pandas</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">pdf</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">target_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;overwrite&quot;</span><span class="p">,</span>
+    <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;parquet&quot;</span><span class="p">,</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Write a Pandas DataFrame using Spark-backed persistence.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        pdf: Pandas DataFrame to persist.</span>
 <span class="sd">        target_path: Output path for the written dataset.</span>
-<span class="sd">        mode: Save mode for Spark writer (default ``&quot;append&quot;``).</span>
+<span class="sd">        mode: Save mode for Spark writer (default ``&quot;overwrite&quot;``).</span>
 <span class="sd">        format: Storage format, defaults to ``&quot;parquet&quot;``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">sdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">pdf</span><span class="p">)</span>
@@ -2193,75 +2307,93 @@
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>syntho_hive/connectors/sampling.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span>
-<span class="normal">74</span>
-<span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span>
-<span class="normal">78</span>
-<span class="normal">79</span>
-<span class="normal">80</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">RelationalSampler</span><span class="p">:</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 14</span>
+<span class="normal"> 15</span>
+<span class="normal"> 16</span>
+<span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">RelationalSampler</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Relational stratified sampler for parent-child table hierarchies.&quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Metadata</span><span class="p">,</span> <span class="n">spark</span><span class="p">:</span> <span class="n">SparkSession</span><span class="p">):</span>
@@ -2275,10 +2407,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">spark</span> <span class="o">=</span> <span class="n">spark</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">sample_relational</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> 
-        <span class="n">root_table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> 
-        <span class="n">sample_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> 
-        <span class="n">stratify_by</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">root_table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">sample_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">stratify_by</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Sample a root table and cascade the sample to child tables.</span>
 
@@ -2299,35 +2428,56 @@
 
         <span class="k">if</span> <span class="n">stratify_by</span><span class="p">:</span>
             <span class="c1"># Approximate stratified sampling</span>
-            <span class="n">fractions</span> <span class="o">=</span> <span class="n">root_df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">stratify_by</span><span class="p">)</span><span class="o">.</span><span class="n">distinct</span><span class="p">()</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">&quot;fraction&quot;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mf">0.1</span><span class="p">))</span><span class="o">.</span><span class="n">rdd</span><span class="o">.</span><span class="n">collectAsMap</span><span class="p">()</span> 
+            <span class="n">fractions</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">root_df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">stratify_by</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">distinct</span><span class="p">()</span>
+                <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">&quot;fraction&quot;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mf">0.1</span><span class="p">))</span>
+                <span class="o">.</span><span class="n">rdd</span><span class="o">.</span><span class="n">collectAsMap</span><span class="p">()</span>
+            <span class="p">)</span>
             <span class="c1"># Note: fractions logic needs to be calculated based on sample_size / total_count</span>
             <span class="n">sampled_root</span> <span class="o">=</span> <span class="n">root_df</span><span class="o">.</span><span class="n">sampleBy</span><span class="p">(</span><span class="n">stratify_by</span><span class="p">,</span> <span class="n">fractions</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">fraction</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">sample_size</span> <span class="o">/</span> <span class="n">root_df</span><span class="o">.</span><span class="n">count</span><span class="p">())</span>
-            <span class="n">sampled_root</span> <span class="o">=</span> <span class="n">root_df</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">withReplacement</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="n">fraction</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+            <span class="n">sampled_root</span> <span class="o">=</span> <span class="n">root_df</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>
+                <span class="n">withReplacement</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="n">fraction</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span>
+            <span class="p">)</span>
 
         <span class="n">sampled_data</span><span class="p">[</span><span class="n">root_table</span><span class="p">]</span> <span class="o">=</span> <span class="n">sampled_root</span>
 
-        <span class="c1"># 2. Cascade to Children</span>
-        <span class="c1"># Simple BFS or using Graph</span>
-        <span class="n">parent_pk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">root_table</span><span class="p">)</span><span class="o">.</span><span class="n">pk</span>
+        <span class="c1"># 2. Cascade to Children using BFS for multi-level hierarchies</span>
+        <span class="n">tables_to_process</span> <span class="o">=</span> <span class="p">[</span><span class="n">root_table</span><span class="p">]</span>
+        <span class="n">processed</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
-        <span class="c1"># Find children</span>
-        <span class="k">for</span> <span class="n">child_name</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">for</span> <span class="n">child_col</span><span class="p">,</span> <span class="n">parent_ref</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">fk</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">parent_ref</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">root_table</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">):</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cascading sample to child: </span><span class="si">{</span><span class="n">child_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                    <span class="n">child_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">child_name</span><span class="p">)</span>
+        <span class="k">while</span> <span class="n">tables_to_process</span><span class="p">:</span>
+            <span class="n">current</span> <span class="o">=</span> <span class="n">tables_to_process</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">current</span> <span class="ow">in</span> <span class="n">processed</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">processed</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
 
-                    <span class="c1"># Semijoin</span>
-                    <span class="c1"># Join on PK-FK to keep only rows matching sampled parents</span>
-                    <span class="n">sampled_child</span> <span class="o">=</span> <span class="n">child_df</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                        <span class="n">sampled_root</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">parent_pk</span><span class="p">),</span>
-                        <span class="n">child_df</span><span class="p">[</span><span class="n">child_col</span><span class="p">]</span> <span class="o">==</span> <span class="n">sampled_root</span><span class="p">[</span><span class="n">parent_pk</span><span class="p">],</span>
-                        <span class="s2">&quot;inner&quot;</span>
-                    <span class="p">)</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">child_df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="c1"># Keep only child cols</span>
+            <span class="n">current_pk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">current</span><span class="p">)</span><span class="o">.</span><span class="n">pk</span>
+            <span class="n">current_sampled</span> <span class="o">=</span> <span class="n">sampled_data</span><span class="p">[</span><span class="n">current</span><span class="p">]</span>
 
-                    <span class="n">sampled_data</span><span class="p">[</span><span class="n">child_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">sampled_child</span>
+            <span class="c1"># Find children of the current table</span>
+            <span class="k">for</span> <span class="n">child_name</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">child_name</span> <span class="ow">in</span> <span class="n">processed</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">for</span> <span class="n">child_col</span><span class="p">,</span> <span class="n">parent_ref</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">fk</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">parent_table</span> <span class="o">=</span> <span class="n">parent_ref</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">parent_table</span> <span class="o">==</span> <span class="n">current</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cascading sample to child: </span><span class="si">{</span><span class="n">child_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="n">child_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">child_name</span><span class="p">)</span>
+
+                        <span class="c1"># Semi-join: keep only child rows matching sampled parent PKs</span>
+                        <span class="c1"># without introducing ambiguous duplicate columns</span>
+                        <span class="n">child_sampled</span> <span class="o">=</span> <span class="n">child_df</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                            <span class="n">current_sampled</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">current_pk</span><span class="p">)</span><span class="o">.</span><span class="n">distinct</span><span class="p">(),</span>
+                            <span class="n">child_df</span><span class="p">[</span><span class="n">child_col</span><span class="p">]</span> <span class="o">==</span> <span class="n">current_sampled</span><span class="p">[</span><span class="n">current_pk</span><span class="p">],</span>
+                            <span class="s2">&quot;left_semi&quot;</span><span class="p">,</span>
+                        <span class="p">)</span>
+
+                        <span class="n">sampled_data</span><span class="p">[</span><span class="n">child_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">child_sampled</span>
+                        <span class="n">tables_to_process</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child_name</span><span class="p">)</span>
+                        <span class="k">break</span>  <span class="c1"># Only process the first FK match per child table</span>
 
         <span class="k">return</span> <span class="n">sampled_data</span>
 </code></pre></div></td></tr></table></div>
@@ -2450,66 +2600,81 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>syntho_hive/connectors/sampling.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span>
-<span class="normal">74</span>
-<span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span>
-<span class="normal">78</span>
-<span class="normal">79</span>
-<span class="normal">80</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">sample_relational</span><span class="p">(</span>
-    <span class="bp">self</span><span class="p">,</span> 
-    <span class="n">root_table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> 
-    <span class="n">sample_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> 
-    <span class="n">stratify_by</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">sample_relational</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span> <span class="n">root_table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">sample_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">stratify_by</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Sample a root table and cascade the sample to child tables.</span>
 
@@ -2530,35 +2695,56 @@
 
     <span class="k">if</span> <span class="n">stratify_by</span><span class="p">:</span>
         <span class="c1"># Approximate stratified sampling</span>
-        <span class="n">fractions</span> <span class="o">=</span> <span class="n">root_df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">stratify_by</span><span class="p">)</span><span class="o">.</span><span class="n">distinct</span><span class="p">()</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">&quot;fraction&quot;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mf">0.1</span><span class="p">))</span><span class="o">.</span><span class="n">rdd</span><span class="o">.</span><span class="n">collectAsMap</span><span class="p">()</span> 
+        <span class="n">fractions</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">root_df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">stratify_by</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">distinct</span><span class="p">()</span>
+            <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">&quot;fraction&quot;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mf">0.1</span><span class="p">))</span>
+            <span class="o">.</span><span class="n">rdd</span><span class="o">.</span><span class="n">collectAsMap</span><span class="p">()</span>
+        <span class="p">)</span>
         <span class="c1"># Note: fractions logic needs to be calculated based on sample_size / total_count</span>
         <span class="n">sampled_root</span> <span class="o">=</span> <span class="n">root_df</span><span class="o">.</span><span class="n">sampleBy</span><span class="p">(</span><span class="n">stratify_by</span><span class="p">,</span> <span class="n">fractions</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">fraction</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">sample_size</span> <span class="o">/</span> <span class="n">root_df</span><span class="o">.</span><span class="n">count</span><span class="p">())</span>
-        <span class="n">sampled_root</span> <span class="o">=</span> <span class="n">root_df</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">withReplacement</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="n">fraction</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+        <span class="n">sampled_root</span> <span class="o">=</span> <span class="n">root_df</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>
+            <span class="n">withReplacement</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="n">fraction</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span>
+        <span class="p">)</span>
 
     <span class="n">sampled_data</span><span class="p">[</span><span class="n">root_table</span><span class="p">]</span> <span class="o">=</span> <span class="n">sampled_root</span>
 
-    <span class="c1"># 2. Cascade to Children</span>
-    <span class="c1"># Simple BFS or using Graph</span>
-    <span class="n">parent_pk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">root_table</span><span class="p">)</span><span class="o">.</span><span class="n">pk</span>
+    <span class="c1"># 2. Cascade to Children using BFS for multi-level hierarchies</span>
+    <span class="n">tables_to_process</span> <span class="o">=</span> <span class="p">[</span><span class="n">root_table</span><span class="p">]</span>
+    <span class="n">processed</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
-    <span class="c1"># Find children</span>
-    <span class="k">for</span> <span class="n">child_name</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="k">for</span> <span class="n">child_col</span><span class="p">,</span> <span class="n">parent_ref</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">fk</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">parent_ref</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">root_table</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">):</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cascading sample to child: </span><span class="si">{</span><span class="n">child_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="n">child_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">child_name</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">tables_to_process</span><span class="p">:</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="n">tables_to_process</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">current</span> <span class="ow">in</span> <span class="n">processed</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">processed</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
 
-                <span class="c1"># Semijoin</span>
-                <span class="c1"># Join on PK-FK to keep only rows matching sampled parents</span>
-                <span class="n">sampled_child</span> <span class="o">=</span> <span class="n">child_df</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                    <span class="n">sampled_root</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">parent_pk</span><span class="p">),</span>
-                    <span class="n">child_df</span><span class="p">[</span><span class="n">child_col</span><span class="p">]</span> <span class="o">==</span> <span class="n">sampled_root</span><span class="p">[</span><span class="n">parent_pk</span><span class="p">],</span>
-                    <span class="s2">&quot;inner&quot;</span>
-                <span class="p">)</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">child_df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="c1"># Keep only child cols</span>
+        <span class="n">current_pk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">current</span><span class="p">)</span><span class="o">.</span><span class="n">pk</span>
+        <span class="n">current_sampled</span> <span class="o">=</span> <span class="n">sampled_data</span><span class="p">[</span><span class="n">current</span><span class="p">]</span>
 
-                <span class="n">sampled_data</span><span class="p">[</span><span class="n">child_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">sampled_child</span>
+        <span class="c1"># Find children of the current table</span>
+        <span class="k">for</span> <span class="n">child_name</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">child_name</span> <span class="ow">in</span> <span class="n">processed</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">child_col</span><span class="p">,</span> <span class="n">parent_ref</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">fk</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">parent_table</span> <span class="o">=</span> <span class="n">parent_ref</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">parent_table</span> <span class="o">==</span> <span class="n">current</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cascading sample to child: </span><span class="si">{</span><span class="n">child_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">child_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">child_name</span><span class="p">)</span>
+
+                    <span class="c1"># Semi-join: keep only child rows matching sampled parent PKs</span>
+                    <span class="c1"># without introducing ambiguous duplicate columns</span>
+                    <span class="n">child_sampled</span> <span class="o">=</span> <span class="n">child_df</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                        <span class="n">current_sampled</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">current_pk</span><span class="p">)</span><span class="o">.</span><span class="n">distinct</span><span class="p">(),</span>
+                        <span class="n">child_df</span><span class="p">[</span><span class="n">child_col</span><span class="p">]</span> <span class="o">==</span> <span class="n">current_sampled</span><span class="p">[</span><span class="n">current_pk</span><span class="p">],</span>
+                        <span class="s2">&quot;left_semi&quot;</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+                    <span class="n">sampled_data</span><span class="p">[</span><span class="n">child_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">child_sampled</span>
+                    <span class="n">tables_to_process</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child_name</span><span class="p">)</span>
+                    <span class="k">break</span>  <span class="c1"># Only process the first FK match per child table</span>
 
     <span class="k">return</span> <span class="n">sampled_data</span>
 </code></pre></div></td></tr></table></div>

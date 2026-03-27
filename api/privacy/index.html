@@ -1669,55 +1669,7 @@
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>syntho_hive/privacy/sanitizer.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 33</span>
-<span class="normal"> 34</span>
-<span class="normal"> 35</span>
-<span class="normal"> 36</span>
-<span class="normal"> 37</span>
-<span class="normal"> 38</span>
-<span class="normal"> 39</span>
-<span class="normal"> 40</span>
-<span class="normal"> 41</span>
-<span class="normal"> 42</span>
-<span class="normal"> 43</span>
-<span class="normal"> 44</span>
-<span class="normal"> 45</span>
-<span class="normal"> 46</span>
-<span class="normal"> 47</span>
-<span class="normal"> 48</span>
-<span class="normal"> 49</span>
-<span class="normal"> 50</span>
-<span class="normal"> 51</span>
-<span class="normal"> 52</span>
-<span class="normal"> 53</span>
-<span class="normal"> 54</span>
-<span class="normal"> 55</span>
-<span class="normal"> 56</span>
-<span class="normal"> 57</span>
-<span class="normal"> 58</span>
-<span class="normal"> 59</span>
-<span class="normal"> 60</span>
-<span class="normal"> 61</span>
-<span class="normal"> 62</span>
-<span class="normal"> 63</span>
-<span class="normal"> 64</span>
-<span class="normal"> 65</span>
-<span class="normal"> 66</span>
-<span class="normal"> 67</span>
-<span class="normal"> 68</span>
-<span class="normal"> 69</span>
-<span class="normal"> 70</span>
-<span class="normal"> 71</span>
-<span class="normal"> 72</span>
-<span class="normal"> 73</span>
-<span class="normal"> 74</span>
-<span class="normal"> 75</span>
-<span class="normal"> 76</span>
-<span class="normal"> 77</span>
-<span class="normal"> 78</span>
-<span class="normal"> 79</span>
-<span class="normal"> 80</span>
-<span class="normal"> 81</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 81</span>
 <span class="normal"> 82</span>
 <span class="normal"> 83</span>
 <span class="normal"> 84</span>
@@ -1814,8 +1766,103 @@
 <span class="normal">175</span>
 <span class="normal">176</span>
 <span class="normal">177</span>
-<span class="normal">178</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PIISanitizer</span><span class="p">:</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PIISanitizer</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Detect and sanitize PII columns based on configurable rules.&quot;&quot;&quot;</span>
+
+    <span class="n">COLUMN_NAME_ALIASES</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;e_mail&quot;</span><span class="p">,</span> <span class="s2">&quot;email_address&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;ssn&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ssn&quot;</span><span class="p">,</span> <span class="s2">&quot;social_security&quot;</span><span class="p">,</span> <span class="s2">&quot;social_sec&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;phone&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;phone&quot;</span><span class="p">,</span> <span class="s2">&quot;mobile&quot;</span><span class="p">,</span> <span class="s2">&quot;cell&quot;</span><span class="p">,</span> <span class="s2">&quot;tel&quot;</span><span class="p">,</span> <span class="s2">&quot;telephone&quot;</span><span class="p">,</span> <span class="s2">&quot;phone_number&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;first_name&quot;</span><span class="p">,</span> <span class="s2">&quot;last_name&quot;</span><span class="p">,</span> <span class="s2">&quot;full_name&quot;</span><span class="p">,</span> <span class="s2">&quot;firstname&quot;</span><span class="p">,</span> <span class="s2">&quot;lastname&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;address&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;address&quot;</span><span class="p">,</span> <span class="s2">&quot;street&quot;</span><span class="p">,</span> <span class="s2">&quot;city&quot;</span><span class="p">,</span> <span class="s2">&quot;zip&quot;</span><span class="p">,</span> <span class="s2">&quot;zipcode&quot;</span><span class="p">,</span> <span class="s2">&quot;postal&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;date_of_birth&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dob&quot;</span><span class="p">,</span> <span class="s2">&quot;date_of_birth&quot;</span><span class="p">,</span> <span class="s2">&quot;birth_date&quot;</span><span class="p">,</span> <span class="s2">&quot;birthday&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;credit_card&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;credit_card&quot;</span><span class="p">,</span> <span class="s2">&quot;card_number&quot;</span><span class="p">,</span> <span class="s2">&quot;cc_num&quot;</span><span class="p">,</span> <span class="s2">&quot;card_num&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PrivacyConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a sanitizer with contextual faker support.</span>
@@ -1825,6 +1872,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">PrivacyConfig</span><span class="o">.</span><span class="n">default</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">faker</span> <span class="o">=</span> <span class="n">ContextualFaker</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hash_salt</span> <span class="o">=</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_bytes</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Detect potential PII columns using configured rules.</span>
@@ -1837,17 +1885,26 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">detected</span> <span class="o">=</span> <span class="p">{}</span>
 
-        <span class="c1"># 1. Check column names (heuristics)</span>
+        <span class="c1"># 1. Check column names using alias-based heuristics</span>
         <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
             <span class="n">col_lower</span> <span class="o">=</span> <span class="n">col</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">rules</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">rule</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">col_lower</span><span class="p">:</span>
-                    <span class="n">detected</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">rule</span><span class="o">.</span><span class="n">name</span>
+                <span class="n">aliases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">COLUMN_NAME_ALIASES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">rule</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">[</span><span class="n">rule</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">alias</span> <span class="ow">in</span> <span class="n">aliases</span><span class="p">:</span>
+                    <span class="c1"># Use word-boundary-like matching: check if alias matches the</span>
+                    <span class="c1"># full column name or appears as a delimited token within it.</span>
+                    <span class="k">if</span> <span class="n">col_lower</span> <span class="o">==</span> <span class="n">alias</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span>
+                        <span class="sa">r</span><span class="s2">&quot;(?:^|[_\-\s])&quot;</span> <span class="o">+</span> <span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">alias</span><span class="p">)</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;(?:$|[_\-\s])&quot;</span><span class="p">,</span>
+                        <span class="n">col_lower</span><span class="p">,</span>
+                    <span class="p">):</span>
+                        <span class="n">detected</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">rule</span><span class="o">.</span><span class="n">name</span>
+                        <span class="k">break</span>
+                <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">detected</span><span class="p">:</span>
                     <span class="k">break</span>
 
         <span class="c1"># 2. Check content for remaining columns</span>
-        <span class="c1"># Sample first 100 rows (or all if small) to speed up</span>
-        <span class="n">sample</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+        <span class="c1"># Sample up to 100 random rows to avoid positional bias</span>
+        <span class="n">sample</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)),</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">detected</span><span class="p">:</span>
@@ -1872,7 +1929,7 @@
                     <span class="k">for</span> <span class="n">pat</span> <span class="ow">in</span> <span class="n">rule</span><span class="o">.</span><span class="n">patterns</span><span class="p">:</span>
                         <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">pat</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
                             <span class="n">match_count</span> <span class="o">+=</span> <span class="mi">1</span>
-                            <span class="k">break</span> <span class="c1"># Match found for this value</span>
+                            <span class="k">break</span>  <span class="c1"># Match found for this value</span>
 
                 <span class="c1"># If &gt; 50% match, consider it a candidate</span>
                 <span class="k">if</span> <span class="n">match_count</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">valid_rows</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">:</span>
@@ -1885,7 +1942,9 @@
 
         <span class="k">return</span> <span class="n">detected</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">sanitize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pii_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sanitize</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pii_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply sanitization rules to a dataframe.</span>
 
 <span class="sd">        Args:</span>
@@ -1897,6 +1956,12 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">pii_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">pii_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analyze</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">invalid_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">pii_map</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">invalid_cols</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;pii_map contains columns not in DataFrame: </span><span class="si">{</span><span class="n">invalid_cols</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
 
         <span class="n">output_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
@@ -1921,23 +1986,29 @@
                 <span class="k">if</span> <span class="n">rule</span><span class="o">.</span><span class="n">custom_generator</span><span class="p">:</span>
                     <span class="c1"># Use custom generator, passing row context</span>
                     <span class="c1"># Note: This checks frame line by line, slower but powerful</span>
-                    <span class="n">output_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">rule</span><span class="o">.</span><span class="n">custom_generator</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">output_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+                        <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">rule</span><span class="o">.</span><span class="n">custom_generator</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+                    <span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="c1"># Fallback if no generator provided</span>
-                    <span class="n">output_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_value</span><span class="p">(</span><span class="n">output_df</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
+                    <span class="n">output_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mask_value</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">output_df</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_mask_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_mask_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Mask a value, preserving only the last four characters.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="ow">or</span> <span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">val</span>
         <span class="n">s</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">4</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;*&quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
         <span class="k">return</span> <span class="s2">&quot;*&quot;</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">-</span> <span class="mi">4</span><span class="p">)</span> <span class="o">+</span> <span class="n">s</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">:]</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_hash_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a SHA256 hash representation of a value.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_hash_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an HMAC-SHA256 hash representation of a value using a per-instance salt.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="ow">or</span> <span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">val</span>
+        <span class="k">return</span> <span class="n">hmac</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_hash_salt</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_fake_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">col</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">rule</span><span class="p">:</span> <span class="n">PiiRule</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate fake data for a column using contextual faker.</span>
@@ -1950,16 +2021,19 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            Series of fake values aligned to ``df``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Context strategy: </span>
+        <span class="c1"># Context strategy:</span>
         <span class="c1"># If the rule has a context_key (not yet fully implemented in config, but good for future), use it.</span>
         <span class="c1"># Fallback to simple random generation.</span>
 
         <span class="c1"># We can pass the dataframe to the faker to handle this column</span>
-        <span class="c1"># But our FakerContextual currently handles whole DF. </span>
+        <span class="c1"># But our FakerContextual currently handles whole DF.</span>
         <span class="c1"># Let&#39;s call generate_pii for the length of DF.</span>
 
         <span class="c1"># Optimization: fast path if no context needed</span>
-        <span class="k">return</span> <span class="n">df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">faker</span><span class="o">.</span><span class="n">generate_pii</span><span class="p">(</span><span class="n">rule</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">faker</span><span class="o">.</span><span class="n">generate_pii</span><span class="p">(</span><span class="n">rule</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -2048,64 +2122,73 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>syntho_hive/privacy/sanitizer.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 45</span>
-<span class="normal"> 46</span>
-<span class="normal"> 47</span>
-<span class="normal"> 48</span>
-<span class="normal"> 49</span>
-<span class="normal"> 50</span>
-<span class="normal"> 51</span>
-<span class="normal"> 52</span>
-<span class="normal"> 53</span>
-<span class="normal"> 54</span>
-<span class="normal"> 55</span>
-<span class="normal"> 56</span>
-<span class="normal"> 57</span>
-<span class="normal"> 58</span>
-<span class="normal"> 59</span>
-<span class="normal"> 60</span>
-<span class="normal"> 61</span>
-<span class="normal"> 62</span>
-<span class="normal"> 63</span>
-<span class="normal"> 64</span>
-<span class="normal"> 65</span>
-<span class="normal"> 66</span>
-<span class="normal"> 67</span>
-<span class="normal"> 68</span>
-<span class="normal"> 69</span>
-<span class="normal"> 70</span>
-<span class="normal"> 71</span>
-<span class="normal"> 72</span>
-<span class="normal"> 73</span>
-<span class="normal"> 74</span>
-<span class="normal"> 75</span>
-<span class="normal"> 76</span>
-<span class="normal"> 77</span>
-<span class="normal"> 78</span>
-<span class="normal"> 79</span>
-<span class="normal"> 80</span>
-<span class="normal"> 81</span>
-<span class="normal"> 82</span>
-<span class="normal"> 83</span>
-<span class="normal"> 84</span>
-<span class="normal"> 85</span>
-<span class="normal"> 86</span>
-<span class="normal"> 87</span>
-<span class="normal"> 88</span>
-<span class="normal"> 89</span>
-<span class="normal"> 90</span>
-<span class="normal"> 91</span>
-<span class="normal"> 92</span>
-<span class="normal"> 93</span>
-<span class="normal"> 94</span>
-<span class="normal"> 95</span>
-<span class="normal"> 96</span>
-<span class="normal"> 97</span>
-<span class="normal"> 98</span>
-<span class="normal"> 99</span>
-<span class="normal">100</span>
-<span class="normal">101</span>
-<span class="normal">102</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Detect potential PII columns using configured rules.</span>
 
 <span class="sd">    Args:</span>
@@ -2116,17 +2199,26 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">detected</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="c1"># 1. Check column names (heuristics)</span>
+    <span class="c1"># 1. Check column names using alias-based heuristics</span>
     <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
         <span class="n">col_lower</span> <span class="o">=</span> <span class="n">col</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">rules</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">rule</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">col_lower</span><span class="p">:</span>
-                <span class="n">detected</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">rule</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">aliases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">COLUMN_NAME_ALIASES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">rule</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">[</span><span class="n">rule</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">alias</span> <span class="ow">in</span> <span class="n">aliases</span><span class="p">:</span>
+                <span class="c1"># Use word-boundary-like matching: check if alias matches the</span>
+                <span class="c1"># full column name or appears as a delimited token within it.</span>
+                <span class="k">if</span> <span class="n">col_lower</span> <span class="o">==</span> <span class="n">alias</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span>
+                    <span class="sa">r</span><span class="s2">&quot;(?:^|[_\-\s])&quot;</span> <span class="o">+</span> <span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">alias</span><span class="p">)</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;(?:$|[_\-\s])&quot;</span><span class="p">,</span>
+                    <span class="n">col_lower</span><span class="p">,</span>
+                <span class="p">):</span>
+                    <span class="n">detected</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">rule</span><span class="o">.</span><span class="n">name</span>
+                    <span class="k">break</span>
+            <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">detected</span><span class="p">:</span>
                 <span class="k">break</span>
 
     <span class="c1"># 2. Check content for remaining columns</span>
-    <span class="c1"># Sample first 100 rows (or all if small) to speed up</span>
-    <span class="n">sample</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+    <span class="c1"># Sample up to 100 random rows to avoid positional bias</span>
+    <span class="n">sample</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)),</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">detected</span><span class="p">:</span>
@@ -2151,7 +2243,7 @@
                 <span class="k">for</span> <span class="n">pat</span> <span class="ow">in</span> <span class="n">rule</span><span class="o">.</span><span class="n">patterns</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">pat</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
                         <span class="n">match_count</span> <span class="o">+=</span> <span class="mi">1</span>
-                        <span class="k">break</span> <span class="c1"># Match found for this value</span>
+                        <span class="k">break</span>  <span class="c1"># Match found for this value</span>
 
             <span class="c1"># If &gt; 50% match, consider it a candidate</span>
             <span class="k">if</span> <span class="n">match_count</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">valid_rows</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">:</span>
@@ -2257,48 +2349,60 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>syntho_hive/privacy/sanitizer.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">104</span>
-<span class="normal">105</span>
-<span class="normal">106</span>
-<span class="normal">107</span>
-<span class="normal">108</span>
-<span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span>
-<span class="normal">115</span>
-<span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span>
-<span class="normal">134</span>
-<span class="normal">135</span>
-<span class="normal">136</span>
-<span class="normal">137</span>
-<span class="normal">138</span>
-<span class="normal">139</span>
-<span class="normal">140</span>
-<span class="normal">141</span>
-<span class="normal">142</span>
-<span class="normal">143</span>
-<span class="normal">144</span>
-<span class="normal">145</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">sanitize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pii_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">sanitize</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pii_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply sanitization rules to a dataframe.</span>
 
 <span class="sd">    Args:</span>
@@ -2310,6 +2414,12 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">pii_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">pii_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analyze</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">invalid_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">pii_map</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">invalid_cols</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;pii_map contains columns not in DataFrame: </span><span class="si">{</span><span class="n">invalid_cols</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
 
     <span class="n">output_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
@@ -2334,10 +2444,12 @@
             <span class="k">if</span> <span class="n">rule</span><span class="o">.</span><span class="n">custom_generator</span><span class="p">:</span>
                 <span class="c1"># Use custom generator, passing row context</span>
                 <span class="c1"># Note: This checks frame line by line, slower but powerful</span>
-                <span class="n">output_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">rule</span><span class="o">.</span><span class="n">custom_generator</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">output_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">rule</span><span class="o">.</span><span class="n">custom_generator</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+                <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># Fallback if no generator provided</span>
-                <span class="n">output_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_value</span><span class="p">(</span><span class="n">output_df</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
+                <span class="n">output_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mask_value</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">output_df</span>
 </code></pre></div></td></tr></table></div>
@@ -2385,21 +2497,31 @@
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>syntho_hive/privacy/sanitizer.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">11</span>
 <span class="normal">12</span>
 <span class="normal">13</span>
 <span class="normal">14</span>
-<span class="normal">15</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">PiiRule</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for a single PII type and handling strategy.&quot;&quot;&quot;</span>
+
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">patterns</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>  <span class="c1"># List of regex patterns to match</span>
     <span class="n">action</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;drop&quot;</span>  <span class="c1"># Options: &quot;drop&quot;, &quot;mask&quot;, &quot;hash&quot;, &quot;fake&quot;, &quot;custom&quot;, &quot;keep&quot;</span>
-    <span class="n">context_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Key to look for in context (e.g. &#39;country&#39; for locale)</span>
-    <span class="n">custom_generator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Custom lambda for generation</span>
+    <span class="n">context_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="kc">None</span>  <span class="c1"># Key to look for in context (e.g. &#39;country&#39; for locale)</span>
+    <span class="p">)</span>
+    <span class="n">custom_generator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="kc">None</span>  <span class="c1"># Custom lambda for generation</span>
+    <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -2454,35 +2576,111 @@
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>syntho_hive/privacy/sanitizer.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">26</span>
 <span class="normal">27</span>
 <span class="normal">28</span>
 <span class="normal">29</span>
 <span class="normal">30</span>
-<span class="normal">31</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">PrivacyConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Collection of rules for PII detection and handling.&quot;&quot;&quot;</span>
+
     <span class="n">rules</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">PiiRule</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">default</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;PrivacyConfig&#39;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">default</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;PrivacyConfig&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a default privacy configuration with common PII rules.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">rules</span><span class="o">=</span><span class="p">[</span>
-            <span class="n">PiiRule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s2">&quot;[^@]+@[^@]+\.[^@]+&quot;</span><span class="p">],</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;fake&quot;</span><span class="p">),</span>
-            <span class="n">PiiRule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;ssn&quot;</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s2">&quot;\d</span><span class="si">{3}</span><span class="s2">-\d</span><span class="si">{2}</span><span class="s2">-\d</span><span class="si">{4}</span><span class="s2">&quot;</span><span class="p">],</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;mask&quot;</span><span class="p">),</span>
-            <span class="n">PiiRule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;phone&quot;</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s2">&quot;\(?\d</span><span class="si">{3}</span><span class="s2">\)?[-.\s]?\d</span><span class="si">{3}</span><span class="s2">[-.\s]?\d</span><span class="si">{4}</span><span class="s2">&quot;</span><span class="p">],</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;fake&quot;</span><span class="p">),</span>
-            <span class="n">PiiRule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;credit_card&quot;</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s2">&quot;\d</span><span class="si">{4}</span><span class="s2">[-\s]?\d</span><span class="si">{4}</span><span class="s2">[-\s]?\d</span><span class="si">{4}</span><span class="s2">[-\s]?\d</span><span class="si">{4}</span><span class="s2">&quot;</span><span class="p">],</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;mask&quot;</span><span class="p">),</span>
-            <span class="n">PiiRule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;ipv4&quot;</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s2">&quot;\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}&quot;</span><span class="p">],</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;fake&quot;</span><span class="p">),</span>
-        <span class="p">])</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">rules</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">PiiRule</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;email&quot;</span><span class="p">,</span>
+                    <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s2">&quot;^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$&quot;</span><span class="p">],</span>
+                    <span class="n">action</span><span class="o">=</span><span class="s2">&quot;fake&quot;</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">PiiRule</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ssn&quot;</span><span class="p">,</span>
+                    <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s2">&quot;^\d</span><span class="si">{3}</span><span class="s2">-\d</span><span class="si">{2}</span><span class="s2">-\d</span><span class="si">{4}</span><span class="s2">$&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;^\d</span><span class="si">{9}</span><span class="s2">$&quot;</span><span class="p">],</span>
+                    <span class="n">action</span><span class="o">=</span><span class="s2">&quot;mask&quot;</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">PiiRule</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;phone&quot;</span><span class="p">,</span>
+                    <span class="n">patterns</span><span class="o">=</span><span class="p">[</span>
+                        <span class="sa">r</span><span class="s2">&quot;^\(?\d</span><span class="si">{3}</span><span class="s2">\)?[-.\s]?\d</span><span class="si">{3}</span><span class="s2">[-.\s]?\d</span><span class="si">{4}</span><span class="s2">$&quot;</span><span class="p">,</span>
+                        <span class="sa">r</span><span class="s2">&quot;^\+\d{1,3}[-.\s]?\d{1,14}$&quot;</span><span class="p">,</span>
+                    <span class="p">],</span>
+                    <span class="n">action</span><span class="o">=</span><span class="s2">&quot;fake&quot;</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">PiiRule</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;credit_card&quot;</span><span class="p">,</span>
+                    <span class="n">patterns</span><span class="o">=</span><span class="p">[</span>
+                        <span class="sa">r</span><span class="s2">&quot;^\d</span><span class="si">{4}</span><span class="s2">[-\s]?\d</span><span class="si">{4}</span><span class="s2">[-\s]?\d</span><span class="si">{4}</span><span class="s2">[-\s]?\d</span><span class="si">{4}</span><span class="s2">$&quot;</span><span class="p">,</span>
+                        <span class="sa">r</span><span class="s2">&quot;^\d</span><span class="si">{4}</span><span class="s2">[-\s]?\d</span><span class="si">{6}</span><span class="s2">[-\s]?\d</span><span class="si">{5}</span><span class="s2">$&quot;</span><span class="p">,</span>
+                    <span class="p">],</span>
+                    <span class="n">action</span><span class="o">=</span><span class="s2">&quot;mask&quot;</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">PiiRule</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ipv4&quot;</span><span class="p">,</span>
+                    <span class="n">patterns</span><span class="o">=</span><span class="p">[</span>
+                        <span class="sa">r</span><span class="s2">&quot;^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.)</span><span class="si">{3}</span><span class="s2">(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$&quot;</span>
+                    <span class="p">],</span>
+                    <span class="n">action</span><span class="o">=</span><span class="s2">&quot;fake&quot;</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">PiiRule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="p">[],</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;fake&quot;</span><span class="p">),</span>
+                <span class="n">PiiRule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;address&quot;</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="p">[],</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;fake&quot;</span><span class="p">),</span>
+                <span class="n">PiiRule</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;date_of_birth&quot;</span><span class="p">,</span>
+                    <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s2">&quot;^\d</span><span class="si">{4}</span><span class="s2">-\d</span><span class="si">{2}</span><span class="s2">-\d</span><span class="si">{2}</span><span class="s2">$&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;^\d</span><span class="si">{2}</span><span class="s2">/\d</span><span class="si">{2}</span><span class="s2">/\d</span><span class="si">{4}</span><span class="s2">$&quot;</span><span class="p">],</span>
+                    <span class="n">action</span><span class="o">=</span><span class="s2">&quot;mask&quot;</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -2521,25 +2719,99 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>syntho_hive/privacy/sanitizer.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">default</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;PrivacyConfig&#39;</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">default</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;PrivacyConfig&quot;</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a default privacy configuration with common PII rules.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">rules</span><span class="o">=</span><span class="p">[</span>
-        <span class="n">PiiRule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s2">&quot;[^@]+@[^@]+\.[^@]+&quot;</span><span class="p">],</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;fake&quot;</span><span class="p">),</span>
-        <span class="n">PiiRule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;ssn&quot;</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s2">&quot;\d</span><span class="si">{3}</span><span class="s2">-\d</span><span class="si">{2}</span><span class="s2">-\d</span><span class="si">{4}</span><span class="s2">&quot;</span><span class="p">],</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;mask&quot;</span><span class="p">),</span>
-        <span class="n">PiiRule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;phone&quot;</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s2">&quot;\(?\d</span><span class="si">{3}</span><span class="s2">\)?[-.\s]?\d</span><span class="si">{3}</span><span class="s2">[-.\s]?\d</span><span class="si">{4}</span><span class="s2">&quot;</span><span class="p">],</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;fake&quot;</span><span class="p">),</span>
-        <span class="n">PiiRule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;credit_card&quot;</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s2">&quot;\d</span><span class="si">{4}</span><span class="s2">[-\s]?\d</span><span class="si">{4}</span><span class="s2">[-\s]?\d</span><span class="si">{4}</span><span class="s2">[-\s]?\d</span><span class="si">{4}</span><span class="s2">&quot;</span><span class="p">],</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;mask&quot;</span><span class="p">),</span>
-        <span class="n">PiiRule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;ipv4&quot;</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s2">&quot;\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}&quot;</span><span class="p">],</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;fake&quot;</span><span class="p">),</span>
-    <span class="p">])</span>
+    <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+        <span class="n">rules</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">PiiRule</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;email&quot;</span><span class="p">,</span>
+                <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s2">&quot;^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$&quot;</span><span class="p">],</span>
+                <span class="n">action</span><span class="o">=</span><span class="s2">&quot;fake&quot;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">PiiRule</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ssn&quot;</span><span class="p">,</span>
+                <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s2">&quot;^\d</span><span class="si">{3}</span><span class="s2">-\d</span><span class="si">{2}</span><span class="s2">-\d</span><span class="si">{4}</span><span class="s2">$&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;^\d</span><span class="si">{9}</span><span class="s2">$&quot;</span><span class="p">],</span>
+                <span class="n">action</span><span class="o">=</span><span class="s2">&quot;mask&quot;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">PiiRule</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;phone&quot;</span><span class="p">,</span>
+                <span class="n">patterns</span><span class="o">=</span><span class="p">[</span>
+                    <span class="sa">r</span><span class="s2">&quot;^\(?\d</span><span class="si">{3}</span><span class="s2">\)?[-.\s]?\d</span><span class="si">{3}</span><span class="s2">[-.\s]?\d</span><span class="si">{4}</span><span class="s2">$&quot;</span><span class="p">,</span>
+                    <span class="sa">r</span><span class="s2">&quot;^\+\d{1,3}[-.\s]?\d{1,14}$&quot;</span><span class="p">,</span>
+                <span class="p">],</span>
+                <span class="n">action</span><span class="o">=</span><span class="s2">&quot;fake&quot;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">PiiRule</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;credit_card&quot;</span><span class="p">,</span>
+                <span class="n">patterns</span><span class="o">=</span><span class="p">[</span>
+                    <span class="sa">r</span><span class="s2">&quot;^\d</span><span class="si">{4}</span><span class="s2">[-\s]?\d</span><span class="si">{4}</span><span class="s2">[-\s]?\d</span><span class="si">{4}</span><span class="s2">[-\s]?\d</span><span class="si">{4}</span><span class="s2">$&quot;</span><span class="p">,</span>
+                    <span class="sa">r</span><span class="s2">&quot;^\d</span><span class="si">{4}</span><span class="s2">[-\s]?\d</span><span class="si">{6}</span><span class="s2">[-\s]?\d</span><span class="si">{5}</span><span class="s2">$&quot;</span><span class="p">,</span>
+                <span class="p">],</span>
+                <span class="n">action</span><span class="o">=</span><span class="s2">&quot;mask&quot;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">PiiRule</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ipv4&quot;</span><span class="p">,</span>
+                <span class="n">patterns</span><span class="o">=</span><span class="p">[</span>
+                    <span class="sa">r</span><span class="s2">&quot;^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.)</span><span class="si">{3}</span><span class="s2">(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$&quot;</span>
+                <span class="p">],</span>
+                <span class="n">action</span><span class="o">=</span><span class="s2">&quot;fake&quot;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">PiiRule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="p">[],</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;fake&quot;</span><span class="p">),</span>
+            <span class="n">PiiRule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;address&quot;</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="p">[],</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;fake&quot;</span><span class="p">),</span>
+            <span class="n">PiiRule</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;date_of_birth&quot;</span><span class="p">,</span>
+                <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s2">&quot;^\d</span><span class="si">{4}</span><span class="s2">-\d</span><span class="si">{2}</span><span class="s2">-\d</span><span class="si">{2}</span><span class="s2">$&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;^\d</span><span class="si">{2}</span><span class="s2">/\d</span><span class="si">{2}</span><span class="s2">/\d</span><span class="si">{4}</span><span class="s2">$&quot;</span><span class="p">],</span>
+                <span class="n">action</span><span class="o">=</span><span class="s2">&quot;mask&quot;</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -2581,8 +2853,7 @@
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>syntho_hive/privacy/faker_contextual.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">  7</span>
-<span class="normal">  8</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">  8</span>
 <span class="normal">  9</span>
 <span class="normal"> 10</span>
 <span class="normal"> 11</span>
@@ -2705,7 +2976,22 @@
 <span class="normal">128</span>
 <span class="normal">129</span>
 <span class="normal">130</span>
-<span class="normal">131</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ContextualFaker</span><span class="p">:</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ContextualFaker</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Context-aware PII generator leveraging Faker locales.&quot;&quot;&quot;</span>
 
     <span class="n">LOCALE_MAP</span> <span class="o">=</span> <span class="p">{</span>
@@ -2745,12 +3031,16 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_fakers</span><span class="p">[</span><span class="n">mapped_locale</span><span class="p">]</span> <span class="o">=</span> <span class="n">Faker</span><span class="p">(</span><span class="n">mapped_locale</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not load locale </span><span class="si">{</span><span class="n">mapped_locale</span><span class="si">}</span><span class="s2">, falling back to default. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Could not load locale </span><span class="si">{</span><span class="n">mapped_locale</span><span class="si">}</span><span class="s2">, falling back to default. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_fakers</span><span class="p">[</span><span class="n">mapped_locale</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fakers</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fakers</span><span class="p">[</span><span class="n">mapped_locale</span><span class="p">]</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">generate_pii</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pii_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_pii</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">pii_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate PII values with optional contextual locale.</span>
 
 <span class="sd">        Args:</span>
@@ -2766,7 +3056,9 @@
 
         <span class="c1"># Attempt to infer locale from context</span>
         <span class="c1"># Heuristic: Look for &#39;country&#39;, &#39;region&#39;, &#39;locale&#39; keys</span>
-        <span class="n">locale</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;country&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;locale&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;region&#39;</span><span class="p">)</span>
+        <span class="n">locale</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;country&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;locale&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;region&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
 
         <span class="n">fake</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_faker</span><span class="p">(</span><span class="n">locale</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">locale</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
 
@@ -2781,16 +3073,20 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a single PII value using a Faker instance.&quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fake</span><span class="p">,</span> <span class="n">pii_type</span><span class="p">):</span>
-                 <span class="c1"># Dynamic method call on Faker instance</span>
+                <span class="c1"># Dynamic method call on Faker instance</span>
                 <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">fake</span><span class="p">,</span> <span class="n">pii_type</span><span class="p">)())</span>
 
             <span class="c1"># Custom mappings for common PII types if name mismatch or special logic</span>
-            <span class="k">if</span> <span class="n">pii_type</span> <span class="o">==</span> <span class="s1">&#39;phone&#39;</span><span class="p">:</span>
-                 <span class="k">return</span> <span class="n">fake</span><span class="o">.</span><span class="n">phone_number</span><span class="p">()</span>
-            <span class="k">elif</span> <span class="n">pii_type</span> <span class="o">==</span> <span class="s1">&#39;ip&#39;</span> <span class="ow">or</span> <span class="n">pii_type</span> <span class="o">==</span> <span class="s1">&#39;ipv4&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">pii_type</span> <span class="o">==</span> <span class="s2">&quot;phone&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">fake</span><span class="o">.</span><span class="n">phone_number</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="n">pii_type</span> <span class="o">==</span> <span class="s2">&quot;ip&quot;</span> <span class="ow">or</span> <span class="n">pii_type</span> <span class="o">==</span> <span class="s2">&quot;ipv4&quot;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">fake</span><span class="o">.</span><span class="n">ipv4</span><span class="p">()</span>
-            <span class="k">elif</span> <span class="n">pii_type</span> <span class="o">==</span> <span class="s1">&#39;credit_card&#39;</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="n">pii_type</span> <span class="o">==</span> <span class="s2">&quot;credit_card&quot;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">fake</span><span class="o">.</span><span class="n">credit_card_number</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="n">pii_type</span> <span class="o">==</span> <span class="s2">&quot;date_of_birth&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">fake</span><span class="o">.</span><span class="n">date_of_birth</span><span class="p">())</span>
+            <span class="k">elif</span> <span class="n">pii_type</span> <span class="o">==</span> <span class="s2">&quot;address&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">fake</span><span class="o">.</span><span class="n">address</span><span class="p">()</span>
 
             <span class="c1"># Fallback</span>
             <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">fake</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">max_nb_chars</span><span class="o">=</span><span class="mi">20</span><span class="p">))</span>
@@ -2798,7 +3094,9 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error generating </span><span class="si">{</span><span class="n">pii_type</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="s2">&quot;REDACTED&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">process_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pii_cols</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_dataframe</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pii_cols</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Replace placeholders with generated PII in a dataframe.</span>
 
 <span class="sd">        Args:</span>
@@ -2811,7 +3109,7 @@
         <span class="n">output_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
         <span class="c1"># Check if we have context columns</span>
-        <span class="n">has_country_context</span> <span class="o">=</span> <span class="s1">&#39;country&#39;</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="ow">or</span> <span class="s1">&#39;locale&#39;</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span>
+        <span class="n">has_country_context</span> <span class="o">=</span> <span class="s2">&quot;country&quot;</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="ow">or</span> <span class="s2">&quot;locale&quot;</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">has_country_context</span><span class="p">:</span>
             <span class="c1"># Fast path: Vectorized apply (Fake doesn&#39;t vectorize well but we avoid row iteration overhead if possible)</span>
@@ -2819,7 +3117,9 @@
             <span class="k">for</span> <span class="n">col</span><span class="p">,</span> <span class="n">pii_type</span> <span class="ow">in</span> <span class="n">pii_cols</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="n">fake</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_faker</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
                 <span class="c1"># Generate list</span>
-                <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_generate_single_value</span><span class="p">(</span><span class="n">fake</span><span class="p">,</span> <span class="n">pii_type</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))]</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_generate_single_value</span><span class="p">(</span><span class="n">fake</span><span class="p">,</span> <span class="n">pii_type</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))</span>
+                <span class="p">]</span>
                 <span class="n">output_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Slow path: Row-by-row for context awareness</span>
@@ -2950,10 +3250,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>syntho_hive/privacy/faker_contextual.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">55</span>
 <span class="normal">56</span>
 <span class="normal">57</span>
 <span class="normal">58</span>
@@ -2975,7 +3272,16 @@
 <span class="normal">74</span>
 <span class="normal">75</span>
 <span class="normal">76</span>
-<span class="normal">77</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">generate_pii</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pii_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">generate_pii</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span> <span class="n">pii_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate PII values with optional contextual locale.</span>
 
 <span class="sd">    Args:</span>
@@ -2991,7 +3297,9 @@
 
     <span class="c1"># Attempt to infer locale from context</span>
     <span class="c1"># Heuristic: Look for &#39;country&#39;, &#39;region&#39;, &#39;locale&#39; keys</span>
-    <span class="n">locale</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;country&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;locale&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;region&#39;</span><span class="p">)</span>
+    <span class="n">locale</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;country&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;locale&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;region&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
 
     <span class="n">fake</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_faker</span><span class="p">(</span><span class="n">locale</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">locale</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
 
@@ -3095,18 +3403,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>syntho_hive/privacy/faker_contextual.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">100</span>
-<span class="normal">101</span>
-<span class="normal">102</span>
-<span class="normal">103</span>
-<span class="normal">104</span>
-<span class="normal">105</span>
-<span class="normal">106</span>
-<span class="normal">107</span>
-<span class="normal">108</span>
-<span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">111</span>
 <span class="normal">112</span>
 <span class="normal">113</span>
 <span class="normal">114</span>
@@ -3126,7 +3423,24 @@
 <span class="normal">128</span>
 <span class="normal">129</span>
 <span class="normal">130</span>
-<span class="normal">131</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">process_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pii_cols</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">process_dataframe</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pii_cols</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Replace placeholders with generated PII in a dataframe.</span>
 
 <span class="sd">    Args:</span>
@@ -3139,7 +3453,7 @@
     <span class="n">output_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
     <span class="c1"># Check if we have context columns</span>
-    <span class="n">has_country_context</span> <span class="o">=</span> <span class="s1">&#39;country&#39;</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="ow">or</span> <span class="s1">&#39;locale&#39;</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span>
+    <span class="n">has_country_context</span> <span class="o">=</span> <span class="s2">&quot;country&quot;</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="ow">or</span> <span class="s2">&quot;locale&quot;</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">has_country_context</span><span class="p">:</span>
         <span class="c1"># Fast path: Vectorized apply (Fake doesn&#39;t vectorize well but we avoid row iteration overhead if possible)</span>
@@ -3147,7 +3461,9 @@
         <span class="k">for</span> <span class="n">col</span><span class="p">,</span> <span class="n">pii_type</span> <span class="ow">in</span> <span class="n">pii_cols</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">fake</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_faker</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
             <span class="c1"># Generate list</span>
-            <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_generate_single_value</span><span class="p">(</span><span class="n">fake</span><span class="p">,</span> <span class="n">pii_type</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))]</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_generate_single_value</span><span class="p">(</span><span class="n">fake</span><span class="p">,</span> <span class="n">pii_type</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))</span>
+            <span class="p">]</span>
             <span class="n">output_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># Slow path: Row-by-row for context awareness</span>
