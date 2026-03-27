@@ -25,8 +25,16 @@ class LinkageModel:
         self._nbinom_n = None
         self._nbinom_p = None
         self.max_children = 0
+        self.distribution = None  # set during fit for negbinom edge cases
+        self.params = None
 
-    def fit(self, parent_df: pd.DataFrame, child_df: pd.DataFrame, fk_col: str, pk_col: str = "id"):
+    def fit(
+        self,
+        parent_df: pd.DataFrame,
+        child_df: pd.DataFrame,
+        fk_col: str,
+        pk_col: str = "id",
+    ):
         """Fit the distribution of child counts per parent.
 
         Counts children per parent, including parents with zero children.
@@ -40,8 +48,7 @@ class LinkageModel:
         counts = child_df[fk_col].value_counts()
         parent_ids = pd.DataFrame(parent_df[pk_col].unique(), columns=[pk_col])
         count_df = parent_ids.merge(
-            counts.rename("child_count"),
-            left_on=pk_col, right_index=True, how="left"
+            counts.rename("child_count"), left_on=pk_col, right_index=True, how="left"
         ).fillna(0)
         X = count_df["child_count"].to_numpy(dtype=int)
         self.max_children = int(X.max())
@@ -50,15 +57,39 @@ class LinkageModel:
         if self.method == "negbinom":
             mu = float(X.mean())
             var = float(X.var())
-            if var > mu and mu > 0:
+            if var == 0:
+                # All parents have the same child count — constant distribution
+                self.distribution = "constant"
+                self.params = {"value": int(round(mu))}
+                log.info(
+                    "negbinom_constant_fallback",
+                    reason="zero variance — all parents have the same child count",
+                    fk_col=fk_col,
+                    value=int(round(mu)),
+                )
+                return
+            if var <= mu:
+                # Underdispersed or Poisson-like — NegBinom is ill-defined
+                self.distribution = "poisson"
+                self.params = {"mu": mu}
+                log.info(
+                    "negbinom_poisson_fallback",
+                    reason="variance <= mean — NegBinom ill-defined, using Poisson",
+                    fk_col=fk_col,
+                    mu=mu,
+                    var=var,
+                )
+                return
+            if mu > 0:
                 p = mu / var
                 n = mu * p / (1.0 - p)
-                self._nbinom_n = max(n, 0.1)
+                n = max(min(n, 1e6), 0.1)  # bound n to avoid numerical explosion
+                self._nbinom_n = n
                 self._nbinom_p = p
             else:
                 log.warning(
                     "negbinom_fallback_to_empirical",
-                    reason="variance <= mean or mean is zero — NegBinom ill-defined for this data",
+                    reason="mean is zero — NegBinom ill-defined for this data",
                     fk_col=fk_col,
                 )
                 self.method = "empirical"  # runtime fallback
@@ -78,8 +109,17 @@ class LinkageModel:
         if self._observed_counts is None:
             raise ValueError("LinkageModel.sample_counts() called before fit()")
         n_samples = len(parent_context)
+
+        # Handle special distribution types from negbinom edge cases
+        if self.distribution == "constant" and self.params is not None:
+            return np.full(n_samples, self.params["value"], dtype=int)
+        if self.distribution == "poisson" and self.params is not None:
+            counts = np.random.poisson(self.params["mu"], size=n_samples)
+            return np.clip(counts, 0, None).astype(int)
+
         if self.method == "negbinom" and self._nbinom_n is not None:
             from scipy import stats
+
             counts = stats.nbinom.rvs(self._nbinom_n, self._nbinom_p, size=n_samples)
             return np.clip(counts, 0, None).astype(int)
         # Default: empirical — draw from observed distribution

@@ -1,8 +1,7 @@
----
-title: Changelog
----
-
 # Changelog
+
+All notable changes to SynthoHive are documented in this file.
+This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [1.4.0] - 2026-03-27
 
@@ -75,7 +74,7 @@ title: Changelog
 - Added deterministic seeds to validation and observability tests
 - Migrated hardcoded file paths to pytest `tmp_path` fixtures
 
-## 1.3.0
+## [1.3.0]
 
 ### Added
 - Pluggable model architecture: `Synthesizer` and `StagedOrchestrator` accept a `model_cls` parameter for custom `ConditionalGenerativeModel` implementations.
@@ -90,13 +89,13 @@ title: Changelog
 - Version bump from 1.2.3 to 1.3.0.
 - `LinkageModel` default method changed from GaussianMixture to empirical histogram resampler (with optional NegBinom fit).
 
-## 1.2.3
+## [1.2.3]
 
 ### Fixed
 - `TypeError` in `DataTransformer` when applying numeric constraints (min, max, dtype) to categorical/string columns.
 - Added robust type coercion to ensure constraints are applied correctly to transformed data.
 
-## 1.2.2
+## [1.2.2]
 
 ### Fixed
 - CTGAN embedding cardinality to avoid `IndexError` when using high-cardinality categorical columns.

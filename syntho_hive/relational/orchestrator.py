@@ -1,5 +1,6 @@
 import shutil
 from typing import Dict, Any, List, Union, Tuple, Optional, Literal, Type
+
 try:
     from pyspark.sql import SparkSession
     from pyspark.sql.functions import pandas_udf, PandasUDFType
@@ -16,16 +17,18 @@ from syntho_hive.core.models.ctgan import CTGAN
 from syntho_hive.core.models.base import ConditionalGenerativeModel
 from syntho_hive.relational.linkage import LinkageModel
 from syntho_hive.connectors.spark_io import SparkIO
+from syntho_hive.exceptions import SchemaError
 
 log = structlog.get_logger()
 
 
 def _write_with_failure_policy(io, pdf, path, policy, written_paths):
     """Write pdf to path; handle failures per policy ('raise', 'cleanup', 'retry')."""
+
     def _attempt_write():
         io.write_pandas(pdf, path)
 
-    if policy == 'retry':
+    if policy == "retry":
         try:
             _attempt_write()
             written_paths.append(path)
@@ -33,7 +36,7 @@ def _write_with_failure_policy(io, pdf, path, policy, written_paths):
             # One retry, no delay — transient lock release
             _attempt_write()
             written_paths.append(path)
-    elif policy == 'cleanup':
+    elif policy == "cleanup":
         try:
             _attempt_write()
             written_paths.append(path)
@@ -57,7 +60,7 @@ class StagedOrchestrator:
         metadata: Metadata,
         spark: Optional[SparkSession] = None,
         io: Optional[Any] = None,
-        on_write_failure: Literal['raise', 'cleanup', 'retry'] = 'raise',
+        on_write_failure: Literal["raise", "cleanup", "retry"] = "raise",
         model_cls: Type[ConditionalGenerativeModel] = CTGAN,
     ):
         """Initialize orchestrator dependencies.
@@ -126,11 +129,13 @@ class StagedOrchestrator:
         # Training order doesn't strictly matter as long as we have data,
         # but generation order matters.
 
+        self.metadata.validate_schema()
+
         for table_name in self.metadata.tables:
-            print(f"Fitting model for table: {table_name}")
+            log.info("fitting_model", table=table_name)
             data_path = real_data_paths.get(table_name)
             if not data_path:
-                print(f"Warning: No data path provided for {table_name}, skipping.")
+                log.warning("no_data_path", table=table_name, action="skipping")
                 continue
 
             # Read data
@@ -139,13 +144,12 @@ class StagedOrchestrator:
             target_pdf = target_df.toPandas()
 
             config = self.metadata.get_table(table_name)
+            if config is None:
+                raise SchemaError(f"Table '{table_name}' not found in metadata")
             if not config.has_dependencies:
                 # Root Table
                 model = self.model_cls(
-                    self.metadata,
-                    batch_size=batch_size,
-                    epochs=epochs,
-                    **model_kwargs
+                    self.metadata, batch_size=batch_size, epochs=epochs, **model_kwargs
                 )
                 model.fit(
                     target_pdf,
@@ -172,15 +176,27 @@ class StagedOrchestrator:
                 parent_df = self.io.read_dataset(parent_path).toPandas()
 
                 # 2. Train Linkage Model on Driver Parent
-                print(f"Training Linkage for {table_name} driven by {driver_parent_table}")
+                log.info(
+                    "training_linkage",
+                    table=table_name,
+                    driver_parent=driver_parent_table,
+                )
                 linkage_method = self.metadata.tables[table_name].linkage_method
                 linkage = LinkageModel(method=linkage_method)
-                linkage.fit(parent_df, target_pdf, fk_col=driver_fk, pk_col=driver_parent_pk)
+                linkage.fit(
+                    parent_df, target_pdf, fk_col=driver_fk, pk_col=driver_parent_pk
+                )
                 self.linkage_models[table_name] = linkage
 
                 # 3. Train Conditional CTGAN (Conditioning on Driver Parent Context)
                 context_cols = config.parent_context_cols
                 if context_cols:
+                    missing = [c for c in context_cols if c not in parent_df.columns]
+                    if missing:
+                        raise SchemaError(
+                            f"parent_context_cols {missing} not found in parent table "
+                            f"'{driver_parent_table}' columns: {list(parent_df.columns)}"
+                        )
                     # Prepare parent data for merge
                     right_side = parent_df[[driver_parent_pk] + context_cols].copy()
 
@@ -191,7 +207,7 @@ class StagedOrchestrator:
                         right_side,
                         left_on=driver_fk,
                         right_on=driver_parent_pk,
-                        how="left"
+                        how="left",
                     )
 
                     context_df = joined[list(rename_map.values())].copy()
@@ -200,10 +216,7 @@ class StagedOrchestrator:
                     context_df = None
 
                 model = self.model_cls(
-                    self.metadata,
-                    batch_size=batch_size,
-                    epochs=epochs,
-                    **model_kwargs
+                    self.metadata, batch_size=batch_size, epochs=epochs, **model_kwargs
                 )
                 # Note: We exclude ALL FK columns from CTGAN modeling to avoid them being treated as continuous/categorical features
                 # The DataTransformer handles excluding PK/FK if they are marked in metadata.
@@ -218,7 +231,9 @@ class StagedOrchestrator:
                 )
                 self.models[table_name] = model
 
-    def generate(self, num_rows_root: Dict[str, int], output_path_base: Optional[str] = None) -> Dict[str, pd.DataFrame]:
+    def generate(
+        self, num_rows_root: Dict[str, int], output_path_base: Optional[str] = None
+    ) -> Dict[str, pd.DataFrame]:
         """Execute the multi-stage generation pipeline.
 
         Args:
@@ -243,20 +258,23 @@ class StagedOrchestrator:
 
         for table_name in generation_order:
             config = self.metadata.get_table(table_name)
+            if config is None:
+                raise SchemaError(f"Table '{table_name}' not found in metadata")
             is_root = not config.fk
 
             model = self.models[table_name]
 
             generated_pdf = None
+            train_pdf = None  # used for schema fallback on zero-row children
 
             if is_root:
-                print(f"Generating root table: {table_name}")
+                log.info("generating_root_table", table=table_name)
                 n_rows = num_rows_root.get(table_name, 1000)
                 generated_pdf = model.sample(n_rows)
-                # Assign PKs
-                generated_pdf[config.pk] = range(1, n_rows + 1)
+                # Assign PKs — use actual DataFrame length in case model returns different count
+                generated_pdf[config.pk] = range(1, len(generated_pdf) + 1)
             else:
-                print(f"Generating child table: {table_name}")
+                log.info("generating_child_table", table=table_name)
 
                 # 1. Handle Driver Parent (Cardinality & Context)
                 pk_map = config.fk
@@ -278,13 +296,17 @@ class StagedOrchestrator:
                 counts = linkage.sample_counts(parent_df)
 
                 # Construct Context from Driver
-                parent_ids_repeated = np.repeat(parent_df[driver_parent_pk].to_numpy(), counts)
+                parent_ids_repeated = np.repeat(
+                    parent_df[driver_parent_pk].to_numpy(), counts
+                )
 
                 context_cols = config.parent_context_cols
                 if context_cols:
                     context_repeated_vals = {}
                     for col in context_cols:
-                        context_repeated_vals[col] = np.repeat(parent_df[col].to_numpy(), counts)
+                        context_repeated_vals[col] = np.repeat(
+                            parent_df[col].to_numpy(), counts
+                        )
                     context_df = pd.DataFrame(context_repeated_vals)
                 else:
                     context_df = None
@@ -313,10 +335,28 @@ class StagedOrchestrator:
                         valid_pks = p_df[p_pk].to_numpy()
 
                         # Randomly sample valid PKs for this column
-                        generated_pdf[fk_col] = np.random.choice(valid_pks, size=total_child_rows)
+                        generated_pdf[fk_col] = np.random.choice(
+                            valid_pks, size=total_child_rows
+                        )
 
                     # Assign PKs
-                    generated_pdf[config.pk] = range(1, total_child_rows + 1)
+                    generated_pdf[config.pk] = range(1, len(generated_pdf) + 1)
+                else:
+                    # Zero child rows: create empty DataFrame with correct schema
+                    # so downstream grandchild tables don't crash with KeyError
+                    log.info(
+                        "zero_child_rows",
+                        table=table_name,
+                        driver_parent=driver_parent_table,
+                    )
+                    train_columns = (
+                        list(model.metadata.get_table(table_name).constraints.keys())
+                        if model.metadata.get_table(table_name)
+                        else []
+                    )
+                    generated_pdf = pd.DataFrame(
+                        columns=train_columns if train_columns else [config.pk]
+                    )
 
             if generated_pdf is not None:
                 if output_path_base:
@@ -328,7 +368,9 @@ class StagedOrchestrator:
                         policy=self.on_write_failure,
                         written_paths=written_paths,
                     )
-                    log.debug("table_released_from_memory", table=table_name, path=output_path)
+                    log.debug(
+                        "table_released_from_memory", table=table_name, path=output_path
+                    )
                     # Do NOT store in generated_tables — child tables read from disk via output_path_base
                 else:
                     generated_tables[table_name] = generated_pdf

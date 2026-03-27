@@ -31,9 +31,12 @@ It is important to distinguish when to use **Faker** versus **Embeddings**:
 
 We use a combination of heuristics to detect Personal Identifiable Information (PII):
 
-1.  **Column Naming**: Checks for keywords like "email", "ssn", "phone", "address".
-2.  **Pattern Matching**: Scans a sample of data against a library of regular expressions (Email, IPv4, Credit Cards, Social Security Numbers).
-3.  **Thresholding**: A column is flagged only if > 50% of non-null values match a pattern.
+1.  **Column Naming**: Checks for keywords like "email", "ssn", "phone", "address", "name", "dob". Alias matching is supported (e.g., "mobile", "cell", and "tel" all match the "phone" rule).
+2.  **Pattern Matching**: Scans a random sample of data against a library of anchored regular expressions (Email, IPv4, Credit Cards, Social Security Numbers, Names, Addresses, Dates of Birth). Patterns are fully anchored to prevent false positives on substrings.
+3.  **Thresholding**: A column is flagged only if > 50% of non-null sampled values match a pattern.
+
+!!! note "Sampling behavior (v1.4.0)"
+    PII detection now uses a random sample of rows instead of the first 100 rows (`head(100)`). This eliminates bias when data is sorted or partitioned. Null values are preserved through all masking and hashing operations.
 
 ## Sanitization Actions
 
@@ -43,7 +46,7 @@ Once PII is detected (or manually configured), you can apply one of several acti
 | :--- | :--- | :--- |
 | **`drop`** | Removes the column entirely. | High-risk fields with zero utility (e.g., internal system IDs). |
 | **`mask`** | Replaces all but the last 4 characters with `*`. | Credit cards, phone numbers where visual format matters. |
-| **`hash`** | Replaces value with SHA-256 hash. | Maintaining distinctness for joining without revealing value (e.g., User IDs). |
+| **`hash`** | Replaces value with HMAC-SHA256 hash (salted per sanitizer instance). | Maintaining distinctness for joining without revealing value (e.g., User IDs). |
 | **`fake`** | Replaces with realistic fake data. | Names, Addresses, Emails that need to look "real" for the model. |
 | **`keep`** | Retains the original value. | Low-sensitivity fields or when data is already sanitized source. |
 | **`custom`** | Uses a user-provided function. | complex logic requiring row-level context. |

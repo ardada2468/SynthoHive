@@ -45,9 +45,34 @@ from syntho_hive.interface.config import PrivacyConfig
 
 privacy = PrivacyConfig(
     enable_differential_privacy=False,
-    epsilon=1.0,
+    epsilon=1.0,       # Must be a positive number (validated in v1.4.0)
     pii_strategy="context_aware_faker",
     k_anonymity_threshold=5,
     pii_columns=["email", "phone"]
 )
+```
+
+## Exception handling
+```python
+from syntho_hive.exceptions import (
+    SchemaError,
+    TrainingError,
+    GenerationError,
+    PrivacyError,
+)
+
+try:
+    metadata.add_table("orders", pk="order_id", fk={"user_id": "users.user_id"})
+except SchemaError as e:
+    print(f"Schema definition error: {e}")
+
+try:
+    synth.fit(data={"orders": "data/orders.parquet"}, epochs=300)
+except TrainingError as e:
+    print(f"Training failed: {e}")
+
+try:
+    synth.sample(num_rows={"users": 1000}, output_path="/tmp/output")
+except GenerationError as e:
+    print(f"Generation failed: {e}")
 ```

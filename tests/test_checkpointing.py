@@ -1,23 +1,17 @@
-
 import os
-import shutil
 import pandas as pd
 import torch
 import numpy as np
 from syntho_hive.core.models.ctgan import CTGAN
 from syntho_hive.interface.config import Metadata
 
-def test_checkpointing():
+
+def test_checkpointing(tmp_path):
     # Setup
-    checkpoint_dir = "./test_checkpoints"
-    if os.path.exists(checkpoint_dir):
-        shutil.rmtree(checkpoint_dir)
+    checkpoint_dir = str(tmp_path / "test_checkpoints")
 
     # Dummy Data
-    df = pd.DataFrame({
-        "A": np.random.randn(100),
-        "B": np.random.randint(0, 10, 100)
-    })
+    df = pd.DataFrame({"A": np.random.randn(100), "B": np.random.randint(0, 10, 100)})
 
     # Valid Metadata
     meta = Metadata()
@@ -27,12 +21,7 @@ def test_checkpointing():
     df["id"] = range(len(df))
 
     print("Initializing CTGAN...")
-    model = CTGAN(
-        metadata=meta,
-        batch_size=10,
-        epochs=5,
-        device="cpu"
-    )
+    model = CTGAN(metadata=meta, batch_size=10, epochs=5, device="cpu")
 
     print("Training with checkpointing...")
     # fit expect data as DataFrame
@@ -52,9 +41,13 @@ def test_checkpointing():
     print(f"Files in {checkpoint_dir}: {files}")
 
     assert "best_checkpoint" in files, "best_checkpoint directory missing"
-    assert os.path.isdir(os.path.join(checkpoint_dir, "best_checkpoint")), "best_checkpoint must be a directory"
+    assert os.path.isdir(os.path.join(checkpoint_dir, "best_checkpoint")), (
+        "best_checkpoint must be a directory"
+    )
     assert "final_checkpoint" in files, "final_checkpoint directory missing"
-    assert os.path.isdir(os.path.join(checkpoint_dir, "final_checkpoint")), "final_checkpoint must be a directory"
+    assert os.path.isdir(os.path.join(checkpoint_dir, "final_checkpoint")), (
+        "final_checkpoint must be a directory"
+    )
     assert "training_metrics.csv" in files, "training_metrics.csv missing"
 
     # Check Metric Content
@@ -67,8 +60,8 @@ def test_checkpointing():
 
     print("Verification Successful!")
 
-    # Cleanup
-    shutil.rmtree(checkpoint_dir)
 
 if __name__ == "__main__":
-    test_checkpointing()
+    import tempfile, pathlib
+
+    test_checkpointing(pathlib.Path(tempfile.mkdtemp()))

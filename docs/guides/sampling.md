@@ -21,10 +21,13 @@ Once a parent table exists, its children are generated using the **Linkage Model
 *   **Step C: Conditional Sampling**: The Child CTGAN model generates the specific details for these rows, *conditioned* on the repeated parent context.
 *   **Step D: Assign FKs**: The Parent's ID is assigned to the foreign key column (`user_id`).
 
-### 3. Multi-Parent Tables (Secondary FKs)
+### 3. Cascaded Sampling
+As of v1.4.0, `RelationalSampler` cascades sampling through the full table hierarchy, not just one level deep. This ensures correct proportional sampling across multi-level parent-child chains (e.g., Users -> Orders -> OrderItems).
+
+### 4. Multi-Parent Tables (Secondary FKs)
 If a table has multiple parents (e.g., `OrderItems` has `order_id` AND `product_id`):
 1.  One parent is chosen as the **Driver** (usually the first FK alphabetically or by configuration). This driver controls the *volume* (how many items per order).
-2.  The other parent (`product_id`) is assigned via **Random Sampling**.
+2.  The other parent (`product_id`) is assigned via **Random Sampling** using semi-joins to avoid ambiguous column references.
     *   The system creates the rows based on the Order driver.
     *   For the `product_id` column, it randomly picks valid IDs from the already-generated `Products` table.
     *   *Note*: This random assignment preserves the validity of the FK (it points to a real Product), but does not currently enforce strict joint distributions between two parents.
@@ -88,7 +91,10 @@ The current implementation generates data in **batches per table**.
 
 ### Referential Integrity
 -   **Primary Keys**: Guaranteed unique for the generated batch.
--   **Foreign Keys**: Guaranteed valid (always point to an existing parent in the current batch).
+-   **Foreign Keys**: Guaranteed valid (always point to an existing parent in the current batch). Integer-to-float FK dtype compatibility is handled automatically.
+
+### Output Mode
+As of v1.4.0, the default `write_pandas` mode is `"overwrite"` (previously `"append"`). This prevents accidental data corruption when re-running generation to the same output path.
 
 !!! warning "Partitioning"
     Generation is not currently distributed across Spark workers. It runs on the driver logic. Future versions will support distributed generation for massive scale.

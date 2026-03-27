@@ -2,8 +2,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class EntityEmbeddingLayer(nn.Module):
     """Embedding layer for high-cardinality categorical variables."""
+
     def __init__(self, num_categories: int, embedding_dim: int):
         """Initialize the embedding layer.
 
@@ -13,7 +15,7 @@ class EntityEmbeddingLayer(nn.Module):
         """
         super().__init__()
         self.embedding = nn.Embedding(num_categories, embedding_dim)
-        
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Lookup embeddings for discrete category indices.
 
@@ -36,8 +38,10 @@ class EntityEmbeddingLayer(nn.Module):
         """
         return torch.matmul(probs, self.embedding.weight)
 
+
 class ResidualLayer(nn.Module):
     """Residual MLP block used in CTGAN generator/discriminator."""
+
     def __init__(self, input_dim: int, output_dim: int, dropout: float = 0.0):
         """Construct a residual MLP block.
 
@@ -51,7 +55,7 @@ class ResidualLayer(nn.Module):
         self.bn = nn.BatchNorm1d(output_dim)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(dropout)
-        
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Apply linear -> BN -> ReLU -> dropout with optional skip connection.
 
@@ -71,25 +75,29 @@ class ResidualLayer(nn.Module):
         else:
             return out
 
+
 class Discriminator(nn.Module):
     """Simple MLP discriminator used by CTGAN."""
 
-    def __init__(self, input_dim: int, hidden_dim: int = 256):
+    def __init__(
+        self, input_dim: int, hidden_dim_1: int = 256, hidden_dim_2: int = 256
+    ):
         """Initialize the discriminator network.
 
         Args:
             input_dim: Flattened feature dimension of real/fake samples.
-            hidden_dim: Width of hidden layers.
+            hidden_dim_1: Width of the first hidden layer.
+            hidden_dim_2: Width of the second hidden layer.
         """
         super().__init__()
         self.seq = nn.Sequential(
-            nn.Linear(input_dim, hidden_dim),
+            nn.Linear(input_dim, hidden_dim_1),
             nn.LeakyReLU(0.2),
-            nn.Linear(hidden_dim, hidden_dim),
+            nn.Linear(hidden_dim_1, hidden_dim_2),
             nn.LeakyReLU(0.2),
-            nn.Linear(hidden_dim, 1)
+            nn.Linear(hidden_dim_2, 1),
         )
-        
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Compute discriminator logits for a batch of samples.
 

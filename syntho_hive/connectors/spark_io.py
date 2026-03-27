@@ -1,4 +1,5 @@
 from typing import Any, List, Optional, Union
+
 try:
     from pyspark.sql import SparkSession, DataFrame
     from delta.tables import DeltaTable
@@ -10,8 +11,10 @@ except ImportError:
 
 import pandas as pd
 
+
 class SparkIO:
     """Utility for reading and writing datasets via Spark and Delta Lake."""
+
     def __init__(self, spark: SparkSession):
         """Initialize the IO helper.
 
@@ -20,7 +23,12 @@ class SparkIO:
         """
         self.spark = spark
 
-    def read_dataset(self, path_or_table: str, format: str = None, **kwargs: Union[str, int, bool, float]) -> DataFrame:
+    def read_dataset(
+        self,
+        path_or_table: str,
+        format: str = None,
+        **kwargs: Union[str, int, bool, float],
+    ) -> DataFrame:
         """Read a dataset from a table name or filesystem path.
 
         Args:
@@ -32,12 +40,22 @@ class SparkIO:
             Spark DataFrame loaded from the specified source.
         """
         # Simple heuristic
-        if "/" in path_or_table or "\\" in path_or_table or path_or_table.startswith("file://"):
+        if (
+            "/" in path_or_table
+            or "\\" in path_or_table
+            or path_or_table.startswith("file://")
+        ):
             if format:
                 return self.spark.read.format(format).load(path_or_table, **kwargs)
-            
+
             if path_or_table.endswith(".csv"):
-                return self.spark.read.format("csv").option("header", "true").option("inferSchema", "true").option("multiLine", "true").load(path_or_table, **kwargs)
+                return (
+                    self.spark.read.format("csv")
+                    .option("header", "true")
+                    .option("inferSchema", "true")
+                    .option("multiLine", "true")
+                    .load(path_or_table, **kwargs)
+                )
             elif path_or_table.endswith(".parquet"):
                 return self.spark.read.format("parquet").load(path_or_table, **kwargs)
             else:
@@ -45,7 +63,14 @@ class SparkIO:
                 return self.spark.read.format("parquet").load(path_or_table, **kwargs)
         return self.spark.table(path_or_table)
 
-    def write_dataset(self, df: DataFrame, target_path: str, mode: str = "overwrite", partition_by: Optional[str] = None, format: str = "parquet"):
+    def write_dataset(
+        self,
+        df: DataFrame,
+        target_path: str,
+        mode: str = "overwrite",
+        partition_by: Optional[str] = None,
+        format: str = "parquet",
+    ):
         """Write a Spark DataFrame to storage.
 
         Args:
@@ -59,14 +84,20 @@ class SparkIO:
         if partition_by:
             writer = writer.partitionBy(partition_by)
         writer.save(target_path)
-        
-    def write_pandas(self, pdf: pd.DataFrame, target_path: str, mode: str = "append", format: str = "parquet"):
+
+    def write_pandas(
+        self,
+        pdf: pd.DataFrame,
+        target_path: str,
+        mode: str = "overwrite",
+        format: str = "parquet",
+    ):
         """Write a Pandas DataFrame using Spark-backed persistence.
 
         Args:
             pdf: Pandas DataFrame to persist.
             target_path: Output path for the written dataset.
-            mode: Save mode for Spark writer (default ``"append"``).
+            mode: Save mode for Spark writer (default ``"overwrite"``).
             format: Storage format, defaults to ``"parquet"``.
         """
         sdf = self.spark.createDataFrame(pdf)

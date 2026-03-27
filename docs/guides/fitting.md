@@ -70,7 +70,7 @@ synth.fit(
 | `validate` | `bool` | `False` | If `True`, automatically runs a validation report after training (requires `validate` extra dependencies). |
 
 !!! warning "Unused Parameters"
-    The parameters `sample_size` and `sampling_strategy` currently appear in the `fit()` signature but are **not yet implemented**. The system currently uses the full dataset provided in the `data` argument. Future versions will support downsampling large datasets before training.
+    The parameters `sample_size` and `sampling_strategy` currently appear in the `fit()` signature but are **not yet implemented**. As of v1.4.0, passing `sampling_strategy` emits a warning. The system currently uses the full dataset provided in the `data` argument. Future versions will support downsampling large datasets before training.
 
 ### Hardware & Performance
 

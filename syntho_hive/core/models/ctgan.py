@@ -14,7 +14,11 @@ from typing import Optional, List, Any, Tuple
 from .base import ConditionalGenerativeModel
 from .layers import ResidualLayer, Discriminator, EntityEmbeddingLayer
 from syntho_hive.core.data.transformer import DataTransformer
-from syntho_hive.exceptions import SerializationError, TrainingError, ConstraintViolationError  # noqa: F401 – re-raised by CTGAN save/load
+from syntho_hive.exceptions import (
+    SerializationError,
+    TrainingError,
+    ConstraintViolationError,
+)  # noqa: F401 – re-raised by CTGAN save/load
 
 log = structlog.get_logger()
 
@@ -32,6 +36,7 @@ def _set_seed(seed: int) -> None:
     import random
     import numpy as np
     import torch
+
     torch.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
@@ -55,7 +60,9 @@ def compute_gradient_penalty(discriminator, real_samples, fake_samples, device):
     # Random weight term for interpolation between real and fake samples
     alpha = torch.rand((real_samples.size(0), 1)).to(device)
     # Get random interpolation between real and fake samples
-    interpolates = (alpha * real_samples + ((1 - alpha) * fake_samples)).requires_grad_(True)
+    interpolates = (alpha * real_samples + ((1 - alpha) * fake_samples)).requires_grad_(
+        True
+    )
     d_interpolates = discriminator(interpolates)
     fake = torch.ones((real_samples.size(0), 1)).to(device)
     # Get gradient w.r.t. interpolates
@@ -71,8 +78,10 @@ def compute_gradient_penalty(discriminator, real_samples, fake_samples, device):
     gradient_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean()
     return gradient_penalty
 
+
 class CTGAN(ConditionalGenerativeModel):
     """Conditional Tabular GAN with entity embeddings and parent context."""
+
     def __init__(
         self,
         metadata: Any,
@@ -108,22 +117,24 @@ class CTGAN(ConditionalGenerativeModel):
         self.discriminator_dim = discriminator_dim
         self.batch_size = batch_size
         self.epochs = epochs
-        self.epochs = epochs
         self.device = torch.device(device)
         self.discriminator_steps = discriminator_steps
         # Prioritize init arg, fallback to metadata if available, else default (already 50)
         self.embedding_threshold = embedding_threshold
         self.legacy_context_conditioning = legacy_context_conditioning
-        
+
         self.generator = None
         self.discriminator = None
-        self.transformer = DataTransformer(metadata, embedding_threshold=self.embedding_threshold)
-        self.context_transformer = DataTransformer(metadata, embedding_threshold=self.embedding_threshold)
-        
+        self.transformer = DataTransformer(
+            metadata, embedding_threshold=self.embedding_threshold
+        )
+        self.context_transformer = DataTransformer(
+            metadata, embedding_threshold=self.embedding_threshold
+        )
+
         # Embedding Layers
         self.embedding_layers = nn.ModuleDict()
-        self.data_column_info = [] # List of tuples: (dim, type, related_info)
-
+        self.data_column_info = []  # List of tuples: (dim, type, related_info)
 
     def _compile_layout(self, transformer):
         """Analyze transformer output to map column indices and types.
@@ -133,36 +144,42 @@ class CTGAN(ConditionalGenerativeModel):
         """
         self.data_column_info = []
         self.embedding_layers = nn.ModuleDict()
-        
+
         current_idx = 0
         for col, info in transformer._column_info.items():
-            if info['type'] == 'categorical_embedding':
+            if info["type"] == "categorical_embedding":
                 # Create Embedding Layer
-                num_categories = info['num_categories']
+                num_categories = info["num_categories"]
                 # Heuristic for embedding dimension: min(50, num_categories/2)
                 emb_dim = min(50, (num_categories + 1) // 2)
-                
-                self.embedding_layers[col] = EntityEmbeddingLayer(num_categories, emb_dim).to(self.device)
-                
-                self.data_column_info.append({
-                    'name': col,
-                    'type': 'embedding', 
-                    'input_idx': current_idx, 
-                    'input_dim': 1,
-                    'output_dim': emb_dim,
-                    'num_categories': num_categories 
-                })
+
+                self.embedding_layers[col] = EntityEmbeddingLayer(
+                    num_categories, emb_dim
+                ).to(self.device)
+
+                self.data_column_info.append(
+                    {
+                        "name": col,
+                        "type": "embedding",
+                        "input_idx": current_idx,
+                        "input_dim": 1,
+                        "output_dim": emb_dim,
+                        "num_categories": num_categories,
+                    }
+                )
                 current_idx += 1
             else:
-                self.data_column_info.append({
-                    'name': col,
-                    'type': 'normal',
-                    'input_idx': current_idx,
-                    'input_dim': info['dim'],
-                    'output_dim': info['dim']
-                })
-                current_idx += info['dim']
-                
+                self.data_column_info.append(
+                    {
+                        "name": col,
+                        "type": "normal",
+                        "input_idx": current_idx,
+                        "input_dim": info["dim"],
+                        "output_dim": info["dim"],
+                    }
+                )
+                current_idx += info["dim"]
+
     def _apply_embeddings(self, data, is_fake=False):
         """Convert a mixed categorical/continuous tensor into embedding space.
 
@@ -175,34 +192,34 @@ class CTGAN(ConditionalGenerativeModel):
         """
         parts = []
         for info in self.data_column_info:
-            idx = info['input_idx']
-            dim = info['input_dim']
-            col_data = data[:, idx:idx+dim]
-            
-            if info['type'] == 'embedding':
-                layer = self.embedding_layers[info['name']]
+            idx = info["input_idx"]
+            dim = info["input_dim"]
+            col_data = data[:, idx : idx + dim]
+
+            if info["type"] == "embedding":
+                layer = self.embedding_layers[info["name"]]
                 if is_fake:
                     # col_data contains Softmax logits from Generator
                     # Needs hard Gumbel-Softmax or Softmax? Generator outputs unnormalized logits usually.
-                    # Ideally Generator outputs (N, num_cats). 
+                    # Ideally Generator outputs (N, num_cats).
                     # Wait, 'data' passed here is strictly what Generator produced.
                     # Discriminator expects (N, EmbDim).
-                    
+
                     # Logic: Generator outputs Logits. We apply Softmax -> Dense.
-                    # But wait, logic above says Generator outputs: 
+                    # But wait, logic above says Generator outputs:
                     # Embedding: Logits (dim=num_cats)
                     # Normal: Values (dim=original_dim)
-                    
+
                     # So 'dim' in loop here must match GENERATOR output structure, not Transformer output.
                     # Compile Layout logic is slightly tricky because Generator output shape != Transformer output shape for Embeddings.
-                    
+
                     # RE-THINK:
                     # Transformer Output (Real): [Index] (1 dim)
                     # Generator Output (Fake): [Logits] (num_cats dim)
-                    
+
                     # This function strictly transforms Real Data (Index) -> Embedding.
                     # Or Fake Data (Logits) -> Soft Embedding.
-                    
+
                     # Problem: input 'data' has different shapes for Real vs Fake.
                     # We need to handle them separately or have this function assume inputs are already sliced?
                     # Let's pass sliced inputs or rely on info having both dims.
@@ -214,7 +231,7 @@ class CTGAN(ConditionalGenerativeModel):
                     parts.append(embeddings)
             else:
                 parts.append(col_data)
-                
+
         # Re-implementing clearer separated logic in Build Model / Forward
         return torch.cat(parts, dim=1)
 
@@ -227,34 +244,47 @@ class CTGAN(ConditionalGenerativeModel):
         """
         # 1. Compile Layout first
         self._compile_layout(self.transformer)
-        
+
         # 2. Calculate Generator Output Dim & Discriminator Input Dim
         gen_output_dim = 0
         disc_input_dim_base = 0
-        
+
         for info in self.data_column_info:
-            if info['type'] == 'embedding':
-                gen_output_dim += info['num_categories'] # Generator outputs logits
-                disc_input_dim_base += info['output_dim'] # D sees embeddings
+            if info["type"] == "embedding":
+                gen_output_dim += info["num_categories"]  # Generator outputs logits
+                disc_input_dim_base += info["output_dim"]  # D sees embeddings
             else:
-                gen_output_dim += info['output_dim']
-                disc_input_dim_base += info['output_dim']
+                gen_output_dim += info["output_dim"]
+                disc_input_dim_base += info["output_dim"]
 
         # Generator: Noise + Context -> Data (Logits/Values)
         gen_input_dim = self.embedding_dim + context_dim
-        
+
         self.generator = nn.Sequential(
             ResidualLayer(gen_input_dim, self.generator_dim[0]),
             ResidualLayer(self.generator_dim[0], self.generator_dim[1]),
-            nn.Linear(self.generator_dim[1], gen_output_dim)
+            nn.Linear(self.generator_dim[1], gen_output_dim),
         ).to(self.device)
-        
+
         # Discriminator: Data(Embeddings) + Context -> Score
         disc_input_dim = disc_input_dim_base + context_dim
-        
-        self.discriminator = Discriminator(disc_input_dim, self.discriminator_dim[0]).to(self.device)
-        
-    def fit(self, data: pd.DataFrame, context: Optional[pd.DataFrame] = None, table_name: Optional[str] = None, checkpoint_dir: Optional[str] = None, log_metrics: bool = True, seed: Optional[int] = None, progress_bar: bool = True, checkpoint_interval: int = 10, **kwargs: Any) -> None:
+
+        self.discriminator = Discriminator(
+            disc_input_dim, self.discriminator_dim[0], self.discriminator_dim[1]
+        ).to(self.device)
+
+    def fit(
+        self,
+        data: pd.DataFrame,
+        context: Optional[pd.DataFrame] = None,
+        table_name: Optional[str] = None,
+        checkpoint_dir: Optional[str] = None,
+        log_metrics: bool = True,
+        seed: Optional[int] = None,
+        progress_bar: bool = True,
+        checkpoint_interval: int = 10,
+        **kwargs: Any,
+    ) -> None:
         """Train the CTGAN model on tabular data.
 
         Args:
@@ -293,25 +323,30 @@ class CTGAN(ConditionalGenerativeModel):
 
         # Validation-metric checkpoint state (QUAL-03)
         _validator = None
-        best_val_metric = float('inf')
+        best_val_metric = float("inf")
         best_epoch = -1
         best_checkpoint_path = None
 
         if checkpoint_dir:
             from syntho_hive.validation.statistical import StatisticalValidator
+
             _validator = StatisticalValidator()
         # 1. Fit and Transform Data
         self.transformer.fit(data, table_name=table_name, seed=seed)
         train_data = self.transformer.transform(data)
         train_data = torch.from_numpy(train_data).float().to(self.device)
-        
+
         # 2. Handle Context
         if context is not None:
-            assert len(data) == len(context), "Data and context must have same number of rows"
-            
+            if len(data) != len(context):
+                raise ValueError(
+                    f"Data and context must have same number of rows, "
+                    f"got {len(data)} and {len(context)}"
+                )
+
             # Use dedicated transformer for context
             # NOTE: We abuse metdata here slightly. Ideally context comes from a known table (Parent).
-            # But context might be a mix of parent columns. 
+            # But context might be a mix of parent columns.
             # For fit, we pass table_name=None to fit on just the columns present in context df.
             self.context_transformer.fit(context)
             context_transformed = self.context_transformer.transform(context)
@@ -320,16 +355,21 @@ class CTGAN(ConditionalGenerativeModel):
         else:
             context_data = None
             context_dim = 0
-            
+
         data_dim = train_data.shape[1]
-        
+
         # 3. Build Model
         if self.generator is None:
             self._build_model(data_dim, context_dim)
-            
-        optimizer_G = optim.Adam(self.generator.parameters(), lr=2e-4, betas=(0.5, 0.9))
-        optimizer_D = optim.Adam(self.discriminator.parameters(), lr=2e-4, betas=(0.5, 0.9))
-        
+
+        all_gen_params = list(self.generator.parameters()) + list(
+            self.embedding_layers.parameters()
+        )
+        optimizer_G = optim.Adam(all_gen_params, lr=2e-4, betas=(0.5, 0.9))
+        optimizer_D = optim.Adam(
+            self.discriminator.parameters(), lr=2e-4, betas=(0.5, 0.9)
+        )
+
         # 4. Training Loop (WGAN-GP)
         steps_per_epoch = max(len(train_data) // self.batch_size, 1)
 
@@ -356,68 +396,82 @@ class CTGAN(ConditionalGenerativeModel):
             for i in range(steps_per_epoch):
                 # --- Train Discriminator ---
                 for _ in range(self.discriminator_steps):
+                    optimizer_D.zero_grad()
+
                     # Sample real data
                     idx = np.random.randint(0, len(train_data), self.batch_size)
                     real_data_batch = train_data[idx]
                     if context_data is not None:
                         real_context_batch = context_data[idx]
-                        real_input = torch.cat([real_data_batch, real_context_batch], dim=1)
+                        real_input = torch.cat(
+                            [real_data_batch, real_context_batch], dim=1
+                        )
                     else:
                         real_context_batch = None
                         real_input = real_data_batch
 
                     # Generate fake data
-                    noise = torch.randn(self.batch_size, self.embedding_dim, device=self.device)
+                    noise = torch.randn(
+                        self.batch_size, self.embedding_dim, device=self.device
+                    )
                     if real_context_batch is not None:
                         gen_input = torch.cat([noise, real_context_batch], dim=1)
                     else:
                         gen_input = noise
-                        
+
                     fake_raw = self.generator(gen_input)
-                    
+
                     # Apply Embeddings / Softmax to Fake Data
                     fake_parts = []
                     fake_ptr = 0
                     for info in self.data_column_info:
-                        if info['type'] == 'embedding':
-                            dim = info['num_categories']
-                            logits = fake_raw[:, fake_ptr:fake_ptr+dim]
+                        if info["type"] == "embedding":
+                            dim = info["num_categories"]
+                            logits = fake_raw[:, fake_ptr : fake_ptr + dim]
                             fake_ptr += dim
-                            
+
                             # Gumbel Softmax or Softmax? WGAN prefers generic softmax for differentiability
                             # Note: Gumbel Softmax allows hard sampling with gradients.
                             probs = F.softmax(logits, dim=1)
-                            emb_vect = self.embedding_layers[info['name']].forward_soft(probs)
+                            emb_vect = self.embedding_layers[info["name"]].forward_soft(
+                                probs
+                            )
                             fake_parts.append(emb_vect)
                         else:
-                            dim = info['output_dim']
-                            val = fake_raw[:, fake_ptr:fake_ptr+dim]
+                            dim = info["output_dim"]
+                            val = fake_raw[:, fake_ptr : fake_ptr + dim]
                             fake_ptr += dim
                             fake_parts.append(val)
-                    
+
                     fake_data_batch = torch.cat(fake_parts, dim=1)
-                    
+
                     # Apply Embeddings to Real Data
                     real_parts = []
                     real_ptr = 0
                     # Need to iterate column info again to slice real data correctly
                     # Real data from transformer is concatenated (Indices, Values...)
                     for info in self.data_column_info:
-                        dim = info['input_dim'] # 1 for embedding (index)
-                        col_data = real_data_batch[:, real_ptr:real_ptr+dim]
+                        dim = info["input_dim"]  # 1 for embedding (index)
+                        col_data = real_data_batch[:, real_ptr : real_ptr + dim]
                         real_ptr += dim
-                        
-                        if info['type'] == 'embedding':
-                            emb_vect = self.embedding_layers[info['name']](col_data.long().squeeze(1))
+
+                        if info["type"] == "embedding":
+                            emb_vect = self.embedding_layers[info["name"]](
+                                col_data.long().squeeze(1)
+                            )
                             real_parts.append(emb_vect)
                         else:
                             real_parts.append(col_data)
-                    
+
                     real_data_processed = torch.cat(real_parts, dim=1)
 
                     if real_context_batch is not None:
-                        fake_input = torch.cat([fake_data_batch, real_context_batch], dim=1)
-                        real_input_processed = torch.cat([real_data_processed, real_context_batch], dim=1)
+                        fake_input = torch.cat(
+                            [fake_data_batch, real_context_batch], dim=1
+                        )
+                        real_input_processed = torch.cat(
+                            [real_data_processed, real_context_batch], dim=1
+                        )
                     else:
                         fake_input = fake_data_batch
                         real_input_processed = real_data_processed
@@ -425,50 +479,63 @@ class CTGAN(ConditionalGenerativeModel):
                     # Compute WGAN loss
                     d_real = self.discriminator(real_input_processed)
                     d_fake = self.discriminator(fake_input)
-                    
+
                     # Gradient Penalty
-                    gp = compute_gradient_penalty(self.discriminator, real_input_processed, fake_input, self.device)
-                    
+                    gp = compute_gradient_penalty(
+                        self.discriminator,
+                        real_input_processed,
+                        fake_input,
+                        self.device,
+                    )
+
                     loss_D = -torch.mean(d_real) + torch.mean(d_fake) + 10.0 * gp
-                    
-                    optimizer_D.zero_grad()
+
                     loss_D.backward()
+                    torch.nn.utils.clip_grad_norm_(
+                        self.discriminator.parameters(), max_norm=1.0
+                    )
                     optimizer_D.step()
 
                 # --- Train Generator ---
                 # Train generator once after n_critic discriminator steps
-                noise = torch.randn(self.batch_size, self.embedding_dim, device=self.device)
+                noise = torch.randn(
+                    self.batch_size, self.embedding_dim, device=self.device
+                )
                 if context_data is not None:
                     if self.legacy_context_conditioning:
                         # Backwards-compatible: reuse last discriminator batch context
                         gen_context_batch = real_context_batch
                     else:
                         # Correct: independently sample fresh context for generator step
-                        gen_ctx_idx = np.random.randint(0, len(context_data), self.batch_size)
+                        gen_ctx_idx = np.random.randint(
+                            0, len(context_data), self.batch_size
+                        )
                         gen_context_batch = context_data[gen_ctx_idx]
                     gen_input = torch.cat([noise, gen_context_batch], dim=1)
                 else:
                     gen_input = noise
-                    
+
                 fake_raw = self.generator(gen_input)
-                
+
                 # Apply Embeddings / Softmax (Same logic as above)
                 fake_parts = []
                 fake_ptr = 0
                 for info in self.data_column_info:
-                    if info['type'] == 'embedding':
-                        dim = info['num_categories']
-                        logits = fake_raw[:, fake_ptr:fake_ptr+dim]
+                    if info["type"] == "embedding":
+                        dim = info["num_categories"]
+                        logits = fake_raw[:, fake_ptr : fake_ptr + dim]
                         fake_ptr += dim
                         probs = F.softmax(logits, dim=1)
-                        emb_vect = self.embedding_layers[info['name']].forward_soft(probs)
+                        emb_vect = self.embedding_layers[info["name"]].forward_soft(
+                            probs
+                        )
                         fake_parts.append(emb_vect)
                     else:
-                        dim = info['output_dim']
-                        val = fake_raw[:, fake_ptr:fake_ptr+dim]
+                        dim = info["output_dim"]
+                        val = fake_raw[:, fake_ptr : fake_ptr + dim]
                         fake_ptr += dim
                         fake_parts.append(val)
-                
+
                 fake_data_batch = torch.cat(fake_parts, dim=1)
 
                 if context_data is not None:
@@ -478,11 +545,16 @@ class CTGAN(ConditionalGenerativeModel):
 
                 d_fake = self.discriminator(fake_input)
                 loss_G = -torch.mean(d_fake)
-                
+
                 optimizer_G.zero_grad()
                 loss_G.backward()
+                torch.nn.utils.clip_grad_norm_(
+                    list(self.generator.parameters())
+                    + list(self.embedding_layers.parameters()),
+                    max_norm=1.0,
+                )
                 optimizer_G.step()
-                    
+
             # --- Checkpointing & Logging ---
             current_loss_g = loss_G.item()
             current_loss_d = loss_D.item()
@@ -492,14 +564,18 @@ class CTGAN(ConditionalGenerativeModel):
             _epochs_done = epoch + 1
             _elapsed_per_epoch = _elapsed / _epochs_done
             _remaining_epochs = self.epochs - _epochs_done
-            eta_seconds = _elapsed_per_epoch * _remaining_epochs  # 0.0 on final epoch — correct
+            eta_seconds = (
+                _elapsed_per_epoch * _remaining_epochs
+            )  # 0.0 on final epoch — correct
 
             # Update tqdm postfix (visual only; fires regardless of disable state)
-            pbar.set_postfix({
-                "g_loss": f"{current_loss_g:.4f}",
-                "d_loss": f"{current_loss_d:.4f}",
-                "eta": f"{int(eta_seconds)}s",
-            })
+            pbar.set_postfix(
+                {
+                    "g_loss": f"{current_loss_g:.4f}",
+                    "d_loss": f"{current_loss_d:.4f}",
+                    "eta": f"{int(eta_seconds)}s",
+                }
+            )
 
             # Prepare epoch_end log fields (val_metric added below on checkpoint epochs)
             epoch_log_fields = dict(
@@ -511,40 +587,49 @@ class CTGAN(ConditionalGenerativeModel):
 
             # Checkpoint validation (every checkpoint_interval epochs, only when checkpoint_dir set)
             _is_checkpoint_epoch = (
-                checkpoint_dir is not None
-                and (epoch + 1) % checkpoint_interval == 0
+                checkpoint_dir is not None and (epoch + 1) % checkpoint_interval == 0
             )
 
             if _is_checkpoint_epoch:
-                # Generate a small validation sample from current generator state
-                self.generator.eval()
-                self.discriminator.eval()
-                with torch.no_grad():
-                    val_synth = self.sample(min(len(data), 500))
-                self.generator.train()
-                self.discriminator.train()
-
-                # Align columns: drop columns not present in synthetic output (FK/PK)
-                real_for_val = data[[c for c in data.columns if c in val_synth.columns]].copy()
-
-                results = _validator.compare_columns(real_for_val, val_synth)
-                stats = [
-                    v['statistic']
-                    for v in results.values()
-                    if isinstance(v, dict) and 'statistic' in v
-                ]
-
-                if stats:
-                    val_metric = sum(stats) / len(stats)
-                    # Include val_metric in epoch_end only on checkpoint epochs
-                    epoch_log_fields["val_metric"] = val_metric
-                else:
-                    log.warning(
-                        "checkpoint_validation_empty",
+                if context_dim > 0:
+                    log.debug(
+                        "checkpoint_validation_skipped",
                         epoch=epoch,
-                        note="compare_columns returned no valid stats — skipping checkpoint",
+                        note="Skipping checkpoint validation for context-conditioned model",
                     )
-                    val_metric = float('inf')
+                    val_metric = float("inf")
+                else:
+                    # Generate a small validation sample from current generator state
+                    self.generator.eval()
+                    self.discriminator.eval()
+                    with torch.no_grad():
+                        val_synth = self.sample(min(len(data), 500))
+                    self.generator.train()
+                    self.discriminator.train()
+
+                    # Align columns: drop columns not present in synthetic output (FK/PK)
+                    real_for_val = data[
+                        [c for c in data.columns if c in val_synth.columns]
+                    ].copy()
+
+                    results = _validator.compare_columns(real_for_val, val_synth)
+                    stats = [
+                        v["statistic"]
+                        for v in results.values()
+                        if isinstance(v, dict) and "statistic" in v
+                    ]
+
+                    if stats:
+                        val_metric = sum(stats) / len(stats)
+                        # Include val_metric in epoch_end only on checkpoint epochs
+                        epoch_log_fields["val_metric"] = val_metric
+                    else:
+                        log.warning(
+                            "checkpoint_validation_empty",
+                            epoch=epoch,
+                            note="compare_columns returned no valid stats — skipping checkpoint",
+                        )
+                        val_metric = float("inf")
 
                 if val_metric < best_val_metric:
                     best_val_metric = val_metric
@@ -564,11 +649,9 @@ class CTGAN(ConditionalGenerativeModel):
             log.info("epoch_end", **epoch_log_fields)
 
             if log_metrics:
-                history.append({
-                    'epoch': epoch,
-                    'loss_g': current_loss_g,
-                    'loss_d': current_loss_d
-                })
+                history.append(
+                    {"epoch": epoch, "loss_g": current_loss_g, "loss_d": current_loss_d}
+                )
 
         # End of training: Save final checkpoint and metrics
         if checkpoint_dir:
@@ -579,7 +662,7 @@ class CTGAN(ConditionalGenerativeModel):
             if best_checkpoint_path is None:
                 best_checkpoint_path = final_cp
                 best_epoch = self.epochs - 1
-                best_val_metric = float('inf')
+                best_val_metric = float("inf")
 
         # Emit training_complete with real validation-metric values (QUAL-03)
         log.info(
@@ -593,13 +676,20 @@ class CTGAN(ConditionalGenerativeModel):
         if checkpoint_dir and log_metrics and history:
             metrics_path = os.path.join(checkpoint_dir, "training_metrics.csv")
             keys = history[0].keys()
-            with open(metrics_path, 'w', newline='') as f:
+            with open(metrics_path, "w", newline="") as f:
                 dict_writer = csv.DictWriter(f, fieldnames=keys)
                 dict_writer.writeheader()
                 dict_writer.writerows(history)
             print(f"Training metrics saved to {metrics_path}")
 
-    def sample(self, num_rows: int, context: Optional[pd.DataFrame] = None, seed: Optional[int] = None, enforce_constraints: bool = False, **kwargs: Any) -> pd.DataFrame:
+    def sample(
+        self,
+        num_rows: int,
+        context: Optional[pd.DataFrame] = None,
+        seed: Optional[int] = None,
+        enforce_constraints: bool = False,
+        **kwargs: Any,
+    ) -> pd.DataFrame:
         """Generate synthetic samples, optionally conditioned on parent context.
 
         Args:
@@ -623,17 +713,26 @@ class CTGAN(ConditionalGenerativeModel):
         if seed is not None:
             _set_seed(seed)
 
+        if num_rows <= 0:
+            raise ValueError(f"num_rows must be positive, got {num_rows}")
+
+        was_training = self.generator.training
         self.generator.eval()
         with torch.no_grad():
             noise = torch.randn(num_rows, self.embedding_dim, device=self.device)
 
             if context is not None:
-                # Assuming context is provided for exactly num_rows
-                assert len(context) == num_rows
+                if len(context) != num_rows:
+                    raise ValueError(
+                        f"context must have exactly num_rows={num_rows} rows, "
+                        f"got {len(context)}"
+                    )
 
                 # Transform context using the fitted context transformer
                 context_transformed = self.context_transformer.transform(context)
-                context_data = torch.from_numpy(context_transformed).float().to(self.device)
+                context_data = (
+                    torch.from_numpy(context_transformed).float().to(self.device)
+                )
 
                 gen_input = torch.cat([noise, context_data], dim=1)
             else:
@@ -645,17 +744,17 @@ class CTGAN(ConditionalGenerativeModel):
             output_parts = []
             fake_ptr = 0
             for info in self.data_column_info:
-                if info['type'] == 'embedding':
-                    dim = info['num_categories']
-                    logits = fake_raw[:, fake_ptr:fake_ptr+dim]
+                if info["type"] == "embedding":
+                    dim = info["num_categories"]
+                    logits = fake_raw[:, fake_ptr : fake_ptr + dim]
                     fake_ptr += dim
 
                     # Argmax to get index
                     indices = torch.argmax(logits, dim=1, keepdim=True)
                     output_parts.append(indices.cpu().numpy())
                 else:
-                    dim = info['output_dim']
-                    val = fake_raw[:, fake_ptr:fake_ptr+dim]
+                    dim = info["output_dim"]
+                    val = fake_raw[:, fake_ptr : fake_ptr + dim]
                     fake_ptr += dim
                     output_parts.append(val.cpu().numpy())
 
@@ -669,8 +768,8 @@ class CTGAN(ConditionalGenerativeModel):
         # catching any residual violations before returning rows to the caller.
         if enforce_constraints:
             table_config = None
-            table_name = getattr(self.transformer, 'table_name', None)
-            if hasattr(self, 'metadata') and table_name:
+            table_name = getattr(self.transformer, "table_name", None)
+            if hasattr(self, "metadata") and table_name:
                 try:
                     table_config = self.metadata.get_table(table_name)
                 except Exception as exc:
@@ -697,7 +796,7 @@ class CTGAN(ConditionalGenerativeModel):
                     min_val = constraint.min
                     if min_val is not None:
                         try:
-                            col_numeric = pd.to_numeric(col_data, errors='coerce')
+                            col_numeric = pd.to_numeric(col_data, errors="coerce")
                             bad = col_numeric < min_val
                             if bad.any():
                                 observed = col_numeric[bad].min()
@@ -717,7 +816,7 @@ class CTGAN(ConditionalGenerativeModel):
                     max_val = constraint.max
                     if max_val is not None:
                         try:
-                            col_numeric = pd.to_numeric(col_data, errors='coerce')
+                            col_numeric = pd.to_numeric(col_data, errors="coerce")
                             bad = col_numeric > max_val
                             if bad.any():
                                 observed = col_numeric[bad].max()
@@ -744,8 +843,11 @@ class CTGAN(ConditionalGenerativeModel):
                         f"{summary}"
                     )
 
+        if was_training:
+            self.generator.train()
+
         return result_df
-        
+
     def save(self, path: str, *, overwrite: bool = False) -> None:
         """Persist full model state to a directory checkpoint.
 
@@ -803,6 +905,7 @@ class CTGAN(ConditionalGenerativeModel):
             # Metadata — human-readable, enables version mismatch detection on load
             try:
                 from syntho_hive import __version__
+
                 current_version = __version__
             except Exception as exc:
                 log.warning(
@@ -858,9 +961,12 @@ class CTGAN(ConditionalGenerativeModel):
             )
 
         required_files = [
-            "generator.pt", "discriminator.pt",
-            "transformer.joblib", "context_transformer.joblib",
-            "embedding_layers.joblib", "data_column_info.joblib",
+            "generator.pt",
+            "discriminator.pt",
+            "transformer.joblib",
+            "context_transformer.joblib",
+            "embedding_layers.joblib",
+            "data_column_info.joblib",
         ]
         missing = [f for f in required_files if not (p / f).exists()]
         if missing:
@@ -879,6 +985,7 @@ class CTGAN(ConditionalGenerativeModel):
                     meta = json.load(f)
                 try:
                     from syntho_hive import __version__
+
                     current_version = __version__
                 except Exception as exc:
                     log.warning(
@@ -904,7 +1011,9 @@ class CTGAN(ConditionalGenerativeModel):
                 if "discriminator_dim" in meta:
                     self.discriminator_dim = tuple(meta["discriminator_dim"])
                 # Default False for forward compatibility with old checkpoints that lack this key
-                self.legacy_context_conditioning = meta.get("legacy_context_conditioning", False)
+                self.legacy_context_conditioning = meta.get(
+                    "legacy_context_conditioning", False
+                )
 
             # Load sklearn objects first — transformer must be in place before _build_model()
             self.transformer = joblib.load(p / "transformer.joblib")
@@ -915,7 +1024,10 @@ class CTGAN(ConditionalGenerativeModel):
             saved_embedding_layers = joblib.load(p / "embedding_layers.joblib")
 
             # Validate transformer round-trip integrity
-            if not hasattr(self.transformer, 'output_dim') or self.transformer.output_dim <= 0:
+            if (
+                not hasattr(self.transformer, "output_dim")
+                or self.transformer.output_dim <= 0
+            ):
                 raise SerializationError(
                     f"SerializationError: Loaded transformer has invalid output_dim "
                     f"({getattr(self.transformer, 'output_dim', 'missing')}). "
@@ -925,7 +1037,7 @@ class CTGAN(ConditionalGenerativeModel):
             # Derive dimensions needed to reconstruct the generator/discriminator architecture.
             # context_transformer.output_dim is 0 when no context was used during training.
             data_dim = self.transformer.output_dim
-            context_dim = getattr(self.context_transformer, 'output_dim', 0)
+            context_dim = getattr(self.context_transformer, "output_dim", 0)
 
             # Reconstruct generator/discriminator architecture.
             # _build_model() internally calls _compile_layout(self.transformer) which overwrites
@@ -939,6 +1051,10 @@ class CTGAN(ConditionalGenerativeModel):
 
             # Load network weights — weights_only=False REQUIRED for PyTorch 2.6+
             # (PyTorch 2.6 changed default to weights_only=True; custom objects fail without False)
+            # SECURITY WARNING: weights_only=False uses pickle deserialization under the hood,
+            # which can execute arbitrary code. Only load checkpoints from trusted sources.
+            # Restructuring to weights_only=True requires registering all custom types with
+            # torch.serialization.add_safe_globals() and is a non-trivial migration.
             self.generator.load_state_dict(
                 torch.load(p / "generator.pt", weights_only=False)
             )

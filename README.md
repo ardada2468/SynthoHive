@@ -153,6 +153,8 @@ report.generate(
 
 ## Documentation
 
+See [CHANGELOG.md](CHANGELOG.md) for release history and upgrade notes.
+
 Full documentation is available at the [MkDocs site](https://ardada2468.github.io/SynthoHive) or can be built locally:
 
 ```bash

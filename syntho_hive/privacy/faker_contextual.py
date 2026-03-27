@@ -4,9 +4,10 @@ import pandas as pd
 import numpy as np
 import logging
 
+
 class ContextualFaker:
     """Context-aware PII generator leveraging Faker locales."""
-    
+
     LOCALE_MAP = {
         "JP": "ja_JP",
         "US": "en_US",
@@ -18,14 +19,14 @@ class ContextualFaker:
         "IN": "en_IN",
         # Add more as needed
     }
-    
+
     def __init__(self):
         """Initialize faker cache and logger."""
         self._fakers: Dict[str, Faker] = {}
         # Initialize default
         self._fakers["default"] = Faker()
         self.logger = logging.getLogger(__name__)
-        
+
     def _get_faker(self, locale: Optional[str]) -> Faker:
         """Get or create a Faker instance for a locale.
 
@@ -37,19 +38,23 @@ class ContextualFaker:
         """
         if not locale:
             return self._fakers["default"]
-            
+
         mapped_locale = self.LOCALE_MAP.get(locale.upper(), "en_US")
-        
+
         if mapped_locale not in self._fakers:
             try:
                 self._fakers[mapped_locale] = Faker(mapped_locale)
             except Exception as e:
-                self.logger.warning(f"Could not load locale {mapped_locale}, falling back to default. Error: {e}")
+                self.logger.warning(
+                    f"Could not load locale {mapped_locale}, falling back to default. Error: {e}"
+                )
                 self._fakers[mapped_locale] = self._fakers["default"]
-            
+
         return self._fakers[mapped_locale]
 
-    def generate_pii(self, pii_type: str, context: Optional[Dict[str, Any]] = None, count: int = 1) -> List[str]:
+    def generate_pii(
+        self, pii_type: str, context: Optional[Dict[str, Any]] = None, count: int = 1
+    ) -> List[str]:
         """Generate PII values with optional contextual locale.
 
         Args:
@@ -62,42 +67,50 @@ class ContextualFaker:
         """
         if context is None:
             context = {}
-            
+
         # Attempt to infer locale from context
         # Heuristic: Look for 'country', 'region', 'locale' keys
-        locale = context.get('country') or context.get('locale') or context.get('region')
-        
+        locale = (
+            context.get("country") or context.get("locale") or context.get("region")
+        )
+
         fake = self._get_faker(locale if isinstance(locale, str) else None)
-        
+
         results = []
         for _ in range(count):
             val = self._generate_single_value(fake, pii_type)
             results.append(val)
-                
+
         return results
 
     def _generate_single_value(self, fake: Faker, pii_type: str) -> str:
         """Generate a single PII value using a Faker instance."""
         try:
             if hasattr(fake, pii_type):
-                 # Dynamic method call on Faker instance
+                # Dynamic method call on Faker instance
                 return str(getattr(fake, pii_type)())
-            
+
             # Custom mappings for common PII types if name mismatch or special logic
-            if pii_type == 'phone':
-                 return fake.phone_number()
-            elif pii_type == 'ip' or pii_type == 'ipv4':
+            if pii_type == "phone":
+                return fake.phone_number()
+            elif pii_type == "ip" or pii_type == "ipv4":
                 return fake.ipv4()
-            elif pii_type == 'credit_card':
+            elif pii_type == "credit_card":
                 return fake.credit_card_number()
-            
+            elif pii_type == "date_of_birth":
+                return str(fake.date_of_birth())
+            elif pii_type == "address":
+                return fake.address()
+
             # Fallback
             return str(fake.text(max_nb_chars=20))
         except Exception as e:
             self.logger.error(f"Error generating {pii_type}: {e}")
             return "REDACTED"
 
-    def process_dataframe(self, df: pd.DataFrame, pii_cols: Dict[str, str]) -> pd.DataFrame:
+    def process_dataframe(
+        self, df: pd.DataFrame, pii_cols: Dict[str, str]
+    ) -> pd.DataFrame:
         """Replace placeholders with generated PII in a dataframe.
 
         Args:
@@ -108,17 +121,19 @@ class ContextualFaker:
             DataFrame with specified columns replaced by generated PII.
         """
         output_df = df.copy()
-        
+
         # Check if we have context columns
-        has_country_context = 'country' in df.columns or 'locale' in df.columns
-        
+        has_country_context = "country" in df.columns or "locale" in df.columns
+
         if not has_country_context:
             # Fast path: Vectorized apply (Fake doesn't vectorize well but we avoid row iteration overhead if possible)
             # Actually simpler: Just generate N fake values using default locale
             for col, pii_type in pii_cols.items():
                 fake = self._get_faker(None)
                 # Generate list
-                values = [self._generate_single_value(fake, pii_type) for _ in range(len(df))]
+                values = [
+                    self._generate_single_value(fake, pii_type) for _ in range(len(df))
+                ]
                 output_df[col] = values
         else:
             # Slow path: Row-by-row for context awareness
@@ -127,5 +142,5 @@ class ContextualFaker:
                 for col, pii_type in pii_cols.items():
                     val = self.generate_pii(pii_type, context=context, count=1)[0]
                     output_df.at[idx, col] = val
-                
+
         return output_df

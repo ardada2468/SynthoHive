@@ -1,32 +1,54 @@
 from typing import List, Dict, Optional, Union, Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 import numpy as np
 import pandas as pd
-from syntho_hive.exceptions import SchemaValidationError
+from syntho_hive.exceptions import SchemaError, SchemaValidationError
+
 
 class PrivacyConfig(BaseModel):
     """Configuration for privacy guardrails applied during synthesis."""
+
     enable_differential_privacy: bool = False
     epsilon: float = 1.0
-    pii_strategy: Literal["mask", "faker", "context_aware_faker"] = "context_aware_faker"
+    pii_strategy: Literal["mask", "faker", "context_aware_faker"] = (
+        "context_aware_faker"
+    )
     k_anonymity_threshold: int = 5
     pii_columns: List[str] = Field(default_factory=list)
 
+    @field_validator("epsilon")
+    @classmethod
+    def validate_epsilon(cls, v: float) -> float:
+        if v <= 0:
+            raise ValueError("epsilon must be positive")
+        return v
+
+
 class Constraint(BaseModel):
     """Configuration object describing numeric constraints for a column."""
+
     dtype: Optional[Literal["int", "float"]] = None
     min: Optional[float] = None
     max: Optional[float] = None
 
+
 class TableConfig(BaseModel):
     """Configuration for a single table, including keys and constraints."""
+
     name: str
     pk: str
     pii_cols: List[str] = Field(default_factory=list)
     high_cardinality_cols: List[str] = Field(default_factory=list)
-    fk: Dict[str, str] = Field(default_factory=dict, description="Map of local_col -> parent_table.parent_col")
-    parent_context_cols: List[str] = Field(default_factory=list, description="List of parent attributes to condition on (e.g., 'users.region')")
-    constraints: Dict[str, Constraint] = Field(default_factory=dict, description="Map of col_name -> Constraint")
+    fk: Dict[str, str] = Field(
+        default_factory=dict, description="Map of local_col -> parent_table.parent_col"
+    )
+    parent_context_cols: List[str] = Field(
+        default_factory=list,
+        description="List of parent attributes to condition on (e.g., 'users.region')",
+    )
+    constraints: Dict[str, Constraint] = Field(
+        default_factory=dict, description="Map of col_name -> Constraint"
+    )
     linkage_method: Literal["empirical", "negbinom"] = "empirical"
 
     @property
@@ -53,22 +75,26 @@ def _dtypes_compatible(dtype_a: str, dtype_b: str) -> bool:
     except TypeError:
         # pandas extension types — be conservative and assume compatible.
         return True
-    integer_kinds = {'i', 'u'}
-    string_kinds = {'U', 'O', 'S'}
-    if kind_a in integer_kinds and kind_b in integer_kinds:
+    numeric_kinds = {"i", "u", "f"}
+    string_kinds = {"U", "O", "S"}
+    if kind_a in numeric_kinds and kind_b in numeric_kinds:
         return True
     if kind_a in string_kinds and kind_b in string_kinds:
-        return True
-    if kind_a == 'f' and kind_b == 'f':
         return True
     return False
 
 
 class Metadata(BaseModel):
     """Schema definition for the entire dataset."""
+
     tables: Dict[str, TableConfig] = Field(default_factory=dict)
 
-    def add_table(self, name: str, pk: str, **kwargs: Union[List[str], Dict[str, str], Dict[str, Constraint]]):
+    def add_table(
+        self,
+        name: str,
+        pk: str,
+        **kwargs: Union[List[str], Dict[str, str], Dict[str, Constraint]],
+    ):
         """Register a table configuration.
 
         Args:
@@ -77,10 +103,10 @@ class Metadata(BaseModel):
             **kwargs: Additional fields to populate ``TableConfig``.
 
         Raises:
-            ValueError: If a table with the same name already exists.
+            SchemaError: If a table with the same name already exists.
         """
         if name in self.tables:
-             raise ValueError(f"Table '{name}' already exists in metadata.")
+            raise SchemaError(f"Table '{name}' already exists in metadata.")
         self.tables[name] = TableConfig(name=name, pk=pk, **kwargs)
 
     def get_table(self, name: str) -> Optional[TableConfig]:
@@ -94,7 +120,9 @@ class Metadata(BaseModel):
         """
         return self.tables.get(name)
 
-    def validate_schema(self, real_data: Optional[Dict[str, "pd.DataFrame"]] = None) -> None:
+    def validate_schema(
+        self, real_data: Optional[Dict[str, "pd.DataFrame"]] = None
+    ) -> None:
         """Validate schema integrity, focusing on foreign key references.
 
         Collects all errors before raising so callers see the complete problem

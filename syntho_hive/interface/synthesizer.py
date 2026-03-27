@@ -17,7 +17,7 @@ from syntho_hive.core.models.ctgan import CTGAN
 # Allowlist regex for Hive/SQL identifier validation.
 # Only letters, digits, and underscores are permitted — everything else is rejected
 # before any spark.sql() interpolation occurs, preventing SQL injection via user input.
-_SAFE_IDENTIFIER = re.compile(r'^[a-zA-Z0-9_]+$')
+_SAFE_IDENTIFIER = re.compile(r"^[a-zA-Z0-9_]+$")
 
 try:
     from pyspark.sql import SparkSession
@@ -29,13 +29,14 @@ log = structlog.get_logger()
 
 class Synthesizer:
     """Main entry point that wires metadata, privacy, and orchestration."""
+
     def __init__(
         self,
         metadata: Metadata,
         privacy_config: PrivacyConfig,
         spark_session: Optional[SparkSession] = None,
         model: Type[ConditionalGenerativeModel] = CTGAN,
-        embedding_threshold: int = 50
+        embedding_threshold: int = 50,
     ):
         """Instantiate the synthesizer façade.
 
@@ -57,7 +58,9 @@ class Synthesizer:
                 unchanged.
             embedding_threshold: Cardinality threshold for switching to embeddings.
         """
-        if not (isinstance(model, type) and issubclass(model, ConditionalGenerativeModel)):
+        if not (
+            isinstance(model, type) and issubclass(model, ConditionalGenerativeModel)
+        ):
             raise TypeError(
                 f"model_cls must be a subclass of ConditionalGenerativeModel, "
                 f"got {model!r}. Implement fit(), sample(), save(), load() "
@@ -72,13 +75,17 @@ class Synthesizer:
 
         # Initialize internal components
         if self.spark:
-            self.orchestrator = StagedOrchestrator(metadata, self.spark, model_cls=self.model_cls)
+            self.orchestrator = StagedOrchestrator(
+                metadata, self.spark, model_cls=self.model_cls
+            )
         else:
-            self.orchestrator = None # Mode without Spark (maybe local pandas only in future)
+            self.orchestrator = (
+                None  # Mode without Spark (maybe local pandas only in future)
+            )
 
     def fit(
         self,
-        data: Any, # Str (database name) or Dict[str, str] (table paths)
+        data: Any,  # Str (database name) or Dict[str, str] (table paths)
         sampling_strategy: str = "relational_stratified",
         sample_size: int = 5_000_000,
         validate: bool = False,
@@ -87,7 +94,7 @@ class Synthesizer:
         progress_bar: bool = True,
         checkpoint_interval: int = 10,
         checkpoint_dir: Optional[str] = None,
-        **model_kwargs: Union[int, str, Tuple[int, int]]
+        **model_kwargs: Union[int, str, Tuple[int, int]],
     ):
         """Fit the generative models on the real database.
 
@@ -109,9 +116,23 @@ class Synthesizer:
             SchemaError: If the data argument is invalid.
             TrainingError: If training fails for any reason.
         """
+        if sampling_strategy != "full":
+            import warnings
+
+            warnings.warn(
+                f"sampling_strategy='{sampling_strategy}' is not yet implemented. "
+                "Using full dataset. This will be supported in a future release.",
+                UserWarning,
+                stacklevel=2,
+            )
+
         try:
             if validate:
-                if isinstance(data, dict) and data and isinstance(next(iter(data.values())), pd.DataFrame):
+                if (
+                    isinstance(data, dict)
+                    and data
+                    and isinstance(next(iter(data.values())), pd.DataFrame)
+                ):
                     # User passed actual DataFrames — data-level FK type checks are possible
                     self.metadata.validate_schema(real_data=data)
                 else:
@@ -124,7 +145,9 @@ class Synthesizer:
             if sample_size <= 0:
                 raise ValueError("sample_size must be positive")
 
-            print(f"Fitting on data source with {sampling_strategy} (target: {sample_size} rows)...")
+            print(
+                f"Fitting on data source with {sampling_strategy} (target: {sample_size} rows)..."
+            )
             print(f"Training Config: epochs={epochs}, batch_size={batch_size}")
 
             # Determine paths
@@ -145,17 +168,20 @@ class Synthesizer:
                 progress_bar=progress_bar,
                 checkpoint_interval=checkpoint_interval,
                 checkpoint_dir=checkpoint_dir,
-                **model_kwargs
+                **model_kwargs,
             )
         except SynthoHiveError:
             raise
         except Exception as exc:
             log.error("fit_failed", error=str(exc))
-            raise TrainingError(
-                f"fit() failed. Original error: {exc}"
-            ) from exc
+            raise TrainingError(f"fit() failed. Original error: {exc}") from exc
 
-    def sample(self, num_rows: Dict[str, int], output_format: str = "delta", output_path: Optional[str] = None) -> Union[Dict[str, str], Dict[str, pd.DataFrame]]:
+    def sample(
+        self,
+        num_rows: Dict[str, int],
+        output_format: str = "delta",
+        output_path: Optional[str] = None,
+    ) -> Union[Dict[str, str], Dict[str, pd.DataFrame]]:
         """Generate synthetic data for each table.
 
         Args:
@@ -177,7 +203,7 @@ class Synthesizer:
 
             # If output_path is explicitly None, we return DataFrames
             if output_path is None:
-                 return self.orchestrator.generate(num_rows, output_path_base=None)
+                return self.orchestrator.generate(num_rows, output_path_base=None)
 
             output_base = output_path
             self.orchestrator.generate(num_rows, output_base)
@@ -188,9 +214,7 @@ class Synthesizer:
             raise
         except Exception as exc:
             log.error("sample_failed", error=str(exc))
-            raise TrainingError(
-                f"sample() failed. Original error: {exc}"
-            ) from exc
+            raise TrainingError(f"sample() failed. Original error: {exc}") from exc
 
     def save(self, path: str) -> None:
         """Persist the synthesizer state to disk.
@@ -203,6 +227,7 @@ class Synthesizer:
         """
         try:
             import joblib
+
             joblib.dump(self, path)
             log.info("synthesizer_saved", path=path)
         except SynthoHiveError:
@@ -212,6 +237,19 @@ class Synthesizer:
             raise SerializationError(
                 f"save() failed writing synthesizer to '{path}'. Original error: {exc}"
             ) from exc
+
+    def __getstate__(self):
+        """Exclude non-serializable attributes (SparkSession, IO) from pickling."""
+        state = self.__dict__.copy()
+        state.pop("spark", None)
+        state.pop("io", None)
+        return state
+
+    def __setstate__(self, state):
+        """Restore instance from pickled state; non-serializable attrs set to None."""
+        self.__dict__.update(state)
+        self.spark = None
+        self.io = None
 
     @classmethod
     def load(cls, path: str) -> "Synthesizer":
@@ -228,6 +266,7 @@ class Synthesizer:
         """
         try:
             import joblib
+
             instance = joblib.load(path)
             log.info("synthesizer_loaded", path=path)
             return instance
@@ -239,7 +278,12 @@ class Synthesizer:
                 f"load() failed reading synthesizer from '{path}'. Original error: {exc}"
             ) from exc
 
-    def generate_validation_report(self, real_data: Dict[str, str], synthetic_data: Dict[str, str], output_path: str):
+    def generate_validation_report(
+        self,
+        real_data: Dict[str, str],
+        synthetic_data: Dict[str, str],
+        output_path: str,
+    ):
         """Generate a validation report comparing real vs synthetic datasets.
 
         Args:
@@ -252,7 +296,9 @@ class Synthesizer:
         """
         try:
             if not self.spark:
-                 raise ValueError("SparkSession required for validation report generation")
+                raise ValueError(
+                    "SparkSession required for validation report generation"
+                )
 
             print("Generating validation report...")
             report_gen = ValidationReport()
@@ -269,7 +315,7 @@ class Synthesizer:
                 except Exception as exc:
                     log.warning("delta_read_fallback_failed", error=str(exc))
                     raise SerializationError(
-                        f"generate_validation_report() failed reading synthetic data. "
+                        f"generate_validation_report() failed reading real data. "
                         f"Original error: {exc}"
                     ) from exc
 
@@ -286,12 +332,18 @@ class Synthesizer:
         except SynthoHiveError:
             raise
         except Exception as exc:
-            log.error("generate_validation_report_failed", output_path=output_path, error=str(exc))
+            log.error(
+                "generate_validation_report_failed",
+                output_path=output_path,
+                error=str(exc),
+            )
             raise SynthoHiveError(
                 f"generate_validation_report() failed. Original error: {exc}"
             ) from exc
 
-    def save_to_hive(self, synthetic_data: Dict[str, str], target_db: str, overwrite: bool = True):
+    def save_to_hive(
+        self, synthetic_data: Dict[str, str], target_db: str, overwrite: bool = True
+    ):
         """Register generated datasets as Hive tables.
 
         Args:
@@ -322,6 +374,13 @@ class Synthesizer:
                     f"Only letters, digits, and underscores [a-zA-Z0-9_] are allowed."
                 )
 
+        # Validate paths from synthetic_data values
+        for table_name, path in synthetic_data.items():
+            if "'" in str(path):
+                raise ValueError(
+                    f"Path for table '{table_name}' contains invalid characters: {path}"
+                )
+
         print(f"Save to Hive database: {target_db}")
 
         # Ensure DB exists
@@ -335,4 +394,6 @@ class Synthesizer:
                 self.spark.sql(f"DROP TABLE IF EXISTS {full_table_name}")
 
             # Register External Table
-            self.spark.sql(f"CREATE TABLE {full_table_name} USING DELTA LOCATION '{path}'")
+            self.spark.sql(
+                f"CREATE TABLE {full_table_name} USING DELTA LOCATION '{path}'"
+            )

@@ -31,16 +31,18 @@ To preserve correlations across tables (e.g., "Users in NY order Winter Coats"),
 
 ## The Orchestration Flow
 
-1.  **Schema Analysis**: `SchemaGraph` constructs a Directed Acyclic Graph (DAG) of the schema from FK definitions.
-2.  **Topological Sort**: `get_generation_order()` determines generation order (Parents -> Children).
-3.  **Root Generation**: Generate independent root tables using standard CTGAN.
-4.  **Child Loop**:
+1.  **Schema Validation**: `validate_schema()` is called at the start of `fit_all()` to detect type mismatches, missing FK columns, and invalid references before training begins.
+2.  **Schema Analysis**: `SchemaGraph` constructs a Directed Acyclic Graph (DAG) of the schema from FK definitions. Self-referencing foreign keys (e.g., `manager_id -> employees.id`) are correctly recognized and do not raise false cycle errors.
+3.  **Topological Sort**: `get_generation_order()` determines generation order (Parents -> Children).
+4.  **Root Generation**: Generate independent root tables using standard CTGAN.
+5.  **Child Loop**:
     *   Load synthetic parent data.
     *   Sample child counts for each parent row via `LinkageModel`.
-    *   Repeat parent IDs and Context attributes.
+    *   Repeat parent IDs and Context attributes (validated to exist in the parent table).
     *   Generate child rows conditioned on repeated context.
     *   Sample valid FKs for secondary parents.
-    *   Assign sequential Primary Keys.
+    *   Assign sequential Primary Keys based on actual generated row count.
+    *   Zero child rows produce an empty DataFrame rather than being silently skipped.
 
 ## Code Example
 
