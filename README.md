@@ -21,22 +21,24 @@ Beyond simple single-table generation, SynthoHive excels at maintaining referent
 
 ## Installation
 
+Core install (no Spark — single-table models, privacy, validation):
+
 ```bash
 pip install synthohive
+```
+
+For the distributed Spark/Delta Lake pipeline, install the `spark` extra:
+
+```bash
+pip install "synthohive[spark]"
 ```
 
 ### Requirements
 
 *   **Python 3.9+**
-*   **PySpark 4.0+**: For distributed data processing (required for the `Synthesizer` facade; individual components like `CTGAN` work without Spark).
-*   **PyTorch**: For training deep generative models.
-*   **PyArrow**: Required for efficient Parquet file handling.
-
-Install all core dependencies at once:
-
-```bash
-pip install synthohive pyspark pandas pyarrow
-```
+*   **PyTorch**: For training deep generative models (installed with the core package).
+*   **PyArrow**: Required for efficient Parquet file handling (installed with the core package).
+*   **`spark` extra**: Pulls in PySpark 4.x and Delta Lake for distributed processing. Requires **Java 17** on the host.
 
 ---
 

@@ -1,6 +1,6 @@
-import pytest
 from syntho_hive import Metadata, PrivacyConfig
-from syntho_hive.core.models.base import GenerativeModel, ConditionalGenerativeModel
+from syntho_hive.core.models.base import GenerativeModel
+
 
 def test_imports():
     """Test that core components can be imported."""
@@ -17,7 +17,7 @@ def test_metadata_configuration():
         pii_cols=["email"],
         high_cardinality_cols=["city"]
     )
-    
+
     table = meta.get_table("users")
     assert table.name == "users"
     assert table.pk == "user_id"

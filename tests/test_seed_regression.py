@@ -1,7 +1,8 @@
 """TEST-05: Seed regression — two independent runs with seed=42 produce bit-identical output."""
-import pandas as pd
 import numpy as np
+import pandas as pd
 import pytest
+
 from syntho_hive.core.models.ctgan import CTGAN
 from syntho_hive.interface.config import Metadata
 
@@ -57,14 +58,7 @@ def test_different_seeds_produce_different_output(small_dataset, meta):
 
     # They might theoretically be equal by chance, but with a continuous column like income
     # this is astronomically unlikely with different training seeds.
-    # Use a soft check — warn rather than hard-fail.
-    try:
-        pd.testing.assert_frame_equal(run_a, run_b, check_exact=True)
-        import warnings
-        warnings.warn(
-            "Different seeds produced identical output — seed parameterization may not be working correctly.",
-            UserWarning,
-            stacklevel=2,
-        )
-    except AssertionError:
-        pass  # Expected: different seeds produce different output
+    assert not run_a.equals(run_b), (
+        "Different training seeds produced identical output — "
+        "seed parameterization is not affecting the model."
+    )

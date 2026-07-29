@@ -1,10 +1,11 @@
-from pathlib import Path
 import argparse
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 
-from syntho_hive.interface.config import Metadata
 from syntho_hive.core.models.ctgan import CTGAN
+from syntho_hive.interface.config import Metadata
 from syntho_hive.relational.linkage import LinkageModel
 
 
@@ -118,7 +119,7 @@ def main():
     parser.add_argument("--epochs", type=int, default=3, help="Training epochs for both GANs.")
     parser.add_argument(
         "--output-dir",
-        default="examples/demos/04_relational_linkage_ctgan/outputs",
+        default=str(Path(__file__).parent / "outputs"),
         help="Directory to place generated CSVs.",
     )
     args = parser.parse_args()

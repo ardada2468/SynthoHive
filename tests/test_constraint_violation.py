@@ -5,13 +5,15 @@ Gap closure for Phase 1 verification failure — the original Plan 03 implementa
 logged a warning and returned valid rows instead of raising. This test verifies the
 corrected behavior: violations raise ConstraintViolationError with column and value details.
 """
-import pandas as pd
-import numpy as np
-import pytest
 from unittest.mock import MagicMock, patch
+
+import numpy as np
+import pandas as pd
+import pytest
+
 from syntho_hive.core.models.ctgan import CTGAN
-from syntho_hive.interface.config import Metadata
 from syntho_hive.exceptions import ConstraintViolationError
+from syntho_hive.interface.config import Metadata
 
 
 @pytest.fixture

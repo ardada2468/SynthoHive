@@ -1,7 +1,8 @@
 import os
-import pandas as pd
-import torch
+
 import numpy as np
+import pandas as pd
+
 from syntho_hive.core.models.ctgan import CTGAN
 from syntho_hive.interface.config import Metadata
 
@@ -62,6 +63,7 @@ def test_checkpointing(tmp_path):
 
 
 if __name__ == "__main__":
-    import tempfile, pathlib
+    import pathlib
+    import tempfile
 
     test_checkpointing(pathlib.Path(tempfile.mkdtemp()))

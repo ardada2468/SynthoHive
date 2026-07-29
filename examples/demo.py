@@ -1,19 +1,19 @@
 from syntho_hive import Metadata, PrivacyConfig
 from syntho_hive.relational.orchestrator import StagedOrchestrator
-from syntho_hive.core.models.ctgan import CTGAN
+
 
 def main():
     # 1. Define Schema
     meta = Metadata()
     meta.add_table(
-        name="users", 
-        pk="user_id", 
+        name="users",
+        pk="user_id",
         pii_cols=["email", "name"],
         high_cardinality_cols=["city"]
     )
     meta.add_table(
-        name="orders", 
-        pk="order_id", 
+        name="orders",
+        pk="order_id",
         fk={"user_id": "users.user_id"},
         parent_context_cols=["users.region"]
     )
@@ -25,14 +25,14 @@ def main():
         pii_strategy="context_aware_faker"
     )
 
-    print("Metadata and Privacy Configured.")
-    
+    print(f"Metadata and Privacy Configured (strategy={privacy.pii_strategy}).")
+
     # 3. Initialize Orchestrator (Mock Spark)
     # real_spark = SparkSession.builder.getOrCreate()
     orchestrator = StagedOrchestrator(metadata=meta, spark=None)
-    
-    print("Orchestrator Initialized.")
-    
+
+    print(f"Orchestrator Initialized: {type(orchestrator).__name__}.")
+
     # 4. Generate Data (Dry Run)
     # orchestrator.fit_all(...)
     # orchestrator.generate(...)

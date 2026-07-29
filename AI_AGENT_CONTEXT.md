@@ -8,7 +8,7 @@
 
 ### 1.1 Dependency Graph (`pyproject.toml`)
 *   **Core**: `numpy>=1.21.0`, `pandas>=1.3.0`, `torch>=1.10.0`
-*   **Distributed**: `pyspark>=3.2.0`, `delta-spark>=2.0.0`, `pyarrow>=8.0.0`
+*   **Distributed (optional `spark` extra)**: `pyspark>=4.0.0,<5.0.0`, `delta-spark>=4.0.0,<5.0.0` — installed via `pip install "synthohive[spark]"`; `pyarrow>=8.0.0` stays in core.
 *   **Validation**: `scipy>=1.7.0`, `scikit-learn>=1.0.0`
 *   **Utilities**: `pydantic>=2.0.0`, `faker>=13.0.0`, `structlog>=21.1.0`
 *   **Dev**: `pytest>=7.0.0`

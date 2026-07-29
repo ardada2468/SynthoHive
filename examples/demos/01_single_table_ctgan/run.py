@@ -1,10 +1,11 @@
-from pathlib import Path
 import argparse
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 
-from syntho_hive.interface.config import Metadata
 from syntho_hive.core.models.ctgan import CTGAN
+from syntho_hive.interface.config import Metadata
 
 
 def build_training_data(num_rows: int = 600) -> pd.DataFrame:
@@ -44,7 +45,7 @@ def main():
     parser.add_argument("--rows", type=int, default=200, help="Number of synthetic rows to generate.")
     parser.add_argument(
         "--output-dir",
-        default="examples/demos/01_single_table_ctgan/outputs",
+        default=str(Path(__file__).parent / "outputs"),
         help="Directory where outputs will be written.",
     )
     args = parser.parse_args()

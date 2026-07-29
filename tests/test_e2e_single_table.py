@@ -1,7 +1,8 @@
 """TEST-01: Single-table end-to-end test — fit -> sample -> basic validation."""
-import pandas as pd
 import numpy as np
+import pandas as pd
 import pytest
+
 from syntho_hive.core.models.ctgan import CTGAN
 from syntho_hive.interface.config import Metadata
 

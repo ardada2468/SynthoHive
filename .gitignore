@@ -138,4 +138,15 @@ cython_debug/
 .vscode/
 .idea/
 .DS_Store
-.agent/rules/code-guidelines.md
+
+# SynthoHive test/demo outputs
+test_output/
+test_output*/
+quickstart_data/
+examples/**/outputs/
+checkpoints/
+test_checkpoints/
+*.ckpt
+
+# AI planning docs (internal, not tracked)
+.planning/
