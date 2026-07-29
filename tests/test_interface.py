@@ -46,18 +46,23 @@ def test_metadata_invalid_fk_format(metadata):
         metadata.add_table("logs", "log_id", fk={"user_id": "users_user_id"}) # Missing dot
         metadata.validate_schema()
 
-def test_synthesizer_init_no_spark(metadata, privacy_config):
-    syn = Synthesizer(metadata, privacy_config, spark_session=None)
-    assert syn.orchestrator is None
+def test_synthesizer_init_no_spark_uses_local_io(metadata, privacy_config):
+    from syntho_hive.connectors.local_io import LocalIO
 
-def test_synthesizer_fit_requires_spark(metadata, privacy_config):
     syn = Synthesizer(metadata, privacy_config, spark_session=None)
-    with pytest.raises(TrainingError, match="SparkSession required"):
+    assert syn.orchestrator is not None
+    assert isinstance(syn.orchestrator.io, LocalIO)
+
+def test_synthesizer_fit_without_spark_missing_source_errors(metadata, privacy_config):
+    syn = Synthesizer(metadata, privacy_config, spark_session=None)
+    with pytest.raises(TrainingError, match="No dataset found"):
         syn.fit("test_db")
 
-def test_synthesizer_sample_requires_spark(metadata, privacy_config):
+def test_synthesizer_sample_before_fit_raises(metadata, privacy_config):
+    from syntho_hive.exceptions import GenerationError
+
     syn = Synthesizer(metadata, privacy_config, spark_session=None)
-    with pytest.raises(TrainingError, match="SparkSession required"):
+    with pytest.raises(GenerationError, match="no fitted models"):
         syn.sample({"users": 100})
 
 def test_synthesizer_fit_call(mock_spark, metadata, privacy_config):
@@ -148,6 +153,7 @@ def test_stub_model_routes_through_pipeline(tmp_path):
 
     mock_io = MagicMock()
     mock_io.read_dataset.return_value = _MockSparkDF(users_df)
+    mock_io.read_pandas.return_value = users_df
 
     def _write_pandas(pdf, path, **kw):
         out = tmp_path / "users"

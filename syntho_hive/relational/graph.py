@@ -1,5 +1,6 @@
 from typing import List, Dict, Set
-from syntho_hive.interface.config import Metadata
+from syntho_hive.interface.config import Metadata, parse_fk_ref
+from syntho_hive.exceptions import SchemaError
 
 
 class SchemaGraph:
@@ -22,10 +23,19 @@ class SchemaGraph:
 
         for table_name, config in self.metadata.tables.items():
             for ref_col, ref_path in config.fk.items():
-                parent_table, _ = ref_path.split(".")
+                parent_table, _ = parse_fk_ref(ref_path)
+                if parent_table == table_name:
+                    raise SchemaError(
+                        f"Table '{table_name}' has a self-referencing FK "
+                        f"'{ref_col}' -> '{ref_path}', which is not supported."
+                    )
+                if parent_table not in self.adj_list:
+                    raise SchemaError(
+                        f"Table '{table_name}' references unknown parent table "
+                        f"'{parent_table}' via FK '{ref_col}'."
+                    )
                 # Dependency: Parent -> Child (we generate Parent first)
-                if parent_table in self.adj_list and parent_table != table_name:
-                    self.adj_list[parent_table].add(table_name)
+                self.adj_list[parent_table].add(table_name)
 
     def get_generation_order(self) -> List[str]:
         """Return a topologically sorted list of tables.
@@ -34,7 +44,7 @@ class SchemaGraph:
             List of table names ordered for parent-before-child generation.
 
         Raises:
-            ValueError: If a cycle is detected in FK relationships.
+            SchemaError: If a cycle is detected in FK relationships.
         """
         visited = set()
         stack = []
@@ -42,7 +52,7 @@ class SchemaGraph:
 
         def visit(node):
             if node in path:
-                raise ValueError(f"Cycle detected involving {node}")
+                raise SchemaError(f"Cycle detected in FK relationships involving '{node}'")
             if node in visited:
                 return
 

@@ -115,6 +115,9 @@ class TestOrchestrator(unittest.TestCase):
             return MockSparkDF(pd.DataFrame())
 
         orchestrator.io.read_dataset = MagicMock(side_effect=read_side_effect)
+        orchestrator.io.read_pandas = MagicMock(
+            side_effect=lambda p, **kw: read_side_effect(p).toPandas()
+        )
 
         # Mock write_dataset to just save to parquet/csv or do nothing
         def write_side_effect(sdf, path, mode="overwrite", partition_by=None):
@@ -202,6 +205,9 @@ class TestFKChainIntegrity(unittest.TestCase):
 
         mock_io = MagicMock()
         mock_io.read_dataset = MagicMock(side_effect=read_side_effect)
+        mock_io.read_pandas = MagicMock(
+            side_effect=lambda p, **kw: read_side_effect(p).toPandas()
+        )
         mock_io.write_pandas = MagicMock(side_effect=write_side_effect)
         return mock_io
 

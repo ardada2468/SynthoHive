@@ -62,7 +62,7 @@ class Synthesizer:
             isinstance(model, type) and issubclass(model, ConditionalGenerativeModel)
         ):
             raise TypeError(
-                f"model_cls must be a subclass of ConditionalGenerativeModel, "
+                f"model must be a subclass of ConditionalGenerativeModel, "
                 f"got {model!r}. Implement fit(), sample(), save(), load() "
                 f"and subclass ConditionalGenerativeModel."
             )
@@ -73,20 +73,20 @@ class Synthesizer:
         self.model_cls = model
         self.embedding_threshold = embedding_threshold
 
-        # Initialize internal components
-        if self.spark:
-            self.orchestrator = StagedOrchestrator(
-                metadata, self.spark, model_cls=self.model_cls
-            )
-        else:
-            self.orchestrator = (
-                None  # Mode without Spark (maybe local pandas only in future)
-            )
+        # Initialize internal components. Without a SparkSession the
+        # orchestrator falls back to the pandas-native LocalIO backend, so the
+        # full pipeline works on a single machine with no Spark installed.
+        self.orchestrator = StagedOrchestrator(
+            metadata,
+            self.spark,
+            model_cls=self.model_cls,
+            privacy_config=privacy_config,
+        )
 
     def fit(
         self,
-        data: Any,  # Str (database name) or Dict[str, str] (table paths)
-        sampling_strategy: str = "relational_stratified",
+        data: Any,  # Str (database name) or Dict[str, str|pd.DataFrame]
+        sampling_strategy: str = "full",
         sample_size: int = 5_000_000,
         validate: bool = False,
         epochs: int = 300,
@@ -94,13 +94,16 @@ class Synthesizer:
         progress_bar: bool = True,
         checkpoint_interval: int = 10,
         checkpoint_dir: Optional[str] = None,
+        seed: Optional[int] = None,
         **model_kwargs: Union[int, str, Tuple[int, int]],
     ):
         """Fit the generative models on the real database.
 
         Args:
-            data: Database name (str) or mapping of {table: path} (dict).
-            sampling_strategy: Strategy for sampling real data.
+            data: Database name (str), or a mapping of table name to a
+                path/table identifier or an in-memory pandas DataFrame.
+            sampling_strategy: Strategy for sampling real data. Only ``"full"``
+                (the default) is currently implemented.
             sample_size: Number of rows to sample from real data (approx).
             validate: Whether to run validation after fitting.
             epochs: Number of training epochs for CTGAN.
@@ -110,20 +113,26 @@ class Synthesizer:
             checkpoint_interval: Save a validation checkpoint every N epochs. Default 10.
             checkpoint_dir: Optional directory to save best_checkpoint/ and final_checkpoint/
                 during training.
+            seed: Optional integer seed for deterministic training across all tables.
             **model_kwargs: Additional args forwarded to the underlying model (e.g., embedding_dim).
 
         Raises:
             SchemaError: If the data argument is invalid.
+            NotImplementedError: If an unimplemented sampling strategy or
+                differential privacy is requested.
             TrainingError: If training fails for any reason.
         """
         if sampling_strategy != "full":
-            import warnings
+            raise NotImplementedError(
+                f"sampling_strategy='{sampling_strategy}' is not implemented yet; "
+                f"use 'full'."
+            )
 
-            warnings.warn(
-                f"sampling_strategy='{sampling_strategy}' is not yet implemented. "
-                "Using full dataset. This will be supported in a future release.",
-                UserWarning,
-                stacklevel=2,
+        if self.privacy is not None and self.privacy.enable_differential_privacy:
+            raise NotImplementedError(
+                "Differential privacy is not implemented yet. Set "
+                "enable_differential_privacy=False (PII sanitization via "
+                "pii_strategy still applies)."
             )
 
         try:
@@ -139,16 +148,20 @@ class Synthesizer:
                     # String (DB name) or dict of path strings — structural checks only
                     self.metadata.validate_schema()
 
-            if not self.orchestrator:
-                raise ValueError("SparkSession required for fit()")
-
             if sample_size <= 0:
                 raise ValueError("sample_size must be positive")
+            if epochs <= 0:
+                raise ValueError("epochs must be positive")
+            if batch_size <= 0:
+                raise ValueError("batch_size must be positive")
 
-            print(
-                f"Fitting on data source with {sampling_strategy} (target: {sample_size} rows)..."
+            log.info(
+                "fit_start",
+                sampling_strategy=sampling_strategy,
+                target_rows=sample_size,
+                epochs=epochs,
+                batch_size=batch_size,
             )
-            print(f"Training Config: epochs={epochs}, batch_size={batch_size}")
 
             # Determine paths
             if isinstance(data, str):
@@ -168,9 +181,10 @@ class Synthesizer:
                 progress_bar=progress_bar,
                 checkpoint_interval=checkpoint_interval,
                 checkpoint_dir=checkpoint_dir,
+                seed=seed,
                 **model_kwargs,
             )
-        except SynthoHiveError:
+        except (SynthoHiveError, NotImplementedError):
             raise
         except Exception as exc:
             log.error("fit_failed", error=str(exc))
@@ -179,34 +193,46 @@ class Synthesizer:
     def sample(
         self,
         num_rows: Dict[str, int],
-        output_format: str = "delta",
+        output_format: str = "parquet",
         output_path: Optional[str] = None,
+        seed: Optional[int] = None,
     ) -> Union[Dict[str, str], Dict[str, pd.DataFrame]]:
         """Generate synthetic data for each table.
 
         Args:
-            num_rows: Mapping of table name to number of rows to generate.
-            output_format: Storage format for generated datasets (default ``"delta"``).
+            num_rows: Mapping of root table name to number of rows to generate.
+                Child table volumes are driven by the fitted cardinality model.
+            output_format: Storage format for generated datasets (default
+                ``"parquet"``). Ignored when ``output_path`` is None.
             output_path: Optional path to write files. If None, returns DataFrames in memory.
+            seed: Optional integer seed making generation reproducible.
 
         Raises:
-            TrainingError: If generation fails for any reason.
+            GenerationError: If called before fit()/load().
+            TrainingError: If generation fails for any other reason.
 
         Returns:
             Mapping of table name to the output path (if wrote to disk) OR Dictionary of DataFrames (if in-memory).
         """
         try:
-            if not self.orchestrator:
-                raise ValueError("SparkSession required for sample()")
+            for table, n in num_rows.items():
+                if not isinstance(n, int) or n < 0:
+                    raise ValueError(
+                        f"num_rows['{table}'] must be a non-negative int, got {n!r}"
+                    )
 
-            print(f"Generating data with {self.model_cls.__name__} backend...")
+            log.info("sample_start", model=self.model_cls.__name__)
 
             # If output_path is explicitly None, we return DataFrames
             if output_path is None:
-                return self.orchestrator.generate(num_rows, output_path_base=None)
+                return self.orchestrator.generate(
+                    num_rows, output_path_base=None, seed=seed
+                )
 
-            output_base = output_path
-            self.orchestrator.generate(num_rows, output_base)
+            output_base = output_path.rstrip("/")
+            self.orchestrator.generate(
+                num_rows, output_base, seed=seed, output_format=output_format
+            )
 
             # Return paths mapping
             return {t: f"{output_base}/{t}" for t in self.metadata.tables}
@@ -246,17 +272,19 @@ class Synthesizer:
         return state
 
     def __setstate__(self, state):
-        """Restore instance from pickled state; non-serializable attrs set to None."""
+        """Restore instance from pickled state; Spark handles reset to None."""
         self.__dict__.update(state)
         self.spark = None
-        self.io = None
 
     @classmethod
-    def load(cls, path: str) -> "Synthesizer":
+    def load(cls, path: str, spark_session: Optional[SparkSession] = None) -> "Synthesizer":
         """Load a synthesizer from a previously saved checkpoint.
 
         Args:
             path: Filesystem path to the synthesizer checkpoint.
+            spark_session: Optional SparkSession to re-attach to the loaded
+                instance. Without one, the loaded synthesizer uses the
+                pandas-native LocalIO backend.
 
         Raises:
             SerializationError: If loading fails for any reason.
@@ -268,6 +296,9 @@ class Synthesizer:
             import joblib
 
             instance = joblib.load(path)
+            instance.spark = spark_session
+            if getattr(instance, "orchestrator", None) is not None:
+                instance.orchestrator.bind_spark(spark_session)
             log.info("synthesizer_loaded", path=path)
             return instance
         except SynthoHiveError:
@@ -295,37 +326,23 @@ class Synthesizer:
             SynthoHiveError: If the report generation fails for any reason.
         """
         try:
-            if not self.spark:
-                raise ValueError(
-                    "SparkSession required for validation report generation"
-                )
-
-            print("Generating validation report...")
+            log.info("validation_report_start", output_path=output_path)
             report_gen = ValidationReport()
+
+            io = self.orchestrator.io
 
             real_dfs = {}
             synth_dfs = {}
 
-            # 1. Load Real Data
+            # 1. Load Real Data (same IO backend/format as the training reads)
             for table, path in real_data.items():
-                print(f"Loading real data for {table} from {path}...")
-                # Try reading as table first, then path
-                try:
-                    df = self.spark.read.table(path)
-                except Exception as exc:
-                    log.warning("delta_read_fallback_failed", error=str(exc))
-                    raise SerializationError(
-                        f"generate_validation_report() failed reading real data. "
-                        f"Original error: {exc}"
-                    ) from exc
+                log.info("loading_real_data", table=table, path=str(path))
+                real_dfs[table] = io.read_pandas(path)
 
-                real_dfs[table] = df.toPandas()
-
-            # 2. Load Synthetic Data
+            # 2. Load Synthetic Data (same IO backend/format sample() wrote)
             for table, path in synthetic_data.items():
-                print(f"Loading synthetic data for {table} from {path}...")
-                df = self.spark.read.format("delta").load(path)
-                synth_dfs[table] = df.toPandas()
+                log.info("loading_synthetic_data", table=table, path=str(path))
+                synth_dfs[table] = io.read_pandas(path)
 
             # 3. Generate Report
             report_gen.generate(real_dfs, synth_dfs, output_path)
@@ -342,7 +359,11 @@ class Synthesizer:
             ) from exc
 
     def save_to_hive(
-        self, synthetic_data: Dict[str, str], target_db: str, overwrite: bool = True
+        self,
+        synthetic_data: Dict[str, str],
+        target_db: str,
+        overwrite: bool = True,
+        table_format: str = "parquet",
     ):
         """Register generated datasets as Hive tables.
 
@@ -350,18 +371,26 @@ class Synthesizer:
             synthetic_data: Map of table name to generated dataset path.
             target_db: Hive database where tables should be registered.
             overwrite: Whether to drop and recreate existing tables.
+            table_format: Storage format the datasets were written in
+                (``"parquet"`` — the default written by ``sample()`` — or
+                ``"delta"``). Must match the actual on-disk format.
 
         Raises:
-            ValueError: If Spark is unavailable.
+            ValueError: If Spark is unavailable or the format is unsupported.
         """
         if not self.spark:
             raise ValueError("SparkSession required for Hive registration")
+
+        if table_format.lower() not in ("parquet", "delta"):
+            raise ValueError(
+                f"table_format must be 'parquet' or 'delta', got '{table_format}'"
+            )
 
         # Validate database name against allowlist before any SQL interpolation.
         # Raises SchemaError immediately — no Spark context touched for invalid names.
         if not _SAFE_IDENTIFIER.match(target_db):
             raise SchemaError(
-                f"SchemaError: Database name '{target_db}' contains invalid characters. "
+                f"Database name '{target_db}' contains invalid characters. "
                 f"Only letters, digits, and underscores [a-zA-Z0-9_] are allowed. "
                 f"This validation prevents SQL injection via unsanitized user input."
             )
@@ -370,7 +399,7 @@ class Synthesizer:
         for table_name in synthetic_data:
             if not _SAFE_IDENTIFIER.match(str(table_name)):
                 raise SchemaError(
-                    f"SchemaError: Table name '{table_name}' contains invalid characters. "
+                    f"Table name '{table_name}' contains invalid characters. "
                     f"Only letters, digits, and underscores [a-zA-Z0-9_] are allowed."
                 )
 
@@ -381,19 +410,20 @@ class Synthesizer:
                     f"Path for table '{table_name}' contains invalid characters: {path}"
                 )
 
-        print(f"Save to Hive database: {target_db}")
+        log.info("save_to_hive_start", database=target_db)
 
         # Ensure DB exists
         self.spark.sql(f"CREATE DATABASE IF NOT EXISTS {target_db}")
 
         for table, path in synthetic_data.items():
             full_table_name = f"{target_db}.{table}"
-            print(f"Registering table {full_table_name} at {path}")
+            log.info("registering_table", table=full_table_name, path=path)
 
             if overwrite:
                 self.spark.sql(f"DROP TABLE IF EXISTS {full_table_name}")
 
-            # Register External Table
+            # Register External Table (format must match what sample() wrote)
             self.spark.sql(
-                f"CREATE TABLE {full_table_name} USING DELTA LOCATION '{path}'"
+                f"CREATE TABLE {full_table_name} "
+                f"USING {table_format.upper()} LOCATION '{path}'"
             )

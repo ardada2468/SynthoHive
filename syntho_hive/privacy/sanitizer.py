@@ -1,11 +1,14 @@
-from typing import List, Dict, Tuple, Optional, Any, Union, Callable
+from typing import List, Dict, Optional, Any, Union, Callable
 import re
 import pandas as pd
+import numpy as np
 import hashlib
 import hmac
 import secrets
 from dataclasses import dataclass, field
+
 from .faker_contextual import ContextualFaker
+from ..exceptions import PrivacyError
 
 
 @dataclass
@@ -21,6 +24,9 @@ class PiiRule:
     custom_generator: Optional[Callable[[Dict[str, Any]], Any]] = (
         None  # Custom lambda for generation
     )
+    preserve_suffix: int = (
+        0  # Number of trailing characters kept visible when masking (0 = full mask)
+    )
 
 
 @dataclass
@@ -31,7 +37,12 @@ class PrivacyConfig:
 
     @classmethod
     def default(cls) -> "PrivacyConfig":
-        """Create a default privacy configuration with common PII rules."""
+        """Create a default privacy configuration with common PII rules.
+
+        Masking rules fully mask by default; opt in to keeping a trailing
+        fragment (e.g. phone last-4) via ``preserve_suffix`` on a rule.
+        SSN and date_of_birth are always fully masked.
+        """
         return cls(
             rules=[
                 PiiRule(
@@ -43,6 +54,7 @@ class PrivacyConfig:
                     name="ssn",
                     patterns=[r"^\d{3}-\d{2}-\d{4}$", r"^\d{9}$"],
                     action="mask",
+                    preserve_suffix=0,
                 ),
                 PiiRule(
                     name="phone",
@@ -59,6 +71,7 @@ class PrivacyConfig:
                         r"^\d{4}[-\s]?\d{6}[-\s]?\d{5}$",
                     ],
                     action="mask",
+                    preserve_suffix=0,
                 ),
                 PiiRule(
                     name="ipv4",
@@ -73,6 +86,7 @@ class PrivacyConfig:
                     name="date_of_birth",
                     patterns=[r"^\d{4}-\d{2}-\d{2}$", r"^\d{2}/\d{2}/\d{4}$"],
                     action="mask",
+                    preserve_suffix=0,
                 ),
             ]
         )
@@ -91,15 +105,29 @@ class PIISanitizer:
         "credit_card": ["credit_card", "card_number", "cc_num", "card_num"],
     }
 
-    def __init__(self, config: Optional[PrivacyConfig] = None):
+    def __init__(
+        self,
+        config: Optional[PrivacyConfig] = None,
+        salt: Optional[Union[bytes, str]] = None,
+    ):
         """Create a sanitizer with contextual faker support.
 
         Args:
             config: Optional privacy configuration; defaults to ``PrivacyConfig.default``.
+            salt: Optional salt for the ``hash`` action. When ``None`` (default)
+                a random per-instance salt is generated, so hashes are only
+                consistent within one sanitizer instance. Supply an explicit
+                salt to make hashed values consistent across tables, instances
+                and runs (e.g. to preserve join keys).
         """
         self.config = config or PrivacyConfig.default()
         self.faker = ContextualFaker()
-        self._hash_salt = secrets.token_bytes(32)
+        if salt is None:
+            self._hash_salt = secrets.token_bytes(32)
+        elif isinstance(salt, str):
+            self._hash_salt = salt.encode("utf-8")
+        else:
+            self._hash_salt = salt
 
     def analyze(self, df: pd.DataFrame) -> Dict[str, str]:
         """Detect potential PII columns using configured rules.
@@ -170,16 +198,26 @@ class PIISanitizer:
         return detected
 
     def sanitize(
-        self, df: pd.DataFrame, pii_map: Optional[Dict[str, str]] = None
+        self,
+        df: pd.DataFrame,
+        pii_map: Optional[Dict[str, str]] = None,
+        seed: Optional[int] = None,
     ) -> pd.DataFrame:
         """Apply sanitization rules to a dataframe.
 
         Args:
             df: Input dataframe containing potential PII.
             pii_map: Optional precomputed map of column name to PII rule name.
+            seed: Optional seed for the ``fake`` action, making generated
+                replacements reproducible across calls.
 
         Returns:
             Sanitized dataframe with PII handled according to configured actions.
+
+        Raises:
+            ValueError: If ``pii_map`` references columns absent from ``df``.
+            PrivacyError: If ``pii_map`` references a rule name that is not
+                configured, or a rule has an unrecognized action.
         """
         if pii_map is None:
             pii_map = self.analyze(df)
@@ -195,19 +233,26 @@ class PIISanitizer:
         for col, rule_name in pii_map.items():
             rule = next((r for r in self.config.rules if r.name == rule_name), None)
             if not rule:
-                continue
+                raise PrivacyError(
+                    f"pii_map references unknown rule '{rule_name}' for column "
+                    f"'{col}'. Known rules: "
+                    f"{sorted(r.name for r in self.config.rules)}. Refusing to "
+                    f"leave the column unsanitized."
+                )
 
             if rule.action == "drop":
                 output_df.drop(columns=[col], inplace=True)
 
             elif rule.action == "mask":
-                output_df[col] = output_df[col].apply(lambda x: self._mask_value(x))
+                output_df[col] = output_df[col].apply(
+                    lambda x: self._mask_value(x, rule.preserve_suffix)
+                )
 
             elif rule.action == "hash":
                 output_df[col] = output_df[col].apply(lambda x: self._hash_value(x))
 
             elif rule.action == "fake":
-                output_df[col] = self._fake_column(output_df, col, rule)
+                output_df[col] = self._fake_column(output_df, col, rule, seed=seed)
 
             elif rule.action == "custom":
                 if rule.custom_generator:
@@ -218,46 +263,98 @@ class PIISanitizer:
                     )
                 else:
                     # Fallback if no generator provided
-                    output_df[col] = output_df[col].apply(self._mask_value)
+                    output_df[col] = output_df[col].apply(
+                        lambda x: self._mask_value(x, rule.preserve_suffix)
+                    )
+
+            elif rule.action == "keep":
+                # Explicitly leave the column untouched.
+                pass
+
+            else:
+                raise PrivacyError(
+                    f"Unrecognized action '{rule.action}' for rule '{rule.name}' "
+                    f"on column '{col}'. Valid actions: drop, mask, hash, fake, "
+                    f"custom, keep."
+                )
 
         return output_df
 
-    def _mask_value(self, val: Any) -> Any:
-        """Mask a value, preserving only the last four characters."""
-        if pd.isna(val) or val is None:
+    @staticmethod
+    def _is_missing(val: Any) -> bool:
+        """Return True for scalar null values; False for lists/arrays and non-nulls."""
+        if val is None:
+            return True
+        # pd.isna on list-like values returns an array, which is ambiguous in
+        # a boolean context — treat list-like cells as non-missing.
+        if isinstance(val, (list, tuple, set, dict, np.ndarray)):
+            return False
+        try:
+            return bool(pd.isna(val))
+        except (TypeError, ValueError):
+            return False
+
+    def _mask_value(self, val: Any, preserve_suffix: int = 0) -> Any:
+        """Mask a value, fully by default.
+
+        Args:
+            val: Value to mask.
+            preserve_suffix: Number of trailing characters left visible.
+                ``0`` (default) masks the entire value; only opt in per rule
+                for low-risk fragments such as phone last-4.
+
+        Returns:
+            Masked string, or the original value if it is null.
+        """
+        if self._is_missing(val):
             return val
         s = str(val)
-        if len(s) <= 4:
-            return "*" * len(s)
-        return "*" * (len(s) - 4) + s[-4:]
+        if preserve_suffix > 0 and len(s) > preserve_suffix:
+            return "*" * (len(s) - preserve_suffix) + s[-preserve_suffix:]
+        return "*" * len(s)
 
     def _hash_value(self, val: Any) -> Any:
-        """Return an HMAC-SHA256 hash representation of a value using a per-instance salt."""
-        if pd.isna(val) or val is None:
+        """Return an HMAC-SHA256 hash representation of a value using the configured salt."""
+        if self._is_missing(val):
             return val
         return hmac.new(self._hash_salt, str(val).encode(), hashlib.sha256).hexdigest()
 
-    def _fake_column(self, df: pd.DataFrame, col: str, rule: PiiRule) -> pd.Series:
+    def _fake_column(
+        self,
+        df: pd.DataFrame,
+        col: str,
+        rule: PiiRule,
+        seed: Optional[int] = None,
+    ) -> pd.Series:
         """Generate fake data for a column using contextual faker.
+
+        Null cells are preserved as-is rather than replaced with fake values.
 
         Args:
             df: DataFrame containing the column to fake.
             col: Column name.
             rule: PII rule describing the type being faked.
+            seed: Optional seed; when given, the underlying Faker instances are
+                re-seeded via ``Faker.seed_instance`` so output is reproducible.
 
         Returns:
             Series of fake values aligned to ``df``.
         """
-        # Context strategy:
-        # If the rule has a context_key (not yet fully implemented in config, but good for future), use it.
-        # Fallback to simple random generation.
+        if seed is not None:
+            self.faker.reseed(seed)
 
-        # We can pass the dataframe to the faker to handle this column
-        # But our FakerContextual currently handles whole DF.
-        # Let's call generate_pii for the length of DF.
+        failures_before = self.faker.failure_count
+        context_records = df.to_dict(orient="records")
+        original_values = df[col].tolist()
 
-        # Optimization: fast path if no context needed
-        return df.apply(
-            lambda row: self.faker.generate_pii(rule.name, context=row.to_dict())[0],
-            axis=1,
-        )
+        values: List[Any] = []
+        for record, original in zip(context_records, original_values):
+            if self._is_missing(original):
+                values.append(original)
+            else:
+                values.append(
+                    self.faker.generate_pii(rule.name, context=record)[0]
+                )
+
+        self.faker.warn_failures(col, failures_before)
+        return pd.Series(values, index=df.index, dtype=object)

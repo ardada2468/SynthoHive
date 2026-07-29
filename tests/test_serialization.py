@@ -52,7 +52,7 @@ def test_serialization_round_trip(tmp_path, small_dataset, meta):
     required_files = [
         "generator.pt", "discriminator.pt",
         "transformer.joblib", "context_transformer.joblib",
-        "embedding_layers.joblib", "data_column_info.joblib",
+        "embedding_layers.pt", "data_column_info.joblib",
         "metadata.json",
     ]
     saved_files = os.listdir(save_dir)

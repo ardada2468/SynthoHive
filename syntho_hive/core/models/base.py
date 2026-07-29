@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 import pandas as pd
-import numpy as np
+
 
 class GenerativeModel(ABC):
     """Base contract for any tabular generative model."""

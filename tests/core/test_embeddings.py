@@ -71,9 +71,11 @@ class TestEntityEmbeddings(unittest.TestCase):
         # If we don't pass table_name, it transforms PK as continuous. That's fine for this test.
         model.fit(self.data)
 
-        # Check if Embedding Layers created
-        self.assertTrue('category' in model.embedding_layers)
-        layer = model.embedding_layers['category']
+        # Check if Embedding Layers created (keyed by index-based emb_key,
+        # mapped from the column via data_column_info)
+        emb_infos = [i for i in model.data_column_info if i["type"] == "embedding"]
+        self.assertEqual([i["name"] for i in emb_infos], ["category"])
+        layer = model.embedding_layers[emb_infos[0]["emb_key"]]
         self.assertIsInstance(layer, torch.nn.Module)
         # Dim heuristic: min(50, (100+1)//2) = 50
         self.assertEqual(layer.embedding.embedding_dim, 50)
@@ -95,7 +97,7 @@ class TestEntityEmbeddings(unittest.TestCase):
         model.fit(self.data)
 
         # Check NO Embedding Layers
-        self.assertFalse('category' in model.embedding_layers)
+        self.assertEqual(len(model.embedding_layers), 0)
 
         samples = model.sample(10)
         self.assertEqual(len(samples), 10)
