@@ -1,15 +1,15 @@
-from typing import Any, List, Optional, Union
+from typing import Any, Optional, Union
 
 try:
     from pyspark.sql import SparkSession, DataFrame
-    from delta.tables import DeltaTable
 except ImportError:
     # Allow imports without spark for local non-spark testing
     SparkSession = Any
     DataFrame = Any
-    DeltaTable = Any
 
 import pandas as pd
+
+_KNOWN_FILE_EXTENSIONS = (".csv", ".parquet", ".json")
 
 
 class SparkIO:
@@ -20,7 +20,15 @@ class SparkIO:
 
         Args:
             spark: Active SparkSession used for all IO.
+
+        Raises:
+            ValueError: If no SparkSession is provided.
         """
+        if spark is None:
+            raise ValueError(
+                "SparkIO requires an active SparkSession. For Spark-free usage, "
+                "use syntho_hive.connectors.local_io.LocalIO instead."
+            )
         self.spark = spark
 
     def read_dataset(
@@ -39,11 +47,13 @@ class SparkIO:
         Returns:
             Spark DataFrame loaded from the specified source.
         """
-        # Simple heuristic
+        # Simple heuristic: separators, URI prefixes, or known file extensions
+        # mean "path"; anything else is treated as a catalog table name.
         if (
             "/" in path_or_table
             or "\\" in path_or_table
             or path_or_table.startswith("file://")
+            or path_or_table.endswith(_KNOWN_FILE_EXTENSIONS)
         ):
             if format:
                 return self.spark.read.format(format).load(path_or_table, **kwargs)
@@ -62,6 +72,24 @@ class SparkIO:
                 # Default to parquet for directories/tables (matching write default)
                 return self.spark.read.format("parquet").load(path_or_table, **kwargs)
         return self.spark.table(path_or_table)
+
+    def read_pandas(
+        self,
+        path_or_df: Union[str, pd.DataFrame],
+        format: Optional[str] = None,
+    ) -> pd.DataFrame:
+        """Read a dataset and return it as a pandas DataFrame.
+
+        Args:
+            path_or_df: A DataFrame (returned as-is) or a table name/path.
+            format: Optional explicit format override.
+
+        Returns:
+            The loaded pandas DataFrame.
+        """
+        if isinstance(path_or_df, pd.DataFrame):
+            return path_or_df
+        return self.read_dataset(path_or_df, format=format).toPandas()
 
     def write_dataset(
         self,

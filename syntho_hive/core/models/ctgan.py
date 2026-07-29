@@ -4,6 +4,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 import pandas as pd
 import numpy as np
+import math
 import os
 import csv
 import sys
@@ -17,8 +18,9 @@ from syntho_hive.core.data.transformer import DataTransformer
 from syntho_hive.exceptions import (
     SerializationError,
     TrainingError,
+    GenerationError,
     ConstraintViolationError,
-)  # noqa: F401 – re-raised by CTGAN save/load
+)
 
 log = structlog.get_logger()
 
@@ -110,7 +112,20 @@ class CTGAN(ConditionalGenerativeModel):
             legacy_context_conditioning: If True, reuses discriminator batch context
                 in generator step (legacy behavior). Default False applies correct
                 independent resample, which prevents FK cardinality drift.
+
+        Raises:
+            ValueError: If any numeric hyperparameter is out of range.
         """
+        if batch_size <= 0:
+            raise ValueError(f"batch_size must be positive, got {batch_size}")
+        if epochs <= 0:
+            raise ValueError(f"epochs must be positive, got {epochs}")
+        if embedding_dim <= 0:
+            raise ValueError(f"embedding_dim must be positive, got {embedding_dim}")
+        if discriminator_steps < 1:
+            raise ValueError(
+                f"discriminator_steps must be >= 1, got {discriminator_steps}"
+            )
         self.metadata = metadata
         self.embedding_dim = embedding_dim
         self.generator_dim = generator_dim
@@ -136,6 +151,23 @@ class CTGAN(ConditionalGenerativeModel):
         self.embedding_layers = nn.ModuleDict()
         self.data_column_info = []  # List of tuples: (dim, type, related_info)
 
+    @staticmethod
+    def _activation_spec(col_info) -> list:
+        """Build the per-block activation layout for a non-embedding column.
+
+        Continuous columns are laid out as ``[mode one-hot, scalar, (null flag)]``
+        and one-hot categoricals as a single softmax block, mirroring
+        ``DataTransformer``'s output layout.
+        """
+        if col_info["type"] == "continuous":
+            t = col_info["transformer"]
+            spec = [("softmax", t.n_components), ("tanh", 1)]
+            if t.output_dim == t.n_components + 2:  # null indicator present
+                spec.append(("sigmoid", 1))
+            return spec
+        # One-hot categorical: single softmax block.
+        return [("softmax", col_info["dim"])]
+
     def _compile_layout(self, transformer):
         """Analyze transformer output to map column indices and types.
 
@@ -146,14 +178,17 @@ class CTGAN(ConditionalGenerativeModel):
         self.embedding_layers = nn.ModuleDict()
 
         current_idx = 0
-        for col, info in transformer._column_info.items():
+        for idx, (col, info) in enumerate(transformer._column_info.items()):
             if info["type"] == "categorical_embedding":
                 # Create Embedding Layer
                 num_categories = info["num_categories"]
                 # Heuristic for embedding dimension: min(50, num_categories/2)
                 emb_dim = min(50, (num_categories + 1) // 2)
 
-                self.embedding_layers[col] = EntityEmbeddingLayer(
+                # ModuleDict keys must be '.'-free strings; index-based keys
+                # support arbitrary column names (ints, dotted names, ...).
+                emb_key = f"emb_{idx}"
+                self.embedding_layers[emb_key] = EntityEmbeddingLayer(
                     num_categories, emb_dim
                 ).to(self.device)
 
@@ -161,6 +196,7 @@ class CTGAN(ConditionalGenerativeModel):
                     {
                         "name": col,
                         "type": "embedding",
+                        "emb_key": emb_key,
                         "input_idx": current_idx,
                         "input_dim": 1,
                         "output_dim": emb_dim,
@@ -176,63 +212,79 @@ class CTGAN(ConditionalGenerativeModel):
                         "input_idx": current_idx,
                         "input_dim": info["dim"],
                         "output_dim": info["dim"],
+                        "activation_spec": self._activation_spec(info),
                     }
                 )
                 current_idx += info["dim"]
 
-    def _apply_embeddings(self, data, is_fake=False):
-        """Convert a mixed categorical/continuous tensor into embedding space.
+    def _embedding_layer(self, info) -> EntityEmbeddingLayer:
+        """Resolve the embedding layer for a column-info entry (legacy-key aware)."""
+        key = info.get("emb_key", str(info["name"]))
+        return self.embedding_layers[key]
 
-        Args:
-            data: Input tensor with mixed column representations.
-            is_fake: Whether the tensor came from the generator (logits) or real data (indices).
+    def _activate(self, fake_raw: torch.Tensor) -> torch.Tensor:
+        """Apply per-block output activations to raw generator output.
 
-        Returns:
-            Tensor with embeddings applied to categorical columns.
+        The generator ends in a bare Linear layer; per the CTGAN design each
+        block needs its own activation before it can be compared with real
+        (exactly one-hot) data: gumbel-softmax for one-hot/mode/categorical
+        blocks, tanh for the normalized scalar, sigmoid for null indicators.
         """
         parts = []
+        ptr = 0
         for info in self.data_column_info:
-            idx = info["input_idx"]
-            dim = info["input_dim"]
-            col_data = data[:, idx : idx + dim]
-
             if info["type"] == "embedding":
-                layer = self.embedding_layers[info["name"]]
-                if is_fake:
-                    # col_data contains Softmax logits from Generator
-                    # Needs hard Gumbel-Softmax or Softmax? Generator outputs unnormalized logits usually.
-                    # Ideally Generator outputs (N, num_cats).
-                    # Wait, 'data' passed here is strictly what Generator produced.
-                    # Discriminator expects (N, EmbDim).
+                dim = info["num_categories"]
+                parts.append(F.gumbel_softmax(fake_raw[:, ptr : ptr + dim], tau=0.2))
+                ptr += dim
+            else:
+                spec = info.get("activation_spec")
+                if spec is None:
+                    # Legacy checkpoint without a spec — pass through unchanged.
+                    dim = info["output_dim"]
+                    parts.append(fake_raw[:, ptr : ptr + dim])
+                    ptr += dim
+                    continue
+                for kind, dim in spec:
+                    blk = fake_raw[:, ptr : ptr + dim]
+                    if kind == "softmax":
+                        blk = F.gumbel_softmax(blk, tau=0.2)
+                    elif kind == "tanh":
+                        blk = torch.tanh(blk)
+                    elif kind == "sigmoid":
+                        blk = torch.sigmoid(blk)
+                    parts.append(blk)
+                    ptr += dim
+        return torch.cat(parts, dim=1)
 
-                    # Logic: Generator outputs Logits. We apply Softmax -> Dense.
-                    # But wait, logic above says Generator outputs:
-                    # Embedding: Logits (dim=num_cats)
-                    # Normal: Values (dim=original_dim)
+    def _fake_to_disc_input(self, activated: torch.Tensor) -> torch.Tensor:
+        """Map activated generator output into discriminator space (soft embeddings)."""
+        parts = []
+        ptr = 0
+        for info in self.data_column_info:
+            if info["type"] == "embedding":
+                dim = info["num_categories"]
+                probs = activated[:, ptr : ptr + dim]
+                ptr += dim
+                parts.append(self._embedding_layer(info).forward_soft(probs))
+            else:
+                dim = info["output_dim"]
+                parts.append(activated[:, ptr : ptr + dim])
+                ptr += dim
+        return torch.cat(parts, dim=1)
 
-                    # So 'dim' in loop here must match GENERATOR output structure, not Transformer output.
-                    # Compile Layout logic is slightly tricky because Generator output shape != Transformer output shape for Embeddings.
-
-                    # RE-THINK:
-                    # Transformer Output (Real): [Index] (1 dim)
-                    # Generator Output (Fake): [Logits] (num_cats dim)
-
-                    # This function strictly transforms Real Data (Index) -> Embedding.
-                    # Or Fake Data (Logits) -> Soft Embedding.
-
-                    # Problem: input 'data' has different shapes for Real vs Fake.
-                    # We need to handle them separately or have this function assume inputs are already sliced?
-                    # Let's pass sliced inputs or rely on info having both dims.
-                    pass
-                else:
-                    # Real Data: Indices -> Embedding
-                    # input is (N, 1) indices
-                    embeddings = layer(col_data.long().squeeze(1))
-                    parts.append(embeddings)
+    def _real_to_disc_input(self, real_batch: torch.Tensor) -> torch.Tensor:
+        """Map transformed real data (indices + one-hots) into discriminator space."""
+        parts = []
+        ptr = 0
+        for info in self.data_column_info:
+            dim = info["input_dim"]
+            col_data = real_batch[:, ptr : ptr + dim]
+            ptr += dim
+            if info["type"] == "embedding":
+                parts.append(self._embedding_layer(info)(col_data.long().squeeze(1)))
             else:
                 parts.append(col_data)
-
-        # Re-implementing clearer separated logic in Build Model / Forward
         return torch.cat(parts, dim=1)
 
     def _build_model(self, transformer_output_dim: int, context_dim: int = 0):
@@ -348,7 +400,7 @@ class CTGAN(ConditionalGenerativeModel):
             # NOTE: We abuse metdata here slightly. Ideally context comes from a known table (Parent).
             # But context might be a mix of parent columns.
             # For fit, we pass table_name=None to fit on just the columns present in context df.
-            self.context_transformer.fit(context)
+            self.context_transformer.fit(context, seed=seed)
             context_transformed = self.context_transformer.transform(context)
             context_data = torch.from_numpy(context_transformed).float().to(self.device)
             context_dim = context_data.shape[1]
@@ -358,9 +410,9 @@ class CTGAN(ConditionalGenerativeModel):
 
         data_dim = train_data.shape[1]
 
-        # 3. Build Model
-        if self.generator is None:
-            self._build_model(data_dim, context_dim)
+        # 3. Build Model — always rebuild so a refit with a different schema
+        # cannot silently reuse a network with mismatched dimensions.
+        self._build_model(data_dim, context_dim)
 
         all_gen_params = list(self.generator.parameters()) + list(
             self.embedding_layers.parameters()
@@ -410,7 +462,9 @@ class CTGAN(ConditionalGenerativeModel):
                         real_context_batch = None
                         real_input = real_data_batch
 
-                    # Generate fake data
+                    # Generate fake data. No grads through the generator here —
+                    # the D step only updates the discriminator, and backprop
+                    # through G in every critic step wastes ~5x compute/memory.
                     noise = torch.randn(
                         self.batch_size, self.embedding_dim, device=self.device
                     )
@@ -419,51 +473,12 @@ class CTGAN(ConditionalGenerativeModel):
                     else:
                         gen_input = noise
 
-                    fake_raw = self.generator(gen_input)
-
-                    # Apply Embeddings / Softmax to Fake Data
-                    fake_parts = []
-                    fake_ptr = 0
-                    for info in self.data_column_info:
-                        if info["type"] == "embedding":
-                            dim = info["num_categories"]
-                            logits = fake_raw[:, fake_ptr : fake_ptr + dim]
-                            fake_ptr += dim
-
-                            # Gumbel Softmax or Softmax? WGAN prefers generic softmax for differentiability
-                            # Note: Gumbel Softmax allows hard sampling with gradients.
-                            probs = F.softmax(logits, dim=1)
-                            emb_vect = self.embedding_layers[info["name"]].forward_soft(
-                                probs
-                            )
-                            fake_parts.append(emb_vect)
-                        else:
-                            dim = info["output_dim"]
-                            val = fake_raw[:, fake_ptr : fake_ptr + dim]
-                            fake_ptr += dim
-                            fake_parts.append(val)
-
-                    fake_data_batch = torch.cat(fake_parts, dim=1)
-
-                    # Apply Embeddings to Real Data
-                    real_parts = []
-                    real_ptr = 0
-                    # Need to iterate column info again to slice real data correctly
-                    # Real data from transformer is concatenated (Indices, Values...)
-                    for info in self.data_column_info:
-                        dim = info["input_dim"]  # 1 for embedding (index)
-                        col_data = real_data_batch[:, real_ptr : real_ptr + dim]
-                        real_ptr += dim
-
-                        if info["type"] == "embedding":
-                            emb_vect = self.embedding_layers[info["name"]](
-                                col_data.long().squeeze(1)
-                            )
-                            real_parts.append(emb_vect)
-                        else:
-                            real_parts.append(col_data)
-
-                    real_data_processed = torch.cat(real_parts, dim=1)
+                    with torch.no_grad():
+                        fake_raw = self.generator(gen_input)
+                        fake_data_batch = self._fake_to_disc_input(
+                            self._activate(fake_raw)
+                        )
+                        real_data_processed = self._real_to_disc_input(real_data_batch)
 
                     if real_context_batch is not None:
                         fake_input = torch.cat(
@@ -516,27 +531,7 @@ class CTGAN(ConditionalGenerativeModel):
                     gen_input = noise
 
                 fake_raw = self.generator(gen_input)
-
-                # Apply Embeddings / Softmax (Same logic as above)
-                fake_parts = []
-                fake_ptr = 0
-                for info in self.data_column_info:
-                    if info["type"] == "embedding":
-                        dim = info["num_categories"]
-                        logits = fake_raw[:, fake_ptr : fake_ptr + dim]
-                        fake_ptr += dim
-                        probs = F.softmax(logits, dim=1)
-                        emb_vect = self.embedding_layers[info["name"]].forward_soft(
-                            probs
-                        )
-                        fake_parts.append(emb_vect)
-                    else:
-                        dim = info["output_dim"]
-                        val = fake_raw[:, fake_ptr : fake_ptr + dim]
-                        fake_ptr += dim
-                        fake_parts.append(val)
-
-                fake_data_batch = torch.cat(fake_parts, dim=1)
+                fake_data_batch = self._fake_to_disc_input(self._activate(fake_raw))
 
                 if context_data is not None:
                     fake_input = torch.cat([fake_data_batch, gen_context_batch], dim=1)
@@ -558,6 +553,14 @@ class CTGAN(ConditionalGenerativeModel):
             # --- Checkpointing & Logging ---
             current_loss_g = loss_G.item()
             current_loss_d = loss_D.item()
+
+            # Divergence detection — a NaN loss silently trains to garbage.
+            if not (math.isfinite(current_loss_g) and math.isfinite(current_loss_d)):
+                raise TrainingError(
+                    f"Training diverged at epoch {epoch}: "
+                    f"g_loss={current_loss_g}, d_loss={current_loss_d}. "
+                    f"Try a smaller learning task, more data, or a different seed."
+                )
 
             # ETA calculation (linear extrapolation)
             _elapsed = time.time() - _start_time
@@ -599,13 +602,20 @@ class CTGAN(ConditionalGenerativeModel):
                     )
                     val_metric = float("inf")
                 else:
-                    # Generate a small validation sample from current generator state
+                    # Generate a small validation sample from current generator state.
+                    # Save/restore RNG state so checkpoint validation does not
+                    # consume the training RNG stream (same seed must produce the
+                    # same model regardless of checkpointing settings).
+                    _torch_state = torch.get_rng_state()
+                    _np_state = np.random.get_state()
                     self.generator.eval()
                     self.discriminator.eval()
                     with torch.no_grad():
                         val_synth = self.sample(min(len(data), 500))
                     self.generator.train()
                     self.discriminator.train()
+                    torch.set_rng_state(_torch_state)
+                    np.random.set_state(_np_state)
 
                     # Align columns: drop columns not present in synthetic output (FK/PK)
                     real_for_val = data[
@@ -680,7 +690,7 @@ class CTGAN(ConditionalGenerativeModel):
                 dict_writer = csv.DictWriter(f, fieldnames=keys)
                 dict_writer.writeheader()
                 dict_writer.writerows(history)
-            print(f"Training metrics saved to {metrics_path}")
+            log.info("metrics_saved", path=metrics_path)
 
     def sample(
         self,
@@ -699,17 +709,26 @@ class CTGAN(ConditionalGenerativeModel):
                   when provided; no auto-generation (fits and samples may use
                   independent seeds per CONTEXT.md decision).
             enforce_constraints: When True, inspects generated rows against column
-                  constraints defined in the table's Metadata config.  Any rows
-                  that violate a min/max constraint are dropped and a structlog
-                  WARNING is emitted listing each violation.  When False (default),
-                  constraint checking is skipped entirely — this matches the
-                  pre-existing behavior where inverse_transform() already clips
-                  values within each column's defined range.
+                  constraints defined in the table's Metadata config and raises
+                  ``ConstraintViolationError`` listing each violated column and
+                  the observed value.  When False (default), constraint checking
+                  is skipped entirely — inverse_transform() already clips values
+                  within each column's defined range.
             **kwargs: Additional sampling controls (unused placeholder).
+
+        Raises:
+            GenerationError: If the model has not been fitted or loaded.
+            ConstraintViolationError: If ``enforce_constraints=True`` and any
+                generated value violates a configured constraint.
 
         Returns:
             DataFrame of synthetic rows mapped back to original schema.
         """
+        if self.generator is None:
+            raise GenerationError(
+                "Model is not fitted. Call fit() or load() before sample()."
+            )
+
         if seed is not None:
             _set_seed(seed)
 
@@ -718,135 +737,111 @@ class CTGAN(ConditionalGenerativeModel):
 
         was_training = self.generator.training
         self.generator.eval()
-        with torch.no_grad():
-            noise = torch.randn(num_rows, self.embedding_dim, device=self.device)
+        try:
+            with torch.no_grad():
+                noise = torch.randn(num_rows, self.embedding_dim, device=self.device)
 
-            if context is not None:
-                if len(context) != num_rows:
-                    raise ValueError(
-                        f"context must have exactly num_rows={num_rows} rows, "
-                        f"got {len(context)}"
+                if context is not None:
+                    if len(context) != num_rows:
+                        raise ValueError(
+                            f"context must have exactly num_rows={num_rows} rows, "
+                            f"got {len(context)}"
+                        )
+
+                    # Transform context using the fitted context transformer
+                    context_transformed = self.context_transformer.transform(context)
+                    context_data = (
+                        torch.from_numpy(context_transformed).float().to(self.device)
                     )
 
-                # Transform context using the fitted context transformer
-                context_transformed = self.context_transformer.transform(context)
-                context_data = (
-                    torch.from_numpy(context_transformed).float().to(self.device)
-                )
-
-                gen_input = torch.cat([noise, context_data], dim=1)
-            else:
-                gen_input = noise
-
-            fake_raw = self.generator(gen_input)
-
-            # Post-process logits to indices for output
-            output_parts = []
-            fake_ptr = 0
-            for info in self.data_column_info:
-                if info["type"] == "embedding":
-                    dim = info["num_categories"]
-                    logits = fake_raw[:, fake_ptr : fake_ptr + dim]
-                    fake_ptr += dim
-
-                    # Argmax to get index
-                    indices = torch.argmax(logits, dim=1, keepdim=True)
-                    output_parts.append(indices.cpu().numpy())
+                    gen_input = torch.cat([noise, context_data], dim=1)
                 else:
-                    dim = info["output_dim"]
-                    val = fake_raw[:, fake_ptr : fake_ptr + dim]
-                    fake_ptr += dim
-                    output_parts.append(val.cpu().numpy())
+                    gen_input = noise
 
-            fake_data_np = np.concatenate(output_parts, axis=1)
+                fake_raw = self.generator(gen_input)
+                fake_act = self._activate(fake_raw)
 
-        result_df = self.transformer.inverse_transform(fake_data_np)
+                # Post-process to transformer layout: argmax embedding blocks to
+                # indices, keep activated blocks for inverse_transform.
+                output_parts = []
+                fake_ptr = 0
+                for info in self.data_column_info:
+                    if info["type"] == "embedding":
+                        dim = info["num_categories"]
+                        probs = fake_act[:, fake_ptr : fake_ptr + dim]
+                        fake_ptr += dim
+                        indices = torch.argmax(probs, dim=1, keepdim=True)
+                        output_parts.append(indices.cpu().numpy())
+                    else:
+                        dim = info["output_dim"]
+                        val = fake_act[:, fake_ptr : fake_ptr + dim]
+                        fake_ptr += dim
+                        output_parts.append(val.cpu().numpy())
 
-        # Constraint violation checking (opt-in via enforce_constraints=True).
-        # Note: inverse_transform() already clips values within defined column ranges,
-        # so enforce_constraints=True is primarily useful for post-hoc auditing or
-        # catching any residual violations before returning rows to the caller.
-        if enforce_constraints:
-            table_config = None
-            table_name = getattr(self.transformer, "table_name", None)
-            if hasattr(self, "metadata") and table_name:
-                try:
-                    table_config = self.metadata.get_table(table_name)
-                except Exception as exc:
-                    log.warning(
-                        "constraint_config_lookup_failed",
-                        table_name=table_name,
-                        error=str(exc),
-                        note="Skipping constraint enforcement — table config could not be retrieved",
-                    )
-                    table_config = None
+                fake_data_np = np.concatenate(output_parts, axis=1)
 
-            # If the table has constraints defined, scan generated rows.
-            # If no constraints are configured this block is a no-op.
-            if table_config is not None and table_config.constraints:
-                violations = []
-                valid_mask = pd.Series([True] * len(result_df), index=result_df.index)
+            result_df = self.transformer.inverse_transform(fake_data_np)
 
-                for col_name, constraint in table_config.constraints.items():
-                    if col_name not in result_df.columns:
-                        continue
-                    col_data = result_df[col_name]
+            # Constraint violation checking (opt-in via enforce_constraints=True).
+            # Note: inverse_transform() already clips values within defined column
+            # ranges, so this is primarily useful for post-hoc auditing.
+            if enforce_constraints:
+                self._check_constraints(result_df)
 
-                    # Check min constraint
-                    min_val = constraint.min
-                    if min_val is not None:
-                        try:
-                            col_numeric = pd.to_numeric(col_data, errors="coerce")
-                            bad = col_numeric < min_val
-                            if bad.any():
-                                observed = col_numeric[bad].min()
-                                violations.append(
-                                    f"{col_name}: got {observed:.4g} (min={min_val})"
-                                )
-                                valid_mask &= ~bad
-                        except Exception as exc:
-                            log.warning(
-                                "constraint_min_check_skipped",
-                                column=col_name,
-                                error=str(exc),
-                                note="Column is non-numeric or comparison failed — skipping min check",
-                            )
+            return result_df
+        finally:
+            # Restore training mode even if transform/inverse/constraint
+            # checking raised — otherwise a failed sample() leaves the model
+            # stuck in eval mode.
+            if was_training:
+                self.generator.train()
 
-                    # Check max constraint
-                    max_val = constraint.max
-                    if max_val is not None:
-                        try:
-                            col_numeric = pd.to_numeric(col_data, errors="coerce")
-                            bad = col_numeric > max_val
-                            if bad.any():
-                                observed = col_numeric[bad].max()
-                                violations.append(
-                                    f"{col_name}: got {observed:.4g} (max={max_val})"
-                                )
-                                valid_mask &= ~bad
-                        except Exception as exc:
-                            log.warning(
-                                "constraint_max_check_skipped",
-                                column=col_name,
-                                error=str(exc),
-                                note="Column is non-numeric or comparison failed — skipping max check",
-                            )
+    def _check_constraints(self, result_df: pd.DataFrame) -> None:
+        """Raise ConstraintViolationError if any configured constraint is violated."""
+        table_config = None
+        table_name = getattr(self.transformer, "table_name", None)
+        if hasattr(self, "metadata") and table_name:
+            try:
+                table_config = self.metadata.get_table(table_name)
+            except Exception as exc:
+                log.warning(
+                    "constraint_config_lookup_failed",
+                    table_name=table_name,
+                    error=str(exc),
+                    note="Skipping constraint enforcement — table config could not be retrieved",
+                )
+                table_config = None
 
-                if violations:
-                    summary = "; ".join(violations)
-                    # ROADMAP success criterion 4 and REQUIREMENTS.md QUAL-04 require
-                    # violations to "raise with the column name and observed value".
-                    # Use sample(enforce_constraints=False) (the default) if you want
-                    # the previous warn-and-return behavior.
-                    raise ConstraintViolationError(
-                        f"ConstraintViolationError: {len(violations)} violation(s) found — "
-                        f"{summary}"
+        if table_config is None or not table_config.constraints:
+            return
+
+        violations = []
+        for col_name, constraint in table_config.constraints.items():
+            if col_name not in result_df.columns:
+                continue
+            col_numeric = pd.to_numeric(result_df[col_name], errors="coerce")
+
+            if constraint.min is not None:
+                bad = col_numeric < constraint.min
+                if bad.any():
+                    violations.append(
+                        f"{col_name}: got {col_numeric[bad].min():.4g} "
+                        f"(min={constraint.min})"
                     )
 
-        if was_training:
-            self.generator.train()
+            if constraint.max is not None:
+                bad = col_numeric > constraint.max
+                if bad.any():
+                    violations.append(
+                        f"{col_name}: got {col_numeric[bad].max():.4g} "
+                        f"(max={constraint.max})"
+                    )
 
-        return result_df
+        if violations:
+            raise ConstraintViolationError(
+                f"{len(violations)} constraint violation(s) found — "
+                + "; ".join(violations)
+            )
 
     def save(self, path: str, *, overwrite: bool = False) -> None:
         """Persist full model state to a directory checkpoint.
@@ -861,7 +856,7 @@ class CTGAN(ConditionalGenerativeModel):
             - discriminator.pt — discriminator state_dict
             - transformer.joblib — fitted DataTransformer for child table
             - context_transformer.joblib — fitted DataTransformer for context
-            - embedding_layers.joblib — nn.ModuleDict with entity embedding weights
+            - embedding_layers.pt — entity embedding weights (state_dict, safe format)
             - data_column_info.joblib — column layout list
             - metadata.json — hyperparameters and version info
 
@@ -881,7 +876,7 @@ class CTGAN(ConditionalGenerativeModel):
         p = Path(path)
         if p.exists() and not overwrite:
             raise SerializationError(
-                f"SerializationError: Save path '{path}' already exists. "
+                f"Save path '{path}' already exists. "
                 f"Pass overwrite=True to replace it."
             )
 
@@ -896,8 +891,9 @@ class CTGAN(ConditionalGenerativeModel):
             joblib.dump(self.transformer, p / "transformer.joblib")
             joblib.dump(self.context_transformer, p / "context_transformer.joblib")
 
-            # Embedding layers (nn.ModuleDict) — joblib serializes via pickle
-            joblib.dump(self.embedding_layers, p / "embedding_layers.joblib")
+            # Embedding layers — plain state_dict so load() can use the safe
+            # weights_only path (the ModuleDict is rebuilt from data_column_info).
+            torch.save(self.embedding_layers.state_dict(), p / "embedding_layers.pt")
 
             # Column layout list (list of dicts describing each column)
             joblib.dump(self.data_column_info, p / "data_column_info.joblib")
@@ -920,6 +916,10 @@ class CTGAN(ConditionalGenerativeModel):
                 "embedding_dim": self.embedding_dim,
                 "generator_dim": list(self.generator_dim),
                 "discriminator_dim": list(self.discriminator_dim),
+                "batch_size": self.batch_size,
+                "epochs": self.epochs,
+                "discriminator_steps": self.discriminator_steps,
+                "embedding_threshold": self.embedding_threshold,
                 "legacy_context_conditioning": self.legacy_context_conditioning,
                 "saved_at": datetime.now(timezone.utc).isoformat(),
             }
@@ -932,7 +932,7 @@ class CTGAN(ConditionalGenerativeModel):
             raise
         except Exception as exc:
             raise SerializationError(
-                f"SerializationError: Failed to save model to '{path}'. "
+                f"Failed to save model to '{path}'. "
                 f"Original error: {exc}"
             ) from exc
 
@@ -957,7 +957,7 @@ class CTGAN(ConditionalGenerativeModel):
         p = Path(path)
         if not p.exists():
             raise SerializationError(
-                f"SerializationError: Checkpoint path '{path}' does not exist."
+                f"Checkpoint path '{path}' does not exist."
             )
 
         required_files = [
@@ -965,13 +965,18 @@ class CTGAN(ConditionalGenerativeModel):
             "discriminator.pt",
             "transformer.joblib",
             "context_transformer.joblib",
-            "embedding_layers.joblib",
             "data_column_info.joblib",
         ]
         missing = [f for f in required_files if not (p / f).exists()]
+        # Embedding weights: new checkpoints use the safe state_dict format,
+        # old ones a pickled ModuleDict — accept either.
+        if not (p / "embedding_layers.pt").exists() and not (
+            p / "embedding_layers.joblib"
+        ).exists():
+            missing.append("embedding_layers.pt")
         if missing:
             raise SerializationError(
-                f"SerializationError: Checkpoint at '{path}' is incomplete. "
+                f"Checkpoint at '{path}' is incomplete. "
                 f"Missing files: {', '.join(missing)}. "
                 f"The checkpoint may have been saved by an older version or is corrupt."
             )
@@ -1010,6 +1015,14 @@ class CTGAN(ConditionalGenerativeModel):
                     self.generator_dim = tuple(meta["generator_dim"])
                 if "discriminator_dim" in meta:
                     self.discriminator_dim = tuple(meta["discriminator_dim"])
+                if "batch_size" in meta:
+                    self.batch_size = meta["batch_size"]
+                if "epochs" in meta:
+                    self.epochs = meta["epochs"]
+                if "discriminator_steps" in meta:
+                    self.discriminator_steps = meta["discriminator_steps"]
+                if "embedding_threshold" in meta:
+                    self.embedding_threshold = meta["embedding_threshold"]
                 # Default False for forward compatibility with old checkpoints that lack this key
                 self.legacy_context_conditioning = meta.get(
                     "legacy_context_conditioning", False
@@ -1019,9 +1032,8 @@ class CTGAN(ConditionalGenerativeModel):
             self.transformer = joblib.load(p / "transformer.joblib")
             self.context_transformer = joblib.load(p / "context_transformer.joblib")
 
-            # Load saved column layout and embedding layers (will be restored after _build_model)
+            # Load saved column layout (embedding layers restored after _build_model)
             saved_data_column_info = joblib.load(p / "data_column_info.joblib")
-            saved_embedding_layers = joblib.load(p / "embedding_layers.joblib")
 
             # Validate transformer round-trip integrity
             if (
@@ -1029,7 +1041,7 @@ class CTGAN(ConditionalGenerativeModel):
                 or self.transformer.output_dim <= 0
             ):
                 raise SerializationError(
-                    f"SerializationError: Loaded transformer has invalid output_dim "
+                    f"Loaded transformer has invalid output_dim "
                     f"({getattr(self.transformer, 'output_dim', 'missing')}). "
                     f"The checkpoint may be corrupt."
                 )
@@ -1045,21 +1057,49 @@ class CTGAN(ConditionalGenerativeModel):
             # We restore the saved values immediately after so weights can be loaded correctly.
             self._build_model(data_dim, context_dim)
 
-            # Restore saved column layout and trained embedding weights (overwrite fresh ones)
+            # Restore saved column layout (overwrite the freshly compiled one)
             self.data_column_info = saved_data_column_info
-            self.embedding_layers = saved_embedding_layers
 
-            # Load network weights — weights_only=False REQUIRED for PyTorch 2.6+
-            # (PyTorch 2.6 changed default to weights_only=True; custom objects fail without False)
-            # SECURITY WARNING: weights_only=False uses pickle deserialization under the hood,
-            # which can execute arbitrary code. Only load checkpoints from trusted sources.
-            # Restructuring to weights_only=True requires registering all custom types with
-            # torch.serialization.add_safe_globals() and is a non-trivial migration.
+            # Restore embedding weights. New checkpoints store a plain
+            # state_dict (safe weights_only load); the ModuleDict itself is
+            # rebuilt from the saved column layout. Legacy checkpoints stored a
+            # pickled ModuleDict — pickle can execute arbitrary code, so only
+            # load legacy checkpoints from trusted sources.
+            if (p / "embedding_layers.pt").exists():
+                rebuilt = nn.ModuleDict()
+                for info in self.data_column_info:
+                    if info["type"] == "embedding":
+                        key = info.get("emb_key", str(info["name"]))
+                        rebuilt[key] = EntityEmbeddingLayer(
+                            info["num_categories"], info["output_dim"]
+                        )
+                rebuilt.load_state_dict(
+                    torch.load(
+                        p / "embedding_layers.pt",
+                        map_location=self.device,
+                        weights_only=True,
+                    )
+                )
+                self.embedding_layers = rebuilt.to(self.device)
+            else:
+                self.embedding_layers = joblib.load(
+                    p / "embedding_layers.joblib"
+                ).to(self.device)
+
+            # Network weights are plain state_dicts (tensors only), so the safe
+            # weights_only path works; map_location makes CUDA-saved checkpoints
+            # loadable on CPU-only hosts.
             self.generator.load_state_dict(
-                torch.load(p / "generator.pt", weights_only=False)
+                torch.load(
+                    p / "generator.pt", map_location=self.device, weights_only=True
+                )
             )
             self.discriminator.load_state_dict(
-                torch.load(p / "discriminator.pt", weights_only=False)
+                torch.load(
+                    p / "discriminator.pt",
+                    map_location=self.device,
+                    weights_only=True,
+                )
             )
 
             # Set model to eval mode for inference
@@ -1072,6 +1112,6 @@ class CTGAN(ConditionalGenerativeModel):
             raise
         except Exception as exc:
             raise SerializationError(
-                f"SerializationError: Failed to load model from '{path}'. "
+                f"Failed to load model from '{path}'. "
                 f"Original error: {exc}"
             ) from exc

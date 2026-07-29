@@ -1,11 +1,13 @@
 """TEST-03: Serialization round-trip — fit -> save -> load -> sample without retraining."""
 import os
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 import pytest
+
 from syntho_hive.core.models.ctgan import CTGAN
-from syntho_hive.interface.config import Metadata
 from syntho_hive.exceptions import SerializationError
+from syntho_hive.interface.config import Metadata
 
 
 @pytest.fixture
@@ -50,7 +52,7 @@ def test_serialization_round_trip(tmp_path, small_dataset, meta):
     required_files = [
         "generator.pt", "discriminator.pt",
         "transformer.joblib", "context_transformer.joblib",
-        "embedding_layers.joblib", "data_column_info.joblib",
+        "embedding_layers.pt", "data_column_info.joblib",
         "metadata.json",
     ]
     saved_files = os.listdir(save_dir)

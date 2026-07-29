@@ -1,12 +1,34 @@
-from typing import List, Dict, Optional, Union, Literal
-from pydantic import BaseModel, Field, field_validator
+from typing import List, Dict, Optional, Tuple, Union, Literal
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 import numpy as np
 import pandas as pd
 from syntho_hive.exceptions import SchemaError, SchemaValidationError
 
 
+def parse_fk_ref(ref: str) -> Tuple[str, str]:
+    """Parse a foreign-key reference of the form ``'parent_table.parent_col'``.
+
+    Args:
+        ref: FK reference string.
+
+    Raises:
+        SchemaError: If the reference is not exactly ``table.column``.
+
+    Returns:
+        Tuple of ``(parent_table, parent_col)``.
+    """
+    parts = ref.split(".")
+    if len(parts) != 2 or not parts[0] or not parts[1]:
+        raise SchemaError(
+            f"Invalid FK reference '{ref}'. Expected format 'parent_table.parent_col'."
+        )
+    return parts[0], parts[1]
+
+
 class PrivacyConfig(BaseModel):
     """Configuration for privacy guardrails applied during synthesis."""
+
+    model_config = ConfigDict(extra="forbid")
 
     enable_differential_privacy: bool = False
     epsilon: float = 1.0
@@ -23,20 +45,44 @@ class PrivacyConfig(BaseModel):
             raise ValueError("epsilon must be positive")
         return v
 
+    @field_validator("k_anonymity_threshold")
+    @classmethod
+    def validate_k_anonymity(cls, v: int) -> int:
+        if v < 1:
+            raise ValueError("k_anonymity_threshold must be >= 1")
+        return v
+
 
 class Constraint(BaseModel):
     """Configuration object describing numeric constraints for a column."""
+
+    model_config = ConfigDict(extra="forbid")
 
     dtype: Optional[Literal["int", "float"]] = None
     min: Optional[float] = None
     max: Optional[float] = None
 
+    @model_validator(mode="after")
+    def validate_bounds(self) -> "Constraint":
+        if self.min is not None and self.max is not None and self.min > self.max:
+            raise ValueError(f"Constraint min ({self.min}) must be <= max ({self.max})")
+        return self
+
 
 class TableConfig(BaseModel):
     """Configuration for a single table, including keys and constraints."""
 
+    model_config = ConfigDict(extra="forbid")
+
     name: str
     pk: str
+    driver_fk: Optional[str] = Field(
+        default=None,
+        description=(
+            "FK column that selects the 'driver' parent for cardinality modeling "
+            "and conditional context. Defaults to the alphabetically-first FK."
+        ),
+    )
     pii_cols: List[str] = Field(default_factory=list)
     high_cardinality_cols: List[str] = Field(default_factory=list)
     fk: Dict[str, str] = Field(
@@ -51,10 +97,25 @@ class TableConfig(BaseModel):
     )
     linkage_method: Literal["empirical", "negbinom"] = "empirical"
 
+    @model_validator(mode="after")
+    def validate_driver_fk(self) -> "TableConfig":
+        if self.driver_fk is not None and self.driver_fk not in self.fk:
+            raise ValueError(
+                f"driver_fk '{self.driver_fk}' is not one of the declared FK columns "
+                f"{sorted(self.fk)}"
+            )
+        return self
+
     @property
     def has_dependencies(self) -> bool:
         """Whether the table declares any foreign key dependencies."""
         return bool(self.fk)
+
+    def get_driver_fk(self) -> str:
+        """Return the FK column driving cardinality/context (explicit or sorted-first)."""
+        if not self.fk:
+            raise SchemaError(f"Table '{self.name}' has no FK dependencies")
+        return self.driver_fk or sorted(self.fk)[0]
 
 
 def _dtypes_compatible(dtype_a: str, dtype_b: str) -> bool:
@@ -75,6 +136,9 @@ def _dtypes_compatible(dtype_a: str, dtype_b: str) -> bool:
     except TypeError:
         # pandas extension types — be conservative and assume compatible.
         return True
+    if kind_a == kind_b:
+        # Identical kinds (incl. datetime 'M', bool 'b') are always compatible.
+        return True
     numeric_kinds = {"i", "u", "f"}
     string_kinds = {"U", "O", "S"}
     if kind_a in numeric_kinds and kind_b in numeric_kinds:
@@ -86,6 +150,8 @@ def _dtypes_compatible(dtype_a: str, dtype_b: str) -> bool:
 
 class Metadata(BaseModel):
     """Schema definition for the entire dataset."""
+
+    model_config = ConfigDict(extra="forbid")
 
     tables: Dict[str, TableConfig] = Field(default_factory=dict)
 
@@ -142,14 +208,22 @@ class Metadata(BaseModel):
 
         for table_name, table_config in self.tables.items():
             for local_col, parent_ref in table_config.fk.items():
-                if "." not in parent_ref:
+                try:
+                    parent_table, parent_col = parse_fk_ref(parent_ref)
+                except SchemaError:
                     errors.append(
                         f"Invalid FK reference '{parent_ref}' in table '{table_name}'."
                         f" Format should be 'parent_table.parent_col'."
                     )
                     continue
 
-                parent_table, parent_col = parent_ref.split(".", 1)
+                if parent_table == table_name:
+                    errors.append(
+                        f"Table '{table_name}' has a self-referencing FK "
+                        f"'{local_col}' -> '{parent_ref}'. Self-references are not "
+                        f"supported by the relational synthesis pipeline."
+                    )
+                    continue
 
                 if parent_table not in self.tables:
                     errors.append(
@@ -186,5 +260,58 @@ class Metadata(BaseModel):
                                 f" or cast '{parent_table}.{parent_col}' to {child_dtype}."
                             )
 
+        # PK existence check when data is provided.
+        if real_data is not None:
+            for table_name, table_config in self.tables.items():
+                if table_name in real_data:
+                    if table_config.pk not in real_data[table_name].columns:
+                        errors.append(
+                            f"Declared PK column '{table_config.pk}' missing from "
+                            f"table '{table_name}'."
+                        )
+
+        # Cycle detection — a cyclic FK graph would otherwise only fail at
+        # generation time, after all models have already been trained.
+        if not errors:
+            cycle = self._find_cycle()
+            if cycle:
+                errors.append(
+                    f"FK relationships form a cycle: {' -> '.join(cycle)}. "
+                    f"Relational synthesis requires an acyclic schema."
+                )
+
         if errors:
             raise SchemaValidationError("\n".join(errors))
+
+    def _find_cycle(self) -> Optional[List[str]]:
+        """Return one FK cycle as a table-name path, or None if the graph is acyclic."""
+        children: Dict[str, List[str]] = {name: [] for name in self.tables}
+        for table_name, config in self.tables.items():
+            for parent_ref in config.fk.values():
+                parent_table = parent_ref.split(".")[0]
+                if parent_table in children and parent_table != table_name:
+                    children[parent_table].append(table_name)
+
+        WHITE, GRAY, BLACK = 0, 1, 2
+        color = {name: WHITE for name in self.tables}
+
+        def dfs(node: str, trail: List[str]) -> Optional[List[str]]:
+            color[node] = GRAY
+            trail.append(node)
+            for child in children[node]:
+                if color[child] == GRAY:
+                    return trail[trail.index(child) :] + [child]
+                if color[child] == WHITE:
+                    found = dfs(child, trail)
+                    if found:
+                        return found
+            trail.pop()
+            color[node] = BLACK
+            return None
+
+        for name in sorted(self.tables):
+            if color[name] == WHITE:
+                found = dfs(name, [])
+                if found:
+                    return found
+        return None

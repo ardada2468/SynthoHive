@@ -1,9 +1,10 @@
-from pathlib import Path
 import argparse
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 
-from syntho_hive.privacy.sanitizer import PIISanitizer, PrivacyConfig, PiiRule
+from syntho_hive.privacy.sanitizer import PiiRule, PIISanitizer, PrivacyConfig
 
 
 def make_raw_users(num_rows: int) -> pd.DataFrame:
@@ -62,7 +63,7 @@ def main():
     parser.add_argument("--rows", type=int, default=50, help="How many raw rows to generate.")
     parser.add_argument(
         "--output-dir",
-        default="examples/demos/02_privacy_sanitization/outputs",
+        default=str(Path(__file__).parent / "outputs"),
         help="Directory to place raw and sanitized CSVs.",
     )
     args = parser.parse_args()

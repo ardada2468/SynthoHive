@@ -1,6 +1,10 @@
+from typing import Optional
+
 import numpy as np
 import pandas as pd
 import structlog
+
+from syntho_hive.exceptions import SchemaError
 
 log = structlog.get_logger()
 
@@ -44,7 +48,22 @@ class LinkageModel:
             child_df: Child table containing foreign keys to parents.
             fk_col: Name of the foreign key column in the child table.
             pk_col: Name of the primary key column in the parent table.
+
+        Raises:
+            SchemaError: If the FK/PK columns are missing from their tables.
         """
+        if fk_col not in child_df.columns:
+            raise SchemaError(f"FK column '{fk_col}' missing from child table")
+        if pk_col not in parent_df.columns:
+            raise SchemaError(f"PK column '{pk_col}' missing from parent table")
+
+        if parent_df.empty:
+            # Empty parent: no parents to attach children to.
+            self._observed_counts = np.zeros(1, dtype=int)
+            self.max_children = 0
+            log.warning("linkage_fit_empty_parent", fk_col=fk_col)
+            return
+
         counts = child_df[fk_col].value_counts()
         parent_ids = pd.DataFrame(parent_df[pk_col].unique(), columns=[pk_col])
         count_df = parent_ids.merge(
@@ -94,11 +113,17 @@ class LinkageModel:
                 )
                 self.method = "empirical"  # runtime fallback
 
-    def sample_counts(self, parent_context: pd.DataFrame) -> np.ndarray:
+    def sample_counts(
+        self,
+        parent_context: pd.DataFrame,
+        rng: Optional[np.random.Generator] = None,
+    ) -> np.ndarray:
         """Sample child counts for a set of parents.
 
         Args:
             parent_context: Parent dataframe (only length is used here).
+            rng: Optional numpy Generator for reproducible sampling. Falls back
+                to a fresh unseeded Generator when omitted.
 
         Returns:
             Numpy array of non-negative integer child counts aligned with parents.
@@ -108,19 +133,25 @@ class LinkageModel:
         """
         if self._observed_counts is None:
             raise ValueError("LinkageModel.sample_counts() called before fit()")
+        if rng is None:
+            rng = np.random.default_rng()
         n_samples = len(parent_context)
+        if n_samples == 0:
+            return np.zeros(0, dtype=int)
 
         # Handle special distribution types from negbinom edge cases
         if self.distribution == "constant" and self.params is not None:
             return np.full(n_samples, self.params["value"], dtype=int)
         if self.distribution == "poisson" and self.params is not None:
-            counts = np.random.poisson(self.params["mu"], size=n_samples)
+            counts = rng.poisson(self.params["mu"], size=n_samples)
             return np.clip(counts, 0, None).astype(int)
 
         if self.method == "negbinom" and self._nbinom_n is not None:
             from scipy import stats
 
-            counts = stats.nbinom.rvs(self._nbinom_n, self._nbinom_p, size=n_samples)
+            counts = stats.nbinom.rvs(
+                self._nbinom_n, self._nbinom_p, size=n_samples, random_state=rng
+            )
             return np.clip(counts, 0, None).astype(int)
         # Default: empirical — draw from observed distribution
-        return np.random.choice(self._observed_counts, size=n_samples, replace=True)
+        return rng.choice(self._observed_counts, size=n_samples, replace=True)

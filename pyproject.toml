@@ -4,14 +4,27 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "synthohive"
-version = "1.4.0"
+dynamic = ["version"]
 description = "Production Synthetic Data Engine with Relational Integrity"
+readme = "README.md"
 authors = [
   { name = "SynthoHive Team", email = "ardada2468@gmail.com" },
 ]
 license = { file = "LICENSE" }
+keywords = [
+    "synthetic-data",
+    "ctgan",
+    "gan",
+    "privacy",
+    "data-generation",
+    "tabular",
+]
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Operating System :: OS Independent",
 ]
 requires-python = ">=3.9"
@@ -20,27 +33,30 @@ dependencies = [
     "numpy>=1.21.0",
     "pandas>=1.3.0",
     "torch>=1.10.0",
-    "pyspark>=4.0.0,<5.0.0",
     "pydantic>=2.0.0",
     "scipy>=1.7.0",
     "scikit-learn>=1.0.0",
     "faker>=13.0.0",
-    "delta-spark>=4.0.0,<5.0.0",
     "structlog>=21.1.0",
     "tqdm>=4.64.0",
     "pyarrow>=8.0.0",
 ]
 
-[tool.setuptools.packages.find]
-include = ["syntho_hive*"]
-exclude = ["test_output*", "tests*"]
+[project.urls]
+Homepage = "https://ardada2468.github.io/SynthoHive"
+Documentation = "https://ardada2468.github.io/SynthoHive"
+Repository = "https://github.com/ardada2468/SynthoHive"
 
 [project.optional-dependencies]
+spark = [
+    "pyspark>=4.0.0,<5.0.0",
+    "delta-spark>=4.0.0,<5.0.0",
+]
 dev = [
     "pytest>=7.0.0",
-    "black",
-    "flake8",
-    "mypy"
+    "pytest-cov",
+    "ruff",
+    "mypy",
 ]
 docs = [
     "mkdocs>=1.6.0",
@@ -50,10 +66,45 @@ docs = [
     "mkdocs-autorefs>=0.5.0",
     "mkdocs-literate-nav>=0.6.0",
     "mkdocs-gen-files>=0.5.0",
-    "mkdocs-git-revision-date-localized-plugin>=1.2.0"
+    "mkdocs-git-revision-date-localized-plugin>=1.2.0",
 ]
+
+[tool.setuptools.dynamic]
+version = { attr = "syntho_hive.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["syntho_hive*"]
+exclude = ["syntho_hive.tests*", "test_output*"]
+
+[tool.setuptools.package-data]
+syntho_hive = ["py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
 addopts = "--import-mode=importlib"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "spark: marks tests that require a PySpark installation",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+extend-exclude = ["notebooks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# Legacy debt in library source; being cleaned up incrementally.
+# Serious errors (undefined names, syntax issues) still apply.
+"syntho_hive/**/*.py" = ["B007", "B023", "E701", "F401", "F841", "I001", "UP006", "UP035", "W291", "W293"]
+# Tests undergoing concurrent rework; style debt tolerated for now.
+"tests/test_privacy.py" = ["F401", "I001", "W293"]
+"tests/test_validation.py" = ["F401", "I001"]
+
+[tool.mypy]
+python_version = "3.9"
+ignore_missing_imports = true

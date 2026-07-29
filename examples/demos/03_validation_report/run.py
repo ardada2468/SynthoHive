@@ -1,5 +1,6 @@
-from pathlib import Path
 import argparse
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 
@@ -38,7 +39,7 @@ def main():
     parser.add_argument("--rows", type=int, default=300, help="Rows per dataset to generate.")
     parser.add_argument(
         "--output-dir",
-        default="examples/demos/03_validation_report/outputs",
+        default=str(Path(__file__).parent / "outputs"),
         help="Directory where the report files will be written.",
     )
     args = parser.parse_args()

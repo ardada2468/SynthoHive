@@ -1,12 +1,10 @@
 """Tests for Phase 8: Training Observability (CORE-05, QUAL-03)."""
 
 import os
-import shutil
 import tempfile
 
 import numpy as np
 import pandas as pd
-import pytest
 from structlog.testing import capture_logs
 
 from syntho_hive.core.models.ctgan import CTGAN

@@ -1,12 +1,11 @@
-import pytest
-import pandas as pd
+import os
+import tempfile
+
 import numpy as np
+import pandas as pd
+
 from syntho_hive.core.models.ctgan import CTGAN
 from syntho_hive.interface.config import Metadata
-import torch
-import shutil
-import tempfile
-import os
 
 
 def test_ctgan_full_cycle():

@@ -1,11 +1,11 @@
 import os
-import sys
-import shutil
-import pandas as pd
-import numpy as np
-from faker import Faker
 import random
-from typing import Dict
+import shutil
+import sys
+
+import numpy as np
+import pandas as pd
+from faker import Faker
 
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
@@ -17,8 +17,8 @@ try:
 except ImportError:
     pytest.skip("PySpark not installed", allow_module_level=True)
 
-from syntho_hive.interface.config import Metadata, Constraint
-from syntho_hive.privacy.sanitizer import PIISanitizer, PrivacyConfig, PiiRule
+from syntho_hive.interface.config import Constraint, Metadata
+from syntho_hive.privacy.sanitizer import PiiRule, PIISanitizer, PrivacyConfig
 from syntho_hive.relational.orchestrator import StagedOrchestrator
 from syntho_hive.validation.report_generator import ValidationReport
 
@@ -304,7 +304,7 @@ def validate_results():
             try:
                 # Try reading parquet first
                 synth_data[table] = pd.read_parquet(path)
-            except Exception as e:
+            except Exception:
                 # print(f"Direct parquet read failed: {e}")
                 try:
                     # Try manual walk for parquet parts (Spark style)
@@ -320,7 +320,7 @@ def validate_results():
                         all_files = glob.glob(os.path.join(path, "*.csv"))
                         if all_files:
                             synth_data[table] = pd.concat(
-                                (pd.read_csv(f) for f in all_files)
+                                pd.read_csv(f) for f in all_files
                             )
                         else:
                             # Maybe it is a single file?

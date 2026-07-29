@@ -1,9 +1,8 @@
-import pandas as pd
+
 import numpy as np
-import os
-import shutil
+import pandas as pd
+
 from syntho_hive.core.models.ctgan import CTGAN
-from syntho_hive.core.data.transformer import DataTransformer
 
 
 class MockMetadata:
@@ -46,19 +45,20 @@ def test_null_handling():
     print(f"Nulls in categorical_col: {num_nulls_cat}")
 
     # Verify null handling infrastructure works correctly:
-    # - Numeric nulls use a learned null indicator, so with 1 epoch the model
-    #   may not produce nulls. We verify the column exists and is numeric.
-    # - Categorical nulls use a sentinel token ('<NAN>') which the model can
-    #   learn to produce even in 1 epoch, so we check for those.
-    assert num_nulls_numeric >= 0, (
-        f"Unexpected negative null count in numeric column: {num_nulls_numeric}"
+    # - The sampled output must have exactly the input schema (no leaked
+    #   helper columns such as null indicators).
+    # - Categorical nulls are modeled internally via a sentinel token
+    #   ('<NAN>'); it must be decoded back to a real null and never leak
+    #   into the output as a literal string value.
+    assert list(sampled.columns) == list(data.columns), (
+        f"Output columns {list(sampled.columns)} do not match input columns {list(data.columns)}"
     )
-    assert num_nulls_cat >= 0, (
-        f"Unexpected negative null count in categorical column: {num_nulls_cat}"
-    )
-    # At least one column type should show some null awareness
-    total_nulls = num_nulls_numeric + num_nulls_cat
-    assert total_nulls >= 0, "Null handling infrastructure should not crash"
+    for col in sampled.columns:
+        literal_sentinels = (sampled[col].astype(str) == "<NAN>").sum()
+        assert literal_sentinels == 0, (
+            f"Sentinel token '<NAN>' leaked into output column {col!r} "
+            f"({literal_sentinels} occurrences); it should be decoded to a real null"
+        )
 
     print("Test Passed!")
 

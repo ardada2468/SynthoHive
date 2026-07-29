@@ -1,5 +1,6 @@
-from pathlib import Path
 import argparse
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 
@@ -45,7 +46,7 @@ def main():
     )
     parser.add_argument(
         "--output-dir",
-        default="examples/demos/05_transformer_embeddings/outputs",
+        default=str(Path(__file__).parent / "outputs"),
         help="Directory to write transformed artifacts.",
     )
     args = parser.parse_args()

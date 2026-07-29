@@ -2,10 +2,9 @@ import hashlib
 import numpy as np
 import pandas as pd
 import structlog
-from typing import List, Dict, Optional, Tuple, Any
+from typing import Optional, Any
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.mixture import BayesianGaussianMixture
-from syntho_hive.exceptions import ConstraintViolationError  # noqa: F401 – used in Plan 03
 
 log = structlog.get_logger()
 
@@ -66,6 +65,7 @@ class DataTransformer:
         # C4: Reset stale state from any previous fit() call
         self._transformers = {}
         self._column_info = {}
+        self._excluded_columns = []
 
         columns_to_transform = data.columns.tolist()
 
@@ -90,7 +90,8 @@ class DataTransformer:
                 # Derive a per-column deterministic seed from the parent seed to avoid
                 # correlated RNG sequences across columns when all columns share one seed.
                 # C5: Use hashlib instead of Python's hash() for cross-process determinism.
-                col_hash = int(hashlib.sha256(col.encode()).hexdigest(), 16) % 100_000
+                # str(col) so non-string column names (ints, tuples) don't crash.
+                col_hash = int(hashlib.sha256(str(col).encode()).hexdigest(), 16) % 100_000
                 col_seed = (seed + col_hash) if seed is not None else None
                 # Continuous column
                 transformer = ClusterBasedNormalizer(n_components=10, seed=col_seed)
@@ -188,12 +189,21 @@ class DataTransformer:
             elif info["type"] == "categorical_embedding":
                 # Returns (N, 1)
                 col_data_filled = self._prepare_categorical(col_data)
-                # H7: Map unseen categories to a known class to avoid ValueError
+                # H7: Map unseen categories to a known class to avoid ValueError.
+                # Prefer the null sentinel over an arbitrary (alphabetically-first)
+                # class so unseen values don't bias a real category.
                 known = set(transformer.classes_)
-                col_data_safe = col_data_filled.map(
-                    lambda x: x if x in known else transformer.classes_[0]
-                )
-                values = transformer.transform(col_data_safe)
+                fallback = "<NAN>" if "<NAN>" in known else transformer.classes_[0]
+                unseen_mask = ~col_data_filled.isin(known)
+                if unseen_mask.any():
+                    log.warning(
+                        "unseen_categories_mapped",
+                        column=str(col),
+                        count=int(unseen_mask.sum()),
+                        fallback=fallback,
+                    )
+                    col_data_filled = col_data_filled.where(~unseen_mask, fallback)
+                values = transformer.transform(col_data_filled)
                 transformed = values.reshape(-1, 1)
             else:
                 # Returns (N, n_categories)
@@ -343,8 +353,10 @@ class ClusterBasedNormalizer:
         # Use provided seed; fall back to 42 for backward compatibility when no seed given.
         random_state = seed if seed is not None else 42
         self._seed = random_state
+        self.model = None
         self.means = None
         self.stds = None
+        self.n_active = 0  # number of live mixture components (<= n_components)
         self.has_nulls = False
         self.all_null = False
         self.fill_value = 0.0
@@ -356,6 +368,15 @@ class ClusterBasedNormalizer:
         Args:
             data: Continuous pandas Series to normalize.
         """
+        # Reject non-finite values early — ±inf silently poisons the GMM and
+        # every downstream training tensor.
+        finite_check = data.dropna().to_numpy(dtype=float)
+        if finite_check.size and not np.isfinite(finite_check).all():
+            raise ValueError(
+                "Continuous column contains non-finite values (inf/-inf). "
+                "Clean the column before fitting."
+            )
+
         # 1. Handle Nulls
         self.has_nulls = data.isnull().any()
 
@@ -367,9 +388,11 @@ class ClusterBasedNormalizer:
             self.output_dim = self.n_components + 1 + 1
             return
 
+        # Always record a fill value so transform() can impute NaNs that were
+        # not present at fit time.
+        self.fill_value = float(data.mean())
+
         if self.has_nulls:
-            self.fill_value = data.mean()
-            # Impute for training GMM
             values = data.fillna(self.fill_value).to_numpy(dtype=float).reshape(-1, 1)
             self.output_dim = self.n_components + 1 + 1  # +1 for null indicator
         else:
@@ -379,6 +402,7 @@ class ClusterBasedNormalizer:
         # H6: Clamp n_components when fewer valid samples than components
         n_valid = data.dropna().shape[0]
         effective_components = min(self.n_components, max(n_valid, 1))
+        self.n_active = effective_components
 
         self.model = BayesianGaussianMixture(
             n_components=effective_components,
@@ -410,18 +434,22 @@ class ClusterBasedNormalizer:
             null_indicator = np.ones((n_samples, 1))
             return np.concatenate([cluster_one_hot, scalar_col, null_indicator], axis=1)
 
-        values_raw = data.to_numpy(dtype=float).reshape(-1, 1)
+        if self.model is None:
+            raise ValueError("ClusterBasedNormalizer has not been fitted.")
+
+        # Always impute — NaNs may appear at transform time even when fit data
+        # had none (previously this crashed or silently NaN-poisoned training).
+        incoming_nulls = pd.isnull(data)
+        if incoming_nulls.any() and not self.has_nulls:
+            log.warning(
+                "unexpected_nulls_at_transform",
+                count=int(incoming_nulls.sum()),
+                note="fit data had no nulls — imputing with fit-time mean",
+            )
+        values_clean = data.fillna(self.fill_value).to_numpy(dtype=float).reshape(-1, 1)
 
         if self.has_nulls:
-            # 0. Create Null Indicator
-            null_indicator = pd.isnull(data).to_numpy(dtype=float).reshape(-1, 1)
-
-            # 1. Impute for projection
-            values_clean = (
-                data.fillna(self.fill_value).to_numpy(dtype=float).reshape(-1, 1)
-            )
-        else:
-            values_clean = values_raw
+            null_indicator = incoming_nulls.to_numpy(dtype=float).reshape(-1, 1)
 
         # 2. Get cluster probabilities: P(c|x)
         probs = self.model.predict_proba(values_clean)  # (N, n_components)
@@ -438,6 +466,8 @@ class ClusterBasedNormalizer:
 
         # H8: Add epsilon to avoid division by zero when std is zero
         normalized_values = (values_clean.flatten() - means) / (4 * stds + 1e-8)
+        # Clip to the CTGAN range — unbounded outliers destabilize training.
+        normalized_values = np.clip(normalized_values, -0.99, 0.99)
         normalized_values = normalized_values.reshape(-1, 1)
 
         # 5. Create One-Hot encoding of cluster assignment
@@ -486,8 +516,12 @@ class ClusterBasedNormalizer:
         else:
             null_indicators = None
 
-        # Identify cluster
-        cluster_assignments = np.argmax(cluster_one_hot, axis=1)
+        # Identify cluster. Only consider the live components: the generator emits
+        # values across the full n_components width, but means/stds only exist for
+        # the n_active components actually fitted — argmax over dead columns
+        # previously caused IndexError on generated data.
+        n_active = getattr(self, "n_active", 0) or len(self.means)
+        cluster_assignments = np.argmax(cluster_one_hot[:, :n_active], axis=1)
 
         means = self.means[cluster_assignments]
         stds = self.stds[cluster_assignments]
